@@ -34,6 +34,7 @@ from bugintel.core.orchestrator import create_orchestration_plan
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.integrations.kali_runner import build_curl_plan, execute_curl_plan
 from bugintel.integrations.web_fetcher import fetch_web_page
+from bugintel.integrations.har_importer import load_har
 
 app = typer.Typer(
     name="bugintel",
@@ -670,6 +671,83 @@ def web_recon_command(
         if json_output:
             json_output.parent.mkdir(parents=True, exist_ok=True)
             json_output.write_text(json.dumps(result.orchestration_plan.to_dict(), indent=2), encoding="utf-8")
+            console.print(f"[bold green]Saved orchestration JSON:[/bold green] {json_output}")
+
+
+@app.command("import-har")
+def import_har_command(
+    har_file: Path = typer.Argument(..., help="HAR file exported from browser DevTools, proxy, or compatible traffic capture."),
+    target_name: str = typer.Option("har-import", "--target", "-t", help="Target/workspace name."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional JSON output path for orchestration plan."),
+):
+    """Import a HAR file, extract endpoints, and optionally save a multi-agent plan."""
+    if not har_file.exists():
+        console.print(f"[bold red]HAR file not found:[/bold red] {har_file}")
+        raise typer.Exit(code=1)
+
+    result = load_har(har_file)
+
+    summary = Table(title="HAR Import Summary")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+
+    summary.add_row("HAR file", str(har_file))
+    summary.add_row("Entries", str(len(result.entries)))
+    summary.add_row("Unique endpoints", str(len(result.endpoints)))
+    summary.add_row("API-like entries", str(len(result.api_entries)))
+
+    console.print(summary)
+
+    if result.entries:
+        table = Table(title="HAR Entries")
+        table.add_column("#", justify="right")
+        table.add_column("Method")
+        table.add_column("Status")
+        table.add_column("Category")
+        table.add_column("Endpoint")
+
+        for index, entry in enumerate(result.entries, start=1):
+            table.add_row(
+                str(index),
+                entry.method,
+                str(entry.status_code) if entry.status_code is not None else "none",
+                entry.category,
+                entry.endpoint,
+            )
+
+        console.print(table)
+
+    if result.endpoints:
+        plan = create_orchestration_plan(
+            target_name=target_name,
+            endpoints=result.endpoints,
+        )
+
+        console.print()
+        console.print(f"[bold green]Created orchestration plan for:[/bold green] {target_name}")
+        console.print(f"[bold]Agent assignments:[/bold] {len(plan.assignments)}")
+
+        assignment_table = Table(title="Agent Assignments from HAR")
+        assignment_table.add_column("#", justify="right")
+        assignment_table.add_column("Endpoint")
+        assignment_table.add_column("Agent")
+        assignment_table.add_column("Mode")
+        assignment_table.add_column("Human Approval")
+
+        for index, assignment in enumerate(plan.assignments, start=1):
+            assignment_table.add_row(
+                str(index),
+                assignment.endpoint,
+                assignment.agent_name,
+                assignment.mode,
+                "YES" if assignment.requires_human_approval else "NO",
+            )
+
+        console.print(assignment_table)
+
+        if json_output:
+            json_output.parent.mkdir(parents=True, exist_ok=True)
+            json_output.write_text(json.dumps(plan.to_dict(), indent=2), encoding="utf-8")
             console.print(f"[bold green]Saved orchestration JSON:[/bold green] {json_output}")
 
 
