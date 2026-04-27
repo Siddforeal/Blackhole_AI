@@ -24,6 +24,10 @@ The long-term goal is to support scope-controlled testing, endpoint mining, task
 - Structured evidence store
 - Response diff analyzer
 - Research task tree builder
+- Passive HTML analysis for links, scripts, forms, and endpoints
+- Scope-guarded website page fetcher
+- JavaScript source collector
+- Website Mode pipeline with endpoint merging and orchestration
 - Unit tests
 - GitHub Actions CI
 

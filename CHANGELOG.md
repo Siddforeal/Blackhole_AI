@@ -8,6 +8,10 @@
 - `generate-report` CLI command
 - Analyst review checklist in generated reports
 - Generated reports are ignored by Git to avoid accidental upload of private evidence
+- Passive HTML analysis for Website Mode
+- Scope-guarded website page fetcher
+- JavaScript source collector
+- Website Recon pipeline combining HTML analysis, JS endpoint mining, and multi-agent orchestration
 
 ## v0.1.0 - BugIntel AI Workbench MVP
 
