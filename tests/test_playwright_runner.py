@@ -81,3 +81,87 @@ def test_build_browser_plan_can_disable_optional_capture():
     assert "extract_html" in action_types
     assert "capture_network" not in action_types
     assert "capture_screenshot" not in action_types
+
+
+def test_build_browser_capture_result_matches_evidence_store_shape(tmp_path):
+    from bugintel.core.evidence_store import EvidenceStore
+    from bugintel.integrations.playwright_runner import build_browser_capture_result
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    result = build_browser_capture_result(
+        plan=plan,
+        task_name="capture dashboard",
+        network_events=[
+            {
+                "method": "GET",
+                "url": "https://demo.example.com/api/me",
+                "status_code": 200,
+                "resource_type": "fetch",
+                "response_body": '{"email":"sidd@example.com"}',
+            }
+        ],
+        screenshots=[
+            {
+                "path": "artifacts/dashboard.png",
+                "sha256": "a" * 64,
+            }
+        ],
+        html_snapshots=[
+            {
+                "url": "https://demo.example.com/dashboard",
+                "html": "<html>sidd@example.com</html>",
+            }
+        ],
+        execution_output={
+            "runner": "playwright",
+            "status": "completed",
+            "stdout": "loaded page",
+        },
+        notes="Future Playwright result adapter",
+    )
+
+    assert result.target_name == "demo-lab"
+    assert result.task_name == "capture dashboard"
+    assert result.start_url == "https://demo.example.com/dashboard"
+    assert result.browser == "chromium"
+    assert result.network_events[0]["method"] == "GET"
+
+    kwargs = result.to_evidence_kwargs()
+
+    assert kwargs["target_name"] == "demo-lab"
+    assert kwargs["task_name"] == "capture dashboard"
+    assert kwargs["start_url"] == "https://demo.example.com/dashboard"
+    assert kwargs["browser"] == "chromium"
+    assert kwargs["network_events"][0]["url"] == "https://demo.example.com/api/me"
+
+    store = EvidenceStore(base_dir=tmp_path)
+    evidence_path = store.save_browser_evidence(**kwargs)
+
+    assert evidence_path.exists()
+
+
+def test_build_browser_capture_result_rejects_blocked_plan():
+    from bugintel.integrations.playwright_runner import build_browser_capture_result
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://evil.example.net/dashboard",
+        browser="chromium",
+    )
+
+    try:
+        build_browser_capture_result(
+            plan=plan,
+            task_name="blocked capture",
+        )
+    except ValueError as exc:
+        assert "Cannot build capture result from blocked browser plan" in str(exc)
+    else:
+        raise AssertionError("Expected blocked browser plan to raise ValueError")
