@@ -154,3 +154,9 @@ The artifact planner prepares future paths like:
     artifacts/browser/<target>/<task>/trace.zip
 
 Creating this request does not create files and does not launch a browser.
+
+You can create a request JSON from the CLI:
+
+    bugintel build-playwright-request examples/target.example.yaml https://demo.example.com/dashboard --task-name "Capture Dashboard" --json-output reports/playwright-request.json
+
+Human meaning: this gives you a reviewable browser job ticket before execution exists.

@@ -123,3 +123,9 @@ The request contains:
 7. Planned artifact paths for screenshot, HTML, network log, and trace output.
 
 This request is the future adapter input. It is safe because building it does not create files, does not install Playwright, and does not launch a browser.
+
+The CLI command is:
+
+    bugintel build-playwright-request examples/target.example.yaml https://demo.example.com/dashboard --task-name "Capture Dashboard" --json-output reports/playwright-request.json
+
+Use this command when you want to review the future browser job before attempting any execution workflow.
