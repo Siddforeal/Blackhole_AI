@@ -27,6 +27,7 @@ from bugintel.analyzers.http_parser import parse_http_response
 from bugintel.analyzers.response_diff import compare_responses, summarize_response
 from bugintel.core.evidence_store import EvidenceStore
 from bugintel.core.scope_guard import load_scope_from_dict
+from bugintel.core.orchestrator import create_orchestration_plan
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.integrations.kali_runner import build_curl_plan, execute_curl_plan
 
@@ -303,6 +304,60 @@ def generate_report_command(
     saved = save_evidence_report(evidence_file, output_file)
 
     console.print(f"[bold green]Report generated:[/bold green] {saved}")
+
+
+@app.command("orchestrate")
+def orchestrate_command(
+    input_file: Path = typer.Argument(..., help="File containing JS/HTML/HAR/log text to mine endpoints from."),
+    target_name: str = typer.Option("demo-lab", "--target", "-t", help="Target/workspace name."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional JSON output path for the orchestration plan."),
+):
+    """Create a multi-agent research plan from discovered endpoints."""
+    if not input_file.exists():
+        console.print(f"[bold red]Input file not found:[/bold red] {input_file}")
+        raise typer.Exit(code=1)
+
+    text = input_file.read_text(encoding="utf-8", errors="replace")
+    endpoints = mine_endpoints(text)
+    endpoint_values = [endpoint.value for endpoint in endpoints]
+
+    plan = create_orchestration_plan(
+        target_name=target_name,
+        endpoints=endpoint_values,
+    )
+
+    rendered = render_tree(plan.root)
+
+    console.print(f"[bold green]Created orchestration plan for:[/bold green] {target_name}")
+    console.print(f"[bold]Endpoints discovered:[/bold] {len(plan.endpoints)}")
+    console.print(f"[bold]Agent assignments:[/bold] {len(plan.assignments)}")
+    console.print()
+    console.print(rendered)
+
+    table = Table(title="Agent Assignments")
+    table.add_column("#", justify="right")
+    table.add_column("Endpoint")
+    table.add_column("Agent")
+    table.add_column("Mode")
+    table.add_column("Human Approval")
+
+    for index, assignment in enumerate(plan.assignments, start=1):
+        table.add_row(
+            str(index),
+            assignment.endpoint,
+            assignment.agent_name,
+            assignment.mode,
+            "YES" if assignment.requires_human_approval else "NO",
+        )
+
+    console.print()
+    console.print(table)
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(plan.to_dict(), indent=2), encoding="utf-8")
+        console.print()
+        console.print(f"[bold green]Saved orchestration JSON:[/bold green] {json_output}")
 
 
 if __name__ == "__main__":
