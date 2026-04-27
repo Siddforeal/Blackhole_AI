@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+No unreleased changes.
+
+## v0.3.0 - Browser Automation Foundation
+
+Released: 2026-04-27
+
 ### Added
 
 - Browser action planner for Chromium, Chrome, and Firefox workflows
