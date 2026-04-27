@@ -36,8 +36,10 @@ from bugintel.core.orchestrator import create_orchestration_plan
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.integrations.kali_runner import build_curl_plan, execute_curl_plan
 from bugintel.integrations.playwright_runner import (
+    BrowserAction,
     BrowserCaptureResult,
     BrowserExecutionConfig,
+    BrowserPlan,
     PlaywrightExecutionSafetyError,
     build_browser_plan,
     build_playwright_execution_preview,
@@ -1292,6 +1294,107 @@ def build_playwright_request_command(
         json_output.parent.mkdir(parents=True, exist_ok=True)
         json_output.write_text(json.dumps(request_data, indent=2, sort_keys=True), encoding="utf-8")
         console.print(f"[bold green]Request JSON saved:[/bold green] {json_output}")
+
+
+
+
+@app.command("preview-playwright-request")
+def preview_playwright_request_command(
+    request_file: Path = typer.Argument(..., help="Path to Playwright execution request JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional path to save the preview JSON."),
+):
+    """
+    Build a safe Playwright preview from a saved execution request JSON.
+
+    Human meaning: this reads a browser job-ticket and previews what the future
+    Playwright execution would look like. It does not launch a browser.
+    """
+    if not request_file.exists():
+        console.print(f"[bold red]Playwright request file not found:[/bold red] {request_file}")
+        raise typer.Exit(code=1)
+
+    data = json.loads(request_file.read_text(encoding="utf-8"))
+
+    required_fields = ["target_name", "task_name", "start_url", "browser", "config", "planned_actions"]
+    missing_fields = [
+        field
+        for field in required_fields
+        if field not in data
+    ]
+
+    if missing_fields:
+        console.print(
+            "[bold red]Playwright request file missing required fields:[/bold red] "
+            + ", ".join(missing_fields)
+        )
+        raise typer.Exit(code=2)
+
+    config_data = data.get("config") or {}
+    actions_data = data.get("planned_actions") or []
+
+    actions = [
+        BrowserAction(
+            action_type=str(action.get("action_type", "")),
+            value=str(action.get("value", "")),
+            description=str(action.get("description", "")),
+        )
+        for action in actions_data
+        if isinstance(action, dict)
+    ]
+
+    plan = BrowserPlan(
+        allowed=True,
+        reason="Loaded from Playwright execution request JSON.",
+        target_name=str(data["target_name"]),
+        start_url=str(data["start_url"]),
+        browser=str(data["browser"]),
+        actions=actions,
+        requires_human_approval=True,
+    )
+
+    config = BrowserExecutionConfig(
+        headless=bool(config_data.get("headless", True)),
+        timeout_ms=int(config_data.get("timeout_ms", 15000)),
+        wait_until=str(config_data.get("wait_until", "load")),
+        capture_network=bool(config_data.get("capture_network", True)),
+        capture_screenshot=bool(config_data.get("capture_screenshot", True)),
+        capture_html=bool(config_data.get("capture_html", True)),
+        screenshot_path=str(config_data.get("screenshot_path", "artifacts/browser-screenshot.png")),
+        allow_live_execution=bool(config_data.get("allow_live_execution", False)),
+    )
+
+    preview = build_playwright_execution_preview(
+        plan=plan,
+        config=config,
+    )
+
+    preview["target_name"] = str(data["target_name"])
+    preview["task_name"] = str(data["task_name"])
+    preview["request_file"] = str(request_file)
+    if "artifacts" in data:
+        preview["artifacts"] = data["artifacts"]
+
+    table = Table(title="Playwright Request Preview")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row("Target", str(preview["target_name"]))
+    table.add_row("Task", str(preview["task_name"]))
+    table.add_row("Runner", str(preview["runner"]))
+    table.add_row("Status", str(preview["status"]))
+    table.add_row("Browser", str(preview["browser"]))
+    table.add_row("Start URL", str(preview["start_url"]))
+    table.add_row("Live execution allowed", "YES" if preview["live_execution_allowed"] else "NO")
+    table.add_row("Playwright available", "YES" if preview["playwright_available"] else "NO")
+    table.add_row("Reason", str(preview["reason"]))
+    table.add_row("Planned actions", str(len(preview["planned_actions"])))
+
+    console.print(table)
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(preview, indent=2, sort_keys=True), encoding="utf-8")
+        console.print(f"[bold green]Preview JSON saved:[/bold green] {json_output}")
 
 
 

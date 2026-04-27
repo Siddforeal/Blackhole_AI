@@ -682,3 +682,81 @@ def test_playwright_request_example_matches_request_shape():
         "capture_screenshot",
         "extract_html",
     ]
+
+
+
+def test_preview_playwright_request_command_writes_json_preview():
+    example = Path("examples/playwright_request.example.json")
+    assert example.exists()
+    example_text = example.read_text(encoding="utf-8")
+
+    with runner.isolated_filesystem():
+        request_path = Path("request.json")
+        output_path = Path("preview.json")
+        request_path.write_text(example_text, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "preview-playwright-request",
+                str(request_path),
+                "--json-output",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Playwright Request Preview" in result.output
+        assert "Preview JSON saved" in result.output
+        assert output_path.exists()
+
+        preview = json.loads(output_path.read_text(encoding="utf-8"))
+
+        assert preview["target_name"] == "demo-lab"
+        assert preview["task_name"] == "Capture Dashboard"
+        assert preview["runner"] == "playwright"
+        assert preview["status"] == "preview"
+        assert preview["browser"] == "chromium"
+        assert preview["start_url"] == "https://demo.example.com/dashboard"
+        assert preview["live_execution_allowed"] is False
+        assert preview["artifacts"]["network_log_path"].endswith("/network.json")
+
+        action_types = [
+            action["action_type"]
+            for action in preview["planned_actions"]
+        ]
+
+        assert action_types == [
+            "navigate",
+            "capture_network",
+            "capture_screenshot",
+            "extract_html",
+        ]
+
+
+def test_preview_playwright_request_command_rejects_missing_required_fields():
+    with runner.isolated_filesystem():
+        request_path = Path("bad-request.json")
+        request_path.write_text(
+            json.dumps(
+                {
+                    "target_name": "demo-lab",
+                    "browser": "chromium",
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        result = runner.invoke(
+            app,
+            [
+                "preview-playwright-request",
+                str(request_path),
+            ],
+        )
+
+        assert result.exit_code == 2
+        assert "missing required fields" in result.output
+        assert "task_name" in result.output
+        assert "start_url" in result.output
+        assert "config" in result.output
