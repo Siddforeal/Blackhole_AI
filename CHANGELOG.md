@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Browser action planner for Chromium, Chrome, and Firefox workflows
+- `plan-browser` CLI command
+- Browser network capture, screenshot evidence, and HTML extraction planning
+- Scope Guard enforcement for browser start URLs
+- Human approval requirement preserved for browser automation planning
+
 ## v0.2.0 - Multi-mode Workbench Foundation
 
 Released: 2026-04-27

@@ -34,6 +34,8 @@ The long-term goal is to support scope-controlled testing, endpoint mining, task
 - Android permissions, components, exported components, deep links, and endpoint extraction
 - iOS plist/config analyzer
 - iOS bundle ID, URL schemes, associated domains, ATS, hosts, and endpoint extraction
+- Browser action planner for Chromium, Chrome, and Firefox workflows
+- Browser network capture, screenshot, and HTML extraction planning
 - Unit tests
 - GitHub Actions CI
 
