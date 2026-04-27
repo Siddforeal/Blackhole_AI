@@ -89,3 +89,9 @@ It blocks execution when:
 3. The optional Playwright package is missing.
 
 When blocked, it raises `PlaywrightExecutionSafetyError`. Future live execution should be implemented behind this same gate, not beside it.
+
+The CLI safety-gate command is:
+
+    bugintel execute-playwright-plan examples/target.example.yaml https://demo.example.com/dashboard
+
+Expected default behavior is refusal, because `allow_live_execution` is false unless explicitly requested.

@@ -117,3 +117,9 @@ The skeleton does not launch a browser yet. It blocks execution unless:
 3. The optional Playwright Python package is available.
 
 If any gate fails, execution raises `PlaywrightExecutionSafetyError`.
+
+You can exercise the safety gate from the CLI:
+
+    bugintel execute-playwright-plan examples/target.example.yaml https://demo.example.com/dashboard
+
+By default, this command blocks with a safety message. Passing `--allow-live-execution` only passes the explicit opt-in gate; the command still does not launch a browser until real Playwright execution is implemented.
