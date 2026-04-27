@@ -129,3 +129,13 @@ The command can also write a future capture-result handoff JSON when the skeleto
     bugintel execute-playwright-plan examples/target.example.yaml https://demo.example.com/dashboard --allow-live-execution --json-output reports/playwright-capture-result.json
 
 In the current skeleton, this handoff remains `status: not_implemented`.
+
+The safe handoff chain is:
+
+    bugintel execute-playwright-plan examples/target.example.yaml https://demo.example.com/dashboard --allow-live-execution --json-output reports/playwright-capture-result.json
+
+    bugintel save-browser-capture reports/playwright-capture-result.json
+
+    bugintel generate-report data/evidence/demo-lab/<saved-browser-evidence>.json --output reports/playwright-browser-report.md
+
+This validates the evidence/report pipeline before live browser execution is implemented.
