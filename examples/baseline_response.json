@@ -1,0 +1,7 @@
+{
+  "status_code": 200,
+  "headers": {
+    "content-type": "application/json"
+  },
+  "body": "{\"id\":1,\"email\":\"user-a@example.com\",\"role\":\"user\",\"account_id\":1001}"
+}

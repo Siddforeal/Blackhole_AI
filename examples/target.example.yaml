@@ -1,0 +1,21 @@
+target_name: demo-lab
+
+allowed_domains:
+  - demo.example.com
+  - "*.demo.example.com"
+
+allowed_schemes:
+  - https
+
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+
+forbidden_paths:
+  - /logout
+  - /delete*
+  - /admin/destructive*
+
+requests_per_minute: 30
+human_approval_required: true

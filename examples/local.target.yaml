@@ -1,0 +1,21 @@
+target_name: local-demo-api
+
+allowed_domains:
+  - 127.0.0.1
+  - localhost
+
+allowed_schemes:
+  - http
+
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+
+forbidden_paths:
+  - /logout
+  - /delete*
+  - /admin/destructive*
+
+requests_per_minute: 30
+human_approval_required: true
