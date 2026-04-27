@@ -324,3 +324,55 @@ def test_execute_playwright_plan_blocks_when_playwright_missing():
         assert "playwright" in str(exc).lower()
     else:
         raise AssertionError("Expected missing Playwright package to block execution")
+
+
+def test_execute_playwright_plan_reaches_not_implemented_handoff_when_all_gates_pass(monkeypatch):
+    import bugintel.integrations.playwright_runner as playwright_runner
+
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        PlaywrightAvailability,
+        execute_playwright_plan,
+    )
+
+    def fake_playwright_available():
+        return PlaywrightAvailability(
+            available=True,
+            reason="Playwright mocked as available for safety-gate test.",
+        )
+
+    monkeypatch.setattr(
+        playwright_runner,
+        "check_playwright_available",
+        fake_playwright_available,
+    )
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    result = execute_playwright_plan(
+        plan=plan,
+        task_name="mocked safe handoff",
+        config=BrowserExecutionConfig(allow_live_execution=True),
+        notes="All gates passed, but live browser launch remains unimplemented.",
+    )
+
+    assert result.target_name == "demo-lab"
+    assert result.task_name == "mocked safe handoff"
+    assert result.start_url == "https://demo.example.com/dashboard"
+    assert result.browser == "chromium"
+
+    output = result.execution_output
+
+    assert output["runner"] == "playwright"
+    assert output["status"] == "not_implemented"
+    assert output["live_execution_allowed"] is True
+    assert output["playwright_available"] is True
+    assert "not implemented yet" in output["reason"]
+    assert result.network_events == []
+    assert result.screenshots == []
+    assert result.html_snapshots == []
