@@ -35,6 +35,7 @@ from bugintel.core.scope_guard import load_scope_from_dict
 from bugintel.core.orchestrator import create_orchestration_plan
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.integrations.kali_runner import build_curl_plan, execute_curl_plan
+from bugintel.integrations.playwright_runner import build_browser_plan
 from bugintel.integrations.web_fetcher import fetch_web_page
 from bugintel.integrations.har_importer import load_har
 
@@ -906,6 +907,67 @@ def analyze_ios_command(
         for index, endpoint in enumerate(result.endpoints, start=1):
             table.add_row(str(index), endpoint)
         console.print(table)
+
+
+@app.command("plan-browser")
+def plan_browser_command(
+    scope_file: Path = typer.Argument(..., help="Path to target scope YAML file."),
+    start_url: str = typer.Argument(..., help="Browser start URL to plan."),
+    browser: str = typer.Option("chromium", "--browser", help="Browser label: chromium, chrome, or firefox."),
+    capture_network: bool = typer.Option(True, "--capture-network/--no-capture-network", help="Plan browser network capture."),
+    capture_screenshot: bool = typer.Option(True, "--capture-screenshot/--no-capture-screenshot", help="Plan screenshot evidence capture."),
+):
+    """Create a safe browser automation plan after Scope Guard approval."""
+    if not scope_file.exists():
+        console.print(f"[bold red]Scope file not found:[/bold red] {scope_file}")
+        raise typer.Exit(code=1)
+
+    with scope_file.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    scope = load_scope_from_dict(data)
+
+    plan = build_browser_plan(
+        scope=scope,
+        start_url=start_url,
+        browser=browser,
+        capture_network=capture_network,
+        capture_screenshot=capture_screenshot,
+    )
+
+    table = Table(title="Browser Action Plan")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row("Target", plan.target_name)
+    table.add_row("Start URL", plan.start_url)
+    table.add_row("Browser", plan.browser)
+    table.add_row("Allowed", "YES" if plan.allowed else "NO")
+    table.add_row("Reason", plan.reason)
+    table.add_row("Human approval required", "YES" if plan.requires_human_approval else "NO")
+    table.add_row("Actions", str(len(plan.actions)))
+
+    console.print(table)
+
+    if not plan.allowed:
+        raise typer.Exit(code=2)
+
+    if plan.actions:
+        action_table = Table(title="Planned Browser Actions")
+        action_table.add_column("#", justify="right")
+        action_table.add_column("Action")
+        action_table.add_column("Value")
+        action_table.add_column("Description")
+
+        for index, action in enumerate(plan.actions, start=1):
+            action_table.add_row(
+                str(index),
+                action.action_type,
+                action.value,
+                action.description,
+            )
+
+        console.print(action_table)
 
 
 if __name__ == "__main__":
