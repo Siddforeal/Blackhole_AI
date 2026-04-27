@@ -105,3 +105,15 @@ Example:
     bugintel preview-playwright examples/target.example.yaml https://demo.example.com/dashboard --browser chromium --json-output reports/playwright-preview.json
 
 The preview keeps live execution disabled by default.
+
+### Playwright Execution Safety Gate
+
+BugIntel now includes a safety-gated `execute_playwright_plan()` skeleton for future live browser execution.
+
+The skeleton does not launch a browser yet. It blocks execution unless:
+
+1. The browser plan was approved by Scope Guard.
+2. `allow_live_execution=True` is explicitly set after human approval.
+3. The optional Playwright Python package is available.
+
+If any gate fails, execution raises `PlaywrightExecutionSafetyError`.

@@ -8,6 +8,8 @@
 - `preview-playwright` CLI command
 - Safe Playwright availability check without installing packages, downloading browsers, or launching a browser
 - Browser execution preview JSON output for future browser/evidence handoff
+- Safety-gated `execute_playwright_plan()` skeleton for future live browser execution
+- `PlaywrightExecutionSafetyError` for blocked execution paths
 - Live browser execution remains disabled by default
 
 ## v0.3.0 - Browser Automation Foundation

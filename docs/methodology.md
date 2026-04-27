@@ -73,3 +73,19 @@ This command:
 6. Does not install Playwright.
 7. Does not download browser binaries.
 8. Keeps live execution disabled by default.
+
+## Playwright Execution Safety Gate
+
+The safety-gated Playwright execution skeleton defines the future adapter boundary:
+
+    execute_playwright_plan(plan, task_name, config)
+
+The function currently does not launch a browser. It exists to enforce the required safety checks before live browser execution is implemented.
+
+It blocks execution when:
+
+1. The browser plan is out of scope or otherwise blocked.
+2. `allow_live_execution` is false.
+3. The optional Playwright package is missing.
+
+When blocked, it raises `PlaywrightExecutionSafetyError`. Future live execution should be implemented behind this same gate, not beside it.
