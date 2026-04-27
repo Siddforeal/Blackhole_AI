@@ -31,6 +31,7 @@ from bugintel.core.scope_guard import load_scope_from_dict
 from bugintel.core.orchestrator import create_orchestration_plan
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.integrations.kali_runner import build_curl_plan, execute_curl_plan
+from bugintel.integrations.web_fetcher import fetch_web_page
 
 app = typer.Typer(
     name="bugintel",
@@ -418,6 +419,82 @@ def analyze_html_command(
         for index, endpoint in enumerate(result.endpoints, start=1):
             table.add_row(str(index), endpoint)
         console.print(table)
+
+
+@app.command("fetch-page")
+def fetch_page_command(
+    scope_file: Path = typer.Argument(..., help="Path to target scope YAML file."),
+    url: str = typer.Argument(..., help="URL to fetch and analyze."),
+    timeout: int = typer.Option(15, "--timeout", help="Maximum request time in seconds."),
+):
+    """Fetch one in-scope web page, analyze HTML, and save evidence."""
+    if not scope_file.exists():
+        console.print(f"[bold red]Scope file not found:[/bold red] {scope_file}")
+        raise typer.Exit(code=1)
+
+    with scope_file.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    scope = load_scope_from_dict(data)
+    result = fetch_web_page(scope=scope, url=url, timeout=timeout)
+
+    table = Table(title="Website Fetch Result")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row("Target", scope.target_name)
+    table.add_row("URL", url)
+    table.add_row("Allowed", "YES" if result.allowed else "NO")
+    table.add_row("Reason", result.reason)
+    table.add_row("Final URL", result.final_url or "none")
+    table.add_row("Status", str(result.status_code) if result.status_code is not None else "none")
+    table.add_row("Error", result.error or "none")
+
+    console.print(table)
+
+    if not result.allowed:
+        raise typer.Exit(code=2)
+
+    if result.error:
+        raise typer.Exit(code=3)
+
+    recon = analyze_html(base_url=result.final_url or url, html=result.text)
+
+    summary = Table(title="Passive HTML Analysis")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Count")
+
+    summary.add_row("Links", str(len(recon.links)))
+    summary.add_row("Scripts", str(len(recon.scripts)))
+    summary.add_row("Forms", str(len(recon.forms)))
+    summary.add_row("Endpoints", str(len(recon.endpoints)))
+
+    console.print(summary)
+
+    if recon.endpoints:
+        endpoint_table = Table(title="Discovered Endpoints")
+        endpoint_table.add_column("#", justify="right")
+        endpoint_table.add_column("Endpoint")
+
+        for index, endpoint in enumerate(recon.endpoints, start=1):
+            endpoint_table.add_row(str(index), endpoint)
+
+        console.print(endpoint_table)
+
+    store = EvidenceStore()
+    evidence_path = store.save_http_evidence(
+        target_name=scope.target_name,
+        task_name=f"fetch page {url}",
+        url=url,
+        method="GET",
+        request={"url": url, "type": "website_fetch"},
+        response_headers=result.headers,
+        response_body=result.text,
+        status_code=result.status_code,
+        notes="Captured by bugintel fetch-page",
+    )
+
+    console.print(f"[bold green]Evidence saved:[/bold green] {evidence_path}")
 
 
 if __name__ == "__main__":
