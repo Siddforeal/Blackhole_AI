@@ -123,3 +123,9 @@ You can exercise the safety gate from the CLI:
     bugintel execute-playwright-plan examples/target.example.yaml https://demo.example.com/dashboard
 
 By default, this command blocks with a safety message. Passing `--allow-live-execution` only passes the explicit opt-in gate; the command still does not launch a browser until real Playwright execution is implemented.
+
+The command can also write a future capture-result handoff JSON when the skeleton reaches the handoff stage:
+
+    bugintel execute-playwright-plan examples/target.example.yaml https://demo.example.com/dashboard --allow-live-execution --json-output reports/playwright-capture-result.json
+
+In the current skeleton, this handoff remains `status: not_implemented`.

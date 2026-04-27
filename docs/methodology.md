@@ -97,3 +97,5 @@ The CLI safety-gate command is:
 Expected default behavior is refusal, because `allow_live_execution` is false unless explicitly requested.
 
 Even if all current gates pass in tests, the skeleton returns `status: not_implemented` and does not produce network events, screenshots, or HTML snapshots. Real browser launch must be added deliberately behind this same gate.
+
+When the skeleton reaches the handoff path, `execute-playwright-plan --json-output` writes a capture-result JSON compatible with the browser evidence pipeline. This is useful for validating the CLI and evidence handoff before live Playwright execution exists.
