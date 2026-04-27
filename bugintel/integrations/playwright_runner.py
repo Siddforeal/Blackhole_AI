@@ -254,6 +254,64 @@ def build_browser_plan(
     )
 
 
+
+class PlaywrightExecutionSafetyError(RuntimeError):
+    """Raised when live Playwright execution is blocked by the safety gate."""
+
+
+def execute_playwright_plan(
+    plan: BrowserPlan,
+    task_name: str,
+    config: BrowserExecutionConfig | None = None,
+    notes: str = "",
+) -> BrowserCaptureResult:
+    """
+    Safety-gated skeleton for future live Playwright execution.
+
+    This function intentionally does not launch a browser yet. It enforces the
+    checks that must pass before a future live adapter is allowed to run:
+
+    - BrowserPlan must be allowed by Scope Guard.
+    - BrowserExecutionConfig.allow_live_execution must be True.
+    - Optional Playwright package must be importable.
+
+    Once those gates pass, this skeleton returns a BrowserCaptureResult with
+    execution_output status "not_implemented" so the future implementation can
+    be added behind the same safety gate.
+    """
+    if not plan.allowed:
+        raise PlaywrightExecutionSafetyError(
+            f"Cannot execute blocked browser plan: {plan.reason}"
+        )
+
+    config = config or BrowserExecutionConfig()
+    preview = build_playwright_execution_preview(plan=plan, config=config)
+
+    if not config.allow_live_execution:
+        raise PlaywrightExecutionSafetyError(
+            "Live Playwright execution is disabled. Set allow_live_execution=True "
+            "only after human approval."
+        )
+
+    availability = check_playwright_available()
+    if not availability.available:
+        raise PlaywrightExecutionSafetyError(availability.reason)
+
+    execution_output = dict(preview)
+    execution_output["status"] = "not_implemented"
+    execution_output["reason"] = (
+        "Playwright execution adapter skeleton is safety-gated, "
+        "but live browser launch is not implemented yet."
+    )
+
+    return build_browser_capture_result(
+        plan=plan,
+        task_name=task_name,
+        execution_output=execution_output,
+        notes=notes or "Playwright execution adapter skeleton; browser not launched.",
+    )
+
+
 def build_browser_capture_result(
     plan: BrowserPlan,
     task_name: str,

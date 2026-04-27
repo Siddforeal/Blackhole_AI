@@ -239,3 +239,88 @@ def test_build_playwright_execution_preview_rejects_blocked_plan():
         assert "Cannot build Playwright execution preview from blocked browser plan" in str(exc)
     else:
         raise AssertionError("Expected blocked browser plan to raise ValueError")
+
+
+def test_execute_playwright_plan_blocks_when_live_execution_not_allowed():
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        PlaywrightExecutionSafetyError,
+        execute_playwright_plan,
+    )
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    try:
+        execute_playwright_plan(
+            plan=plan,
+            task_name="blocked live execution",
+            config=BrowserExecutionConfig(allow_live_execution=False),
+        )
+    except PlaywrightExecutionSafetyError as exc:
+        assert "Live Playwright execution is disabled" in str(exc)
+    else:
+        raise AssertionError("Expected live execution safety gate to block execution")
+
+
+def test_execute_playwright_plan_blocks_out_of_scope_plan():
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        PlaywrightExecutionSafetyError,
+        execute_playwright_plan,
+    )
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://evil.example.net/dashboard",
+        browser="chromium",
+    )
+
+    try:
+        execute_playwright_plan(
+            plan=plan,
+            task_name="blocked out-of-scope execution",
+            config=BrowserExecutionConfig(allow_live_execution=True),
+        )
+    except PlaywrightExecutionSafetyError as exc:
+        assert "Cannot execute blocked browser plan" in str(exc)
+        assert "Domain not in scope" in str(exc)
+    else:
+        raise AssertionError("Expected out-of-scope browser plan to block execution")
+
+
+def test_execute_playwright_plan_blocks_when_playwright_missing():
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        PlaywrightExecutionSafetyError,
+        check_playwright_available,
+        execute_playwright_plan,
+    )
+
+    availability = check_playwright_available()
+
+    if availability.available:
+        return
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    try:
+        execute_playwright_plan(
+            plan=plan,
+            task_name="blocked missing playwright",
+            config=BrowserExecutionConfig(allow_live_execution=True),
+        )
+    except PlaywrightExecutionSafetyError as exc:
+        assert "playwright" in str(exc).lower()
+    else:
+        raise AssertionError("Expected missing Playwright package to block execution")
