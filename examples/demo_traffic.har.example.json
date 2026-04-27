@@ -1,0 +1,43 @@
+{
+  "log": {
+    "version": "1.2",
+    "entries": [
+      {
+        "request": {
+          "method": "GET",
+          "url": "https://demo.example.com/api/users/me"
+        },
+        "response": {
+          "status": 200,
+          "content": {
+            "mimeType": "application/json"
+          }
+        }
+      },
+      {
+        "request": {
+          "method": "POST",
+          "url": "https://demo.example.com/api/projects/123/export?format=csv"
+        },
+        "response": {
+          "status": 202,
+          "content": {
+            "mimeType": "application/json"
+          }
+        }
+      },
+      {
+        "request": {
+          "method": "GET",
+          "url": "https://demo.example.com/static/app.js"
+        },
+        "response": {
+          "status": 200,
+          "content": {
+            "mimeType": "application/javascript"
+          }
+        }
+      }
+    ]
+  }
+}
