@@ -760,3 +760,149 @@ def test_preview_playwright_request_command_rejects_missing_required_fields():
         assert "task_name" in result.output
         assert "start_url" in result.output
         assert "config" in result.output
+
+
+
+def test_execute_playwright_request_command_blocks_by_default():
+    request_example = Path("examples/playwright_request.example.json")
+    scope_example = Path("examples/target.example.yaml")
+    assert request_example.exists()
+    assert scope_example.exists()
+
+    request_text = request_example.read_text(encoding="utf-8")
+    scope_text = scope_example.read_text(encoding="utf-8")
+
+    with runner.isolated_filesystem():
+        request_path = Path("request.json")
+        scope_path = Path("scope.yaml")
+
+        request_path.write_text(request_text, encoding="utf-8")
+        scope_path.write_text(scope_text, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "execute-playwright-request",
+                str(request_path),
+                str(scope_path),
+            ],
+        )
+
+        assert result.exit_code == 2
+        assert "Playwright request execution blocked" in result.output
+        assert "Live Playwright execution is disabled" in result.output
+
+
+def test_execute_playwright_request_command_revalidates_scope():
+    request_example = Path("examples/playwright_request.example.json")
+    assert request_example.exists()
+
+    request_data = json.loads(request_example.read_text(encoding="utf-8"))
+    request_data["start_url"] = "https://evil.example.net/dashboard"
+
+    scope_yaml = """
+target_name: demo-lab
+allowed_domains:
+  - demo.example.com
+allowed_schemes:
+  - https
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+forbidden_paths: []
+human_approval_required: true
+"""
+
+    with runner.isolated_filesystem():
+        request_path = Path("request.json")
+        scope_path = Path("scope.yaml")
+
+        request_path.write_text(json.dumps(request_data), encoding="utf-8")
+        scope_path.write_text(scope_yaml, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "execute-playwright-request",
+                str(request_path),
+                str(scope_path),
+                "--allow-live-execution",
+            ],
+        )
+
+        assert result.exit_code == 2
+        assert "Playwright request execution blocked" in result.output
+        assert "Domain not in" in result.output
+        assert "scope: evil.example.net" in result.output
+
+
+def test_execute_playwright_request_command_writes_json_when_handoff_reached(monkeypatch):
+    import bugintel.cli as cli_module
+    from bugintel.integrations.playwright_runner import BrowserCaptureResult
+
+    request_example = Path("examples/playwright_request.example.json")
+    scope_example = Path("examples/target.example.yaml")
+    assert request_example.exists()
+    assert scope_example.exists()
+
+    request_text = request_example.read_text(encoding="utf-8")
+    scope_text = scope_example.read_text(encoding="utf-8")
+
+    def fake_execute_playwright_plan(plan, task_name, config, notes):
+        return BrowserCaptureResult(
+            target_name=plan.target_name,
+            task_name=task_name,
+            start_url=plan.start_url,
+            browser=plan.browser,
+            execution_output={
+                "runner": "playwright",
+                "status": "not_implemented",
+                "reason": "Mocked request handoff; browser not launched.",
+                "live_execution_allowed": config.allow_live_execution,
+                "playwright_available": True,
+            },
+            notes=notes,
+        )
+
+    monkeypatch.setattr(
+        cli_module,
+        "execute_playwright_plan",
+        fake_execute_playwright_plan,
+    )
+
+    with runner.isolated_filesystem():
+        request_path = Path("request.json")
+        scope_path = Path("scope.yaml")
+        output_path = Path("capture-result.json")
+
+        request_path.write_text(request_text, encoding="utf-8")
+        scope_path.write_text(scope_text, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "execute-playwright-request",
+                str(request_path),
+                str(scope_path),
+                "--allow-live-execution",
+                "--json-output",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Playwright Request Execution Skeleton" in result.output
+        assert "Capture result JSON saved" in result.output
+        assert output_path.exists()
+
+        data = json.loads(output_path.read_text(encoding="utf-8"))
+
+        assert data["target_name"] == "demo-lab"
+        assert data["task_name"] == "Capture Dashboard"
+        assert data["start_url"] == "https://demo.example.com/dashboard"
+        assert data["browser"] == "chromium"
+        assert data["execution_output"]["runner"] == "playwright"
+        assert data["execution_output"]["status"] == "not_implemented"
+        assert data["execution_output"]["live_execution_allowed"] is True
+        assert data["execution_output"]["playwright_available"] is True

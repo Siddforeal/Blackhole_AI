@@ -1399,5 +1399,112 @@ def preview_playwright_request_command(
 
 
 
+@app.command("execute-playwright-request")
+def execute_playwright_request_command(
+    request_file: Path = typer.Argument(..., help="Path to Playwright execution request JSON."),
+    scope_file: Path = typer.Argument(..., help="Path to target scope YAML file for re-validation."),
+    allow_live_execution: bool = typer.Option(False, "--allow-live-execution", help="Explicitly pass the live execution safety gate. Browser launch is still not implemented yet."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional path to save the capture result JSON if the skeleton reaches handoff."),
+):
+    """
+    Exercise the safety-gated Playwright execution skeleton from a saved request.
+
+    Human meaning: this reads a browser job-ticket, re-checks the start URL
+    against scope, then applies the same execution safety gate. It does not
+    launch a browser.
+    """
+    if not request_file.exists():
+        console.print(f"[bold red]Playwright request file not found:[/bold red] {request_file}")
+        raise typer.Exit(code=1)
+
+    if not scope_file.exists():
+        console.print(f"[bold red]Scope file not found:[/bold red] {scope_file}")
+        raise typer.Exit(code=1)
+
+    request_data = json.loads(request_file.read_text(encoding="utf-8"))
+
+    required_fields = ["target_name", "task_name", "start_url", "browser", "config", "planned_actions"]
+    missing_fields = [
+        field
+        for field in required_fields
+        if field not in request_data
+    ]
+
+    if missing_fields:
+        console.print(
+            "[bold red]Playwright request file missing required fields:[/bold red] "
+            + ", ".join(missing_fields)
+        )
+        raise typer.Exit(code=2)
+
+    with scope_file.open("r", encoding="utf-8") as f:
+        scope_data = yaml.safe_load(f)
+
+    scope = load_scope_from_dict(scope_data)
+    config_data = request_data.get("config") or {}
+
+    plan = build_browser_plan(
+        scope=scope,
+        start_url=str(request_data["start_url"]),
+        browser=str(request_data["browser"]),
+        capture_network=bool(config_data.get("capture_network", True)),
+        capture_screenshot=bool(config_data.get("capture_screenshot", True)),
+    )
+
+    if not plan.allowed:
+        console.print(f"[bold red]Playwright request execution blocked:[/bold red] {plan.reason}")
+        raise typer.Exit(code=2)
+
+    config = BrowserExecutionConfig(
+        headless=bool(config_data.get("headless", True)),
+        timeout_ms=int(config_data.get("timeout_ms", 15000)),
+        wait_until=str(config_data.get("wait_until", "load")),
+        capture_network=bool(config_data.get("capture_network", True)),
+        capture_screenshot=bool(config_data.get("capture_screenshot", True)),
+        capture_html=bool(config_data.get("capture_html", True)),
+        screenshot_path=str(config_data.get("screenshot_path", "artifacts/browser-screenshot.png")),
+        allow_live_execution=allow_live_execution,
+    )
+
+    try:
+        result = execute_playwright_plan(
+            plan=plan,
+            task_name=str(request_data["task_name"]),
+            config=config,
+            notes="Captured by bugintel execute-playwright-request skeleton.",
+        )
+    except PlaywrightExecutionSafetyError as exc:
+        console.print(f"[bold red]Playwright request execution blocked:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    output = result.execution_output
+
+    table = Table(title="Playwright Request Execution Skeleton")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row("Target", result.target_name)
+    table.add_row("Task", result.task_name)
+    table.add_row("Browser", result.browser)
+    table.add_row("Start URL", result.start_url)
+    table.add_row("Runner", str(output.get("runner", "playwright")))
+    table.add_row("Status", str(output.get("status", "unknown")))
+    table.add_row("Reason", str(output.get("reason", "")))
+    table.add_row("Live execution allowed", "YES" if output.get("live_execution_allowed") else "NO")
+    table.add_row("Playwright available", "YES" if output.get("playwright_available") else "NO")
+
+    console.print(table)
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(
+            json.dumps(result.to_evidence_kwargs(), indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        console.print(f"[bold green]Capture result JSON saved:[/bold green] {json_output}")
+
+
+
+
 if __name__ == "__main__":
     app()
