@@ -222,4 +222,143 @@ human_approval_required: true
 
         assert result.exit_code == 2
         assert "Browser plan blocked" in result.output
-        assert "Domain not in scope" in result.output
+        assert "Domain not in" in result.output
+        assert "scope: evil.example.net" in result.output
+
+
+def test_execute_playwright_plan_command_blocks_by_default():
+    scope_yaml = """
+target_name: demo-lab
+allowed_domains:
+  - demo.example.com
+allowed_schemes:
+  - https
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+forbidden_paths: []
+human_approval_required: true
+"""
+
+    with runner.isolated_filesystem():
+        scope_path = Path("scope.yaml")
+        scope_path.write_text(scope_yaml, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "execute-playwright-plan",
+                str(scope_path),
+                "https://demo.example.com/dashboard",
+            ],
+        )
+
+        assert result.exit_code == 2
+        assert "Playwright execution blocked" in result.output
+        assert "Live Playwright execution is disabled" in result.output
+
+
+def test_execute_playwright_plan_command_blocks_out_of_scope_url():
+    scope_yaml = """
+target_name: demo-lab
+allowed_domains:
+  - demo.example.com
+allowed_schemes:
+  - https
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+forbidden_paths: []
+human_approval_required: true
+"""
+
+    with runner.isolated_filesystem():
+        scope_path = Path("scope.yaml")
+        scope_path.write_text(scope_yaml, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "execute-playwright-plan",
+                str(scope_path),
+                "https://evil.example.net/dashboard",
+                "--allow-live-execution",
+            ],
+        )
+
+        assert result.exit_code == 2
+        assert "Playwright execution blocked" in result.output
+        assert "Cannot execute blocked browser plan" in result.output
+        assert "Domain not in" in result.output
+        assert "scope: evil.example.net" in result.output
+
+
+def test_execute_playwright_plan_command_blocks_by_default():
+    scope_yaml = """
+target_name: demo-lab
+allowed_domains:
+  - demo.example.com
+allowed_schemes:
+  - https
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+forbidden_paths: []
+human_approval_required: true
+"""
+
+    with runner.isolated_filesystem():
+        scope_path = Path("scope.yaml")
+        scope_path.write_text(scope_yaml, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "execute-playwright-plan",
+                str(scope_path),
+                "https://demo.example.com/dashboard",
+            ],
+        )
+
+        assert result.exit_code == 2
+        assert "Playwright execution blocked" in result.output
+        assert "Live Playwright execution is disabled" in result.output
+
+
+def test_execute_playwright_plan_command_blocks_out_of_scope_url():
+    scope_yaml = """
+target_name: demo-lab
+allowed_domains:
+  - demo.example.com
+allowed_schemes:
+  - https
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+forbidden_paths: []
+human_approval_required: true
+"""
+
+    with runner.isolated_filesystem():
+        scope_path = Path("scope.yaml")
+        scope_path.write_text(scope_yaml, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "execute-playwright-plan",
+                str(scope_path),
+                "https://evil.example.net/dashboard",
+                "--allow-live-execution",
+            ],
+        )
+
+        assert result.exit_code == 2
+        assert "Playwright execution blocked" in result.output
+        assert "Cannot execute blocked browser plan" in result.output
+        assert "Domain not in" in result.output
+        assert "scope: evil.example.net" in result.output

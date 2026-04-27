@@ -38,8 +38,10 @@ from bugintel.integrations.kali_runner import build_curl_plan, execute_curl_plan
 from bugintel.integrations.playwright_runner import (
     BrowserCaptureResult,
     BrowserExecutionConfig,
+    PlaywrightExecutionSafetyError,
     build_browser_plan,
     build_playwright_execution_preview,
+    execute_playwright_plan,
 )
 from bugintel.integrations.web_fetcher import fetch_web_page
 from bugintel.integrations.har_importer import load_har
@@ -1108,6 +1110,97 @@ def preview_playwright_command(
         json_output.parent.mkdir(parents=True, exist_ok=True)
         json_output.write_text(json.dumps(preview, indent=2, sort_keys=True), encoding="utf-8")
         console.print(f"[bold green]Preview JSON saved:[/bold green] {json_output}")
+
+
+
+
+@app.command("execute-playwright-plan")
+def execute_playwright_plan_command(
+    scope_file: Path = typer.Argument(..., help="Path to target scope YAML file."),
+    start_url: str = typer.Argument(..., help="Browser start URL to execute."),
+    task_name: str = typer.Option("playwright execution", "--task-name", help="Task name for the future browser capture result."),
+    browser: str = typer.Option("chromium", "--browser", help="Browser label: chromium, chrome, or firefox."),
+    capture_network: bool = typer.Option(True, "--capture-network/--no-capture-network", help="Request browser network capture."),
+    capture_screenshot: bool = typer.Option(True, "--capture-screenshot/--no-capture-screenshot", help="Request screenshot evidence capture."),
+    capture_html: bool = typer.Option(True, "--capture-html/--no-capture-html", help="Request HTML snapshot capture."),
+    headless: bool = typer.Option(True, "--headless/--headed", help="Future headless/headed browser setting."),
+    timeout_ms: int = typer.Option(15000, "--timeout-ms", help="Future browser timeout in milliseconds."),
+    wait_until: str = typer.Option("load", "--wait-until", help="Future page load wait condition."),
+    screenshot_path: str = typer.Option("artifacts/browser-screenshot.png", "--screenshot-path", help="Future screenshot artifact path."),
+    allow_live_execution: bool = typer.Option(False, "--allow-live-execution", help="Explicitly pass the live execution safety gate. Browser launch is still not implemented yet."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional path to save the capture result JSON if the skeleton reaches the handoff stage."),
+):
+    """
+    Exercise the safety-gated Playwright execution skeleton.
+
+    This command does not launch a browser yet. By default, it refuses execution.
+    It exists to validate that future live browser execution stays behind the
+    Scope Guard, explicit human approval, and Playwright availability gates.
+    """
+    if not scope_file.exists():
+        console.print(f"[bold red]Scope file not found:[/bold red] {scope_file}")
+        raise typer.Exit(code=1)
+
+    with scope_file.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    scope = load_scope_from_dict(data)
+
+    plan = build_browser_plan(
+        scope=scope,
+        start_url=start_url,
+        browser=browser,
+        capture_network=capture_network,
+        capture_screenshot=capture_screenshot,
+    )
+
+    config = BrowserExecutionConfig(
+        headless=headless,
+        timeout_ms=timeout_ms,
+        wait_until=wait_until,
+        capture_network=capture_network,
+        capture_screenshot=capture_screenshot,
+        capture_html=capture_html,
+        screenshot_path=screenshot_path,
+        allow_live_execution=allow_live_execution,
+    )
+
+    try:
+        result = execute_playwright_plan(
+            plan=plan,
+            task_name=task_name,
+            config=config,
+            notes="Captured by bugintel execute-playwright-plan skeleton.",
+        )
+    except PlaywrightExecutionSafetyError as exc:
+        console.print(f"[bold red]Playwright execution blocked:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    table = Table(title="Playwright Execution Skeleton")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    output = result.execution_output
+
+    table.add_row("Target", result.target_name)
+    table.add_row("Task", result.task_name)
+    table.add_row("Browser", result.browser)
+    table.add_row("Start URL", result.start_url)
+    table.add_row("Runner", str(output.get("runner", "playwright")))
+    table.add_row("Status", str(output.get("status", "unknown")))
+    table.add_row("Reason", str(output.get("reason", "")))
+    table.add_row("Live execution allowed", "YES" if output.get("live_execution_allowed") else "NO")
+    table.add_row("Playwright available", "YES" if output.get("playwright_available") else "NO")
+
+    console.print(table)
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(
+            json.dumps(result.to_evidence_kwargs(), indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        console.print(f"[bold green]Capture result JSON saved:[/bold green] {json_output}")
 
 
 
