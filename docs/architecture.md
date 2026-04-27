@@ -93,6 +93,7 @@ Current support:
 - Human approval requirement preservation
 - Planned network capture, screenshot capture, and HTML extraction steps
 - Browser evidence records for network events, screenshot metadata, HTML snapshots, and future Playwright execution output
+- Browser capture result model that maps future browser execution output into evidence storage
 
 Planned support:
 
@@ -175,6 +176,8 @@ Current evidence types:
 - Browser evidence: network events, screenshot metadata, HTML snapshot previews and hashes, execution output previews, and artifact references
 
 Browser evidence is designed to support future Playwright execution without storing raw sensitive page bodies by default. Raw response bodies and raw HTML are converted into redacted previews plus SHA-256 hashes for comparison and reproducibility.
+
+The Browser Capture Result model acts as the bridge between a reviewed browser plan, future Playwright execution, and EvidenceStore browser records.
 
 ## Safety Model
 

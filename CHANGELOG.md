@@ -8,6 +8,7 @@
 - `plan-browser` CLI command
 - Browser network capture, screenshot evidence, and HTML extraction planning
 - Browser evidence model for network events, screenshot metadata, HTML snapshots, and future Playwright execution output
+- Browser capture result model for future Playwright-to-evidence handoff
 - Redacted browser evidence storage with body/HTML previews and SHA-256 hashes
 - Scope Guard enforcement for browser start URLs
 - Human approval requirement preserved for browser automation planning

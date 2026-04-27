@@ -26,7 +26,8 @@ Browser automation should follow the same safety pattern as command execution:
 5. Save screenshot metadata and artifact references.
 6. Save redacted HTML snapshot previews and hashes.
 7. Save execution output previews from future Playwright runs.
-8. Store evidence as redacted JSON for later reporting and validation.
+8. Normalize browser execution output into a Browser Capture Result.
+9. Store evidence as redacted JSON for later reporting and validation.
 
 Browser evidence should avoid saving raw secrets, raw tokens, raw private HTML, or raw sensitive response bodies by default. Instead, it should preserve enough metadata, previews, and hashes to support reproducible analysis.
 
