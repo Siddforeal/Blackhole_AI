@@ -362,3 +362,82 @@ human_approval_required: true
         assert "Cannot execute blocked browser plan" in result.output
         assert "Domain not in" in result.output
         assert "scope: evil.example.net" in result.output
+
+
+def test_execute_playwright_plan_command_writes_json_when_skeleton_reaches_handoff(monkeypatch):
+    import bugintel.cli as cli_module
+    from bugintel.integrations.playwright_runner import BrowserCaptureResult
+
+    scope_yaml = """
+target_name: demo-lab
+allowed_domains:
+  - demo.example.com
+allowed_schemes:
+  - https
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+forbidden_paths: []
+human_approval_required: true
+"""
+
+    def fake_execute_playwright_plan(plan, task_name, config, notes):
+        return BrowserCaptureResult(
+            target_name=plan.target_name,
+            task_name=task_name,
+            start_url=plan.start_url,
+            browser=plan.browser,
+            execution_output={
+                "runner": "playwright",
+                "status": "not_implemented",
+                "reason": "Mocked handoff; browser not launched.",
+                "live_execution_allowed": config.allow_live_execution,
+                "playwright_available": True,
+            },
+            notes=notes,
+        )
+
+    monkeypatch.setattr(
+        cli_module,
+        "execute_playwright_plan",
+        fake_execute_playwright_plan,
+    )
+
+    with runner.isolated_filesystem():
+        scope_path = Path("scope.yaml")
+        output_path = Path("capture-result.json")
+        scope_path.write_text(scope_yaml, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "execute-playwright-plan",
+                str(scope_path),
+                "https://demo.example.com/dashboard",
+                "--task-name",
+                "mocked cli handoff",
+                "--allow-live-execution",
+                "--json-output",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Playwright Execution Skeleton" in result.output
+        assert "Capture result JSON saved" in result.output
+        assert output_path.exists()
+
+        data = json.loads(output_path.read_text(encoding="utf-8"))
+
+        assert data["target_name"] == "demo-lab"
+        assert data["task_name"] == "mocked cli handoff"
+        assert data["start_url"] == "https://demo.example.com/dashboard"
+        assert data["browser"] == "chromium"
+        assert data["execution_output"]["runner"] == "playwright"
+        assert data["execution_output"]["status"] == "not_implemented"
+        assert data["execution_output"]["live_execution_allowed"] is True
+        assert data["execution_output"]["playwright_available"] is True
+        assert data["network_events"] == []
+        assert data["screenshots"] == []
+        assert data["html_snapshots"] == []
