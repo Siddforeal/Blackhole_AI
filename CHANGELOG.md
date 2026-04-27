@@ -15,6 +15,8 @@
 - HAR traffic importer for Browser/DevTools and proxy exports
 - Safe HAR example file using a non-HAR extension
 - HAR-to-orchestration planning workflow
+- Android manifest/config analyzer
+- Android permission, component, exported component, deep-link, and endpoint extraction
 
 ## v0.1.0 - BugIntel AI Workbench MVP
 

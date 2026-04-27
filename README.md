@@ -30,6 +30,8 @@ The long-term goal is to support scope-controlled testing, endpoint mining, task
 - Website Mode pipeline with endpoint merging and orchestration
 - HAR traffic importer for Browser/DevTools exports
 - HAR-to-orchestration workflow for captured browser traffic
+- Android manifest/config analyzer
+- Android permissions, components, exported components, deep links, and endpoint extraction
 - Unit tests
 - GitHub Actions CI
 
