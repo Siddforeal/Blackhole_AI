@@ -17,6 +17,7 @@
 - Browser evidence reports now render Playwright execution-output reasons
 - Playwright execution request model for future browser adapter jobs
 - `build-playwright-request` CLI command for creating reviewable browser job-ticket JSON
+- Safe `examples/playwright_request.example.json` browser job-ticket example
 - Playwright artifact path planner for future screenshots, HTML snapshots, network logs, and traces
 - Live browser execution remains disabled by default
 

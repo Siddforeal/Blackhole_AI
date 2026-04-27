@@ -160,3 +160,9 @@ You can create a request JSON from the CLI:
     bugintel build-playwright-request examples/target.example.yaml https://demo.example.com/dashboard --task-name "Capture Dashboard" --json-output reports/playwright-request.json
 
 Human meaning: this gives you a reviewable browser job ticket before execution exists.
+
+A safe example request is included at:
+
+    examples/playwright_request.example.json
+
+This file is a sample request shape only. It is not browser evidence and does not mean a browser was launched.

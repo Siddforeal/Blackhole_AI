@@ -129,3 +129,9 @@ The CLI command is:
     bugintel build-playwright-request examples/target.example.yaml https://demo.example.com/dashboard --task-name "Capture Dashboard" --json-output reports/playwright-request.json
 
 Use this command when you want to review the future browser job before attempting any execution workflow.
+
+A safe example request lives at:
+
+    examples/playwright_request.example.json
+
+Treat this example as a request format reference, not as evidence of browser execution.
