@@ -56,3 +56,20 @@ The browser evidence workflow can be exercised with the safe example capture res
     bugintel generate-report data/evidence/demo-lab/<saved-browser-evidence>.json --output reports/browser-evidence-report.md
 
 The example capture result represents the output shape expected from a future Playwright/browser execution adapter. It should be treated as a handoff file, not as proof that live browser automation has executed.
+
+## Playwright Preview Workflow
+
+The Playwright preview workflow is the first v0.4.0 step toward live browser execution:
+
+    bugintel preview-playwright examples/target.example.yaml https://demo.example.com/dashboard --browser chromium --json-output reports/playwright-preview.json
+
+This command:
+
+1. Loads the authorized target scope.
+2. Builds a browser plan through Scope Guard.
+3. Checks whether the optional Playwright Python package is importable.
+4. Produces a safe execution preview JSON.
+5. Does not launch a browser.
+6. Does not install Playwright.
+7. Does not download browser binaries.
+8. Keeps live execution disabled by default.

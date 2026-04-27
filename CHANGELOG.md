@@ -2,7 +2,13 @@
 
 ## Unreleased
 
-No unreleased changes.
+### Added
+
+- Playwright execution preview foundation
+- `preview-playwright` CLI command
+- Safe Playwright availability check without installing packages, downloading browsers, or launching a browser
+- Browser execution preview JSON output for future browser/evidence handoff
+- Live browser execution remains disabled by default
 
 ## v0.3.0 - Browser Automation Foundation
 

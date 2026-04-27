@@ -95,3 +95,13 @@ After saving evidence, generate a report from the saved JSON path:
     bugintel generate-report data/evidence/demo-lab/<saved-browser-evidence>.json --output reports/browser-evidence-report.md
 
 Browser execution itself is still a future step. The current implementation provides planning, capture-result normalization, redacted evidence storage, and report rendering.
+
+### Playwright Execution Preview
+
+The v0.4.0 foundation adds a safe Playwright execution preview command. It does not launch a browser. It validates scope, checks whether the optional Playwright package is available, and writes a JSON preview that can later feed execution/evidence workflows.
+
+Example:
+
+    bugintel preview-playwright examples/target.example.yaml https://demo.example.com/dashboard --browser chromium --json-output reports/playwright-preview.json
+
+The preview keeps live execution disabled by default.
