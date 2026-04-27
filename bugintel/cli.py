@@ -22,6 +22,7 @@ from rich.console import Console
 from rich.table import Table
 
 from bugintel.agents.report_agent import save_evidence_report
+from bugintel.agents.recon_agent import analyze_html
 from bugintel.analyzers.endpoint_miner import mine_endpoints
 from bugintel.analyzers.http_parser import parse_http_response
 from bugintel.analyzers.response_diff import compare_responses, summarize_response
@@ -358,6 +359,65 @@ def orchestrate_command(
         json_output.write_text(json.dumps(plan.to_dict(), indent=2), encoding="utf-8")
         console.print()
         console.print(f"[bold green]Saved orchestration JSON:[/bold green] {json_output}")
+
+
+@app.command("analyze-html")
+def analyze_html_command(
+    html_file: Path = typer.Argument(..., help="HTML file to analyze."),
+    base_url: str = typer.Option(..., "--base-url", help="Base URL used to resolve relative links."),
+):
+    """Passively analyze HTML for links, scripts, forms, and endpoints."""
+    if not html_file.exists():
+        console.print(f"[bold red]HTML file not found:[/bold red] {html_file}")
+        raise typer.Exit(code=1)
+
+    html = html_file.read_text(encoding="utf-8", errors="replace")
+    result = analyze_html(base_url=base_url, html=html)
+
+    summary = Table(title="Website Recon Summary")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Count")
+
+    summary.add_row("Links", str(len(result.links)))
+    summary.add_row("Scripts", str(len(result.scripts)))
+    summary.add_row("Forms", str(len(result.forms)))
+    summary.add_row("Endpoints", str(len(result.endpoints)))
+
+    console.print(summary)
+
+    if result.links:
+        table = Table(title="Links")
+        table.add_column("#", justify="right")
+        table.add_column("URL")
+        for index, link in enumerate(result.links, start=1):
+            table.add_row(str(index), link)
+        console.print(table)
+
+    if result.scripts:
+        table = Table(title="JavaScript Sources")
+        table.add_column("#", justify="right")
+        table.add_column("Script URL")
+        for index, script in enumerate(result.scripts, start=1):
+            table.add_row(str(index), script)
+        console.print(table)
+
+    if result.forms:
+        table = Table(title="Forms")
+        table.add_column("#", justify="right")
+        table.add_column("Method")
+        table.add_column("Action")
+        table.add_column("Inputs")
+        for index, form in enumerate(result.forms, start=1):
+            table.add_row(str(index), form.method, form.action, ", ".join(form.inputs))
+        console.print(table)
+
+    if result.endpoints:
+        table = Table(title="Endpoints")
+        table.add_column("#", justify="right")
+        table.add_column("Endpoint")
+        for index, endpoint in enumerate(result.endpoints, start=1):
+            table.add_row(str(index), endpoint)
+        console.print(table)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <script src="/static/app.js"></script>
+  </head>
+  <body>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/settings">Settings</a>
+
+    <form method="post" action="/api/login">
+      <input name="email">
+      <input name="password" type="password">
+    </form>
+
+    <script>
+      fetch("/api/users/me");
+      fetch("/api/projects/123");
+      fetch("/api/admin/settings");
+    </script>
+  </body>
+</html>
