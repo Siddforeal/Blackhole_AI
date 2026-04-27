@@ -1,6 +1,6 @@
 # BugIntel AI Workbench
 
-[![Tests](https://github.com/siddforreal403-commits/bugintel-ai-workbench/actions/workflows/tests.yml/badge.svg)](https://github.com/siddforreal403-commits/bugintel-ai-workbench/actions/workflows/tests.yml)
+[![Tests](https://github.com/Siddforeal/bugintel-ai-workbench/actions/workflows/tests.yml/badge.svg)](https://github.com/Siddforeal/bugintel-ai-workbench/actions/workflows/tests.yml)
 
 BugIntel AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
