@@ -269,6 +269,7 @@ def _format_execution_output(output: Any) -> str:
 
     runner = output.get("runner", "")
     status = output.get("status", "")
+    reason = output.get("reason", "")
     stdout_preview = output.get("stdout_preview", "")
     stderr_preview = output.get("stderr_preview", "")
     artifacts = output.get("artifacts", {})
@@ -279,6 +280,8 @@ def _format_execution_output(output: Any) -> str:
         lines.append(f"- Runner: {runner}")
     if status:
         lines.append(f"- Status: {status}")
+    if reason:
+        lines.append(f"- Reason: {reason}")
 
     if artifacts:
         lines.append("")

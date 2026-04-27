@@ -441,3 +441,104 @@ human_approval_required: true
         assert data["network_events"] == []
         assert data["screenshots"] == []
         assert data["html_snapshots"] == []
+
+
+
+def test_execute_playwright_json_handoff_can_be_saved_and_reported(monkeypatch):
+    import bugintel.cli as cli_module
+    from bugintel.integrations.playwright_runner import BrowserCaptureResult
+
+    scope_yaml = """
+target_name: demo-lab
+allowed_domains:
+  - demo.example.com
+allowed_schemes:
+  - https
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+forbidden_paths: []
+human_approval_required: true
+"""
+
+    def fake_execute_playwright_plan(plan, task_name, config, notes):
+        return BrowserCaptureResult(
+            target_name=plan.target_name,
+            task_name=task_name,
+            start_url=plan.start_url,
+            browser=plan.browser,
+            execution_output={
+                "runner": "playwright",
+                "status": "not_implemented",
+                "reason": "Mocked handoff; browser not launched.",
+                "live_execution_allowed": config.allow_live_execution,
+                "playwright_available": True,
+            },
+            notes=notes,
+        )
+
+    monkeypatch.setattr(
+        cli_module,
+        "execute_playwright_plan",
+        fake_execute_playwright_plan,
+    )
+
+    with runner.isolated_filesystem():
+        scope_path = Path("scope.yaml")
+        capture_result_path = Path("capture-result.json")
+        report_path = Path("report.md")
+
+        scope_path.write_text(scope_yaml, encoding="utf-8")
+
+        execute_result = runner.invoke(
+            app,
+            [
+                "execute-playwright-plan",
+                str(scope_path),
+                "https://demo.example.com/dashboard",
+                "--task-name",
+                "mocked full cli chain",
+                "--allow-live-execution",
+                "--json-output",
+                str(capture_result_path),
+            ],
+        )
+
+        assert execute_result.exit_code == 0
+        assert capture_result_path.exists()
+
+        save_result = runner.invoke(
+            app,
+            [
+                "save-browser-capture",
+                str(capture_result_path),
+            ],
+        )
+
+        assert save_result.exit_code == 0
+        assert "Browser evidence saved" in save_result.output
+
+        evidence_files = list(Path("data/evidence/demo-lab").glob("*.json"))
+        assert len(evidence_files) == 1
+
+        report_result = runner.invoke(
+            app,
+            [
+                "generate-report",
+                str(evidence_files[0]),
+                "--output",
+                str(report_path),
+            ],
+        )
+
+        assert report_result.exit_code == 0
+        assert report_path.exists()
+
+        report = report_path.read_text(encoding="utf-8")
+
+        assert "Evidence Type: browser" in report
+        assert "## Browser Execution Output" in report
+        assert "Runner: playwright" in report
+        assert "Status: not_implemented" in report
+        assert "Mocked handoff; browser not launched." in report
