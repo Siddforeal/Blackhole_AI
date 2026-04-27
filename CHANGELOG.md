@@ -11,6 +11,7 @@
 - Safety-gated `execute_playwright_plan()` skeleton for future live browser execution
 - `execute-playwright-plan` CLI command for exercising the Playwright safety gate
 - `PlaywrightExecutionSafetyError` for blocked execution paths
+- Safety test proving all gates passing still returns `not_implemented` until real browser launch is added
 - Live browser execution remains disabled by default
 
 ## v0.3.0 - Browser Automation Foundation
