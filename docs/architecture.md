@@ -86,9 +86,17 @@ Purpose:
 - Save screenshots and HAR-style evidence.
 - Observe frontend behavior that static parsing may miss.
 
+Current support:
+
+- Browser action planning for Chromium, Chrome, and Firefox labels
+- Scope Guard validation for browser start URLs
+- Human approval requirement preservation
+- Planned network capture, screenshot capture, and HTML extraction steps
+- Browser evidence records for network events, screenshot metadata, HTML snapshots, and future Playwright execution output
+
 Planned support:
 
-- Playwright workflow
+- Playwright execution workflow
 - Chrome-compatible browser traffic capture
 - Firefox-compatible workflow later
 - HAR export/import
@@ -157,6 +165,17 @@ Current and planned agents:
 - ios_agent: iOS static analysis
 - report_agent: evidence-to-report generation
 
+## Evidence Model
+
+BugIntel stores security-testing evidence as redacted JSON records.
+
+Current evidence types:
+
+- HTTP evidence: request metadata, response headers, redacted response preview, response hash, and notes
+- Browser evidence: network events, screenshot metadata, HTML snapshot previews and hashes, execution output previews, and artifact references
+
+Browser evidence is designed to support future Playwright execution without storing raw sensitive page bodies by default. Raw response bodies and raw HTML are converted into redacted previews plus SHA-256 hashes for comparison and reproducibility.
+
 ## Safety Model
 
 BugIntel is designed for authorized testing only.
@@ -182,6 +201,7 @@ Implemented:
 - Response Diff Analyzer
 - Secret Redactor
 - Evidence Store
+- Browser Evidence Model
 - Evidence Report Generator
 - CLI
 - Unit Tests

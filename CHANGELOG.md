@@ -7,6 +7,8 @@
 - Browser action planner for Chromium, Chrome, and Firefox workflows
 - `plan-browser` CLI command
 - Browser network capture, screenshot evidence, and HTML extraction planning
+- Browser evidence model for network events, screenshot metadata, HTML snapshots, and future Playwright execution output
+- Redacted browser evidence storage with body/HTML previews and SHA-256 hashes
 - Scope Guard enforcement for browser start URLs
 - Human approval requirement preserved for browser automation planning
 
