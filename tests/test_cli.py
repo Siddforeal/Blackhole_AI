@@ -121,3 +121,105 @@ def test_browser_capture_example_can_be_saved_and_reported(tmp_path):
         assert "## Browser Network Events" in report
         assert "researcher@example.com" not in json.dumps(json.loads(evidence_files[0].read_text(encoding="utf-8")))
         assert "<email>" in report
+
+
+def test_preview_playwright_command_writes_json_preview():
+    scope_yaml = """
+target_name: demo-lab
+allowed_domains:
+  - demo.example.com
+  - "*.demo.example.com"
+allowed_schemes:
+  - https
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+forbidden_paths:
+  - /logout
+  - /delete*
+human_approval_required: true
+"""
+
+    with runner.isolated_filesystem():
+        scope_path = Path("scope.yaml")
+        output_path = Path("preview.json")
+        scope_path.write_text(scope_yaml, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "preview-playwright",
+                str(scope_path),
+                "https://demo.example.com/dashboard",
+                "--browser",
+                "chromium",
+                "--timeout-ms",
+                "10000",
+                "--screenshot-path",
+                "artifacts/demo-dashboard.png",
+                "--json-output",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Playwright Execution Preview" in result.output
+        assert "Preview JSON saved" in result.output
+        assert output_path.exists()
+
+        preview = json.loads(output_path.read_text(encoding="utf-8"))
+
+        assert preview["runner"] == "playwright"
+        assert preview["status"] == "preview"
+        assert preview["live_execution_allowed"] is False
+        assert preview["browser"] == "chromium"
+        assert preview["start_url"] == "https://demo.example.com/dashboard"
+        assert preview["timeout_ms"] == 10000
+        assert preview["screenshot_path"] == "artifacts/demo-dashboard.png"
+        assert preview["capture_network"] is True
+        assert preview["capture_screenshot"] is True
+        assert preview["capture_html"] is True
+
+        action_types = [
+            action["action_type"]
+            for action in preview["planned_actions"]
+        ]
+
+        assert "navigate" in action_types
+        assert "capture_network" in action_types
+        assert "capture_screenshot" in action_types
+        assert "extract_html" in action_types
+
+
+def test_preview_playwright_command_blocks_out_of_scope_url():
+    scope_yaml = """
+target_name: demo-lab
+allowed_domains:
+  - demo.example.com
+allowed_schemes:
+  - https
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+forbidden_paths: []
+human_approval_required: true
+"""
+
+    with runner.isolated_filesystem():
+        scope_path = Path("scope.yaml")
+        scope_path.write_text(scope_yaml, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "preview-playwright",
+                str(scope_path),
+                "https://evil.example.net/dashboard",
+            ],
+        )
+
+        assert result.exit_code == 2
+        assert "Browser plan blocked" in result.output
+        assert "Domain not in scope" in result.output
