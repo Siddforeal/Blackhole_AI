@@ -165,3 +165,77 @@ def test_build_browser_capture_result_rejects_blocked_plan():
         assert "Cannot build capture result from blocked browser plan" in str(exc)
     else:
         raise AssertionError("Expected blocked browser plan to raise ValueError")
+
+
+def test_build_playwright_execution_preview_is_safe_by_default():
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        build_browser_capture_result,
+        build_playwright_execution_preview,
+    )
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    preview = build_playwright_execution_preview(
+        plan=plan,
+        config=BrowserExecutionConfig(
+            headless=True,
+            timeout_ms=10000,
+            screenshot_path="artifacts/demo-dashboard.png",
+        ),
+    )
+
+    assert preview["runner"] == "playwright"
+    assert preview["status"] == "preview"
+    assert preview["live_execution_allowed"] is False
+    assert preview["browser"] == "chromium"
+    assert preview["start_url"] == "https://demo.example.com/dashboard"
+    assert preview["timeout_ms"] == 10000
+    assert preview["screenshot_path"] == "artifacts/demo-dashboard.png"
+    assert preview["capture_network"] is True
+    assert preview["capture_screenshot"] is True
+    assert preview["capture_html"] is True
+
+    action_types = [
+        action["action_type"]
+        for action in preview["planned_actions"]
+    ]
+
+    assert "navigate" in action_types
+    assert "capture_network" in action_types
+    assert "capture_screenshot" in action_types
+    assert "extract_html" in action_types
+
+    result = build_browser_capture_result(
+        plan=plan,
+        task_name="playwright preview",
+        execution_output=preview,
+        notes="Execution preview only; browser not launched.",
+    )
+
+    assert result.execution_output["runner"] == "playwright"
+    assert result.execution_output["status"] == "preview"
+    assert result.execution_output["live_execution_allowed"] is False
+
+
+def test_build_playwright_execution_preview_rejects_blocked_plan():
+    from bugintel.integrations.playwright_runner import build_playwright_execution_preview
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://evil.example.net/dashboard",
+        browser="chromium",
+    )
+
+    try:
+        build_playwright_execution_preview(plan=plan)
+    except ValueError as exc:
+        assert "Cannot build Playwright execution preview from blocked browser plan" in str(exc)
+    else:
+        raise AssertionError("Expected blocked browser plan to raise ValueError")
