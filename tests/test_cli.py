@@ -646,3 +646,39 @@ human_approval_required: true
         assert "Playwright request blocked" in result.output
         assert "Domain not in" in result.output
         assert "scope: evil.example.net" in result.output
+
+
+
+def test_playwright_request_example_matches_request_shape():
+    example = Path("examples/playwright_request.example.json")
+    assert example.exists()
+
+    data = json.loads(example.read_text(encoding="utf-8"))
+
+    assert data["target_name"] == "demo-lab"
+    assert data["task_name"] == "Capture Dashboard"
+    assert data["start_url"] == "https://demo.example.com/dashboard"
+    assert data["browser"] == "chromium"
+
+    assert data["config"]["allow_live_execution"] is False
+    assert data["config"]["capture_network"] is True
+    assert data["config"]["capture_screenshot"] is True
+    assert data["config"]["capture_html"] is True
+
+    assert data["artifacts"]["artifact_dir"] == "artifacts/browser/demo-lab/capture-dashboard"
+    assert data["artifacts"]["screenshot_path"].endswith("/screenshot.png")
+    assert data["artifacts"]["html_snapshot_path"].endswith("/page.html")
+    assert data["artifacts"]["network_log_path"].endswith("/network.json")
+    assert data["artifacts"]["trace_path"].endswith("/trace.zip")
+
+    action_types = [
+        action["action_type"]
+        for action in data["planned_actions"]
+    ]
+
+    assert action_types == [
+        "navigate",
+        "capture_network",
+        "capture_screenshot",
+        "extract_html",
+    ]

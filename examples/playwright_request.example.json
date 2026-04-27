@@ -1,0 +1,45 @@
+{
+  "artifacts": {
+    "artifact_dir": "artifacts/browser/demo-lab/capture-dashboard",
+    "html_snapshot_path": "artifacts/browser/demo-lab/capture-dashboard/page.html",
+    "network_log_path": "artifacts/browser/demo-lab/capture-dashboard/network.json",
+    "screenshot_path": "artifacts/browser/demo-lab/capture-dashboard/screenshot.png",
+    "trace_path": "artifacts/browser/demo-lab/capture-dashboard/trace.zip"
+  },
+  "browser": "chromium",
+  "config": {
+    "allow_live_execution": false,
+    "capture_html": true,
+    "capture_network": true,
+    "capture_screenshot": true,
+    "headless": true,
+    "screenshot_path": "artifacts/browser-screenshot.png",
+    "timeout_ms": 15000,
+    "wait_until": "load"
+  },
+  "planned_actions": [
+    {
+      "action_type": "navigate",
+      "description": "Navigate to the approved start URL.",
+      "value": "https://demo.example.com/dashboard"
+    },
+    {
+      "action_type": "capture_network",
+      "description": "Capture browser-observed requests and responses for analysis.",
+      "value": "enabled"
+    },
+    {
+      "action_type": "capture_screenshot",
+      "description": "Capture screenshot evidence after page load.",
+      "value": "enabled"
+    },
+    {
+      "action_type": "extract_html",
+      "description": "Extract page HTML for passive endpoint, link, script, and form analysis.",
+      "value": "document"
+    }
+  ],
+  "start_url": "https://demo.example.com/dashboard",
+  "target_name": "demo-lab",
+  "task_name": "Capture Dashboard"
+}
