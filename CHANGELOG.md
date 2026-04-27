@@ -17,6 +17,8 @@
 - HAR-to-orchestration planning workflow
 - Android manifest/config analyzer
 - Android permission, component, exported component, deep-link, and endpoint extraction
+- iOS plist/config analyzer
+- iOS bundle ID, URL scheme, associated domain, ATS, host, and endpoint extraction
 
 ## v0.1.0 - BugIntel AI Workbench MVP
 

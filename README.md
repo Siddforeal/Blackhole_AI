@@ -32,6 +32,8 @@ The long-term goal is to support scope-controlled testing, endpoint mining, task
 - HAR-to-orchestration workflow for captured browser traffic
 - Android manifest/config analyzer
 - Android permissions, components, exported components, deep links, and endpoint extraction
+- iOS plist/config analyzer
+- iOS bundle ID, URL schemes, associated domains, ATS, hosts, and endpoint extraction
 - Unit tests
 - GitHub Actions CI
 
