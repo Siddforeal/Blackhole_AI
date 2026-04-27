@@ -23,6 +23,7 @@ from rich.table import Table
 
 from bugintel.agents.report_agent import save_evidence_report
 from bugintel.agents.recon_agent import analyze_html
+from bugintel.agents.js_agent import collect_js_sources
 from bugintel.analyzers.endpoint_miner import mine_endpoints
 from bugintel.analyzers.http_parser import parse_http_response
 from bugintel.analyzers.response_diff import compare_responses, summarize_response
@@ -495,6 +496,89 @@ def fetch_page_command(
     )
 
     console.print(f"[bold green]Evidence saved:[/bold green] {evidence_path}")
+
+
+@app.command("collect-js")
+def collect_js_command(
+    scope_file: Path = typer.Argument(..., help="Path to target scope YAML file."),
+    page_url: str = typer.Argument(..., help="Page URL to fetch, analyze, and collect JS from."),
+    timeout: int = typer.Option(15, "--timeout", help="Maximum request time in seconds."),
+):
+    """Fetch one in-scope page, collect JavaScript sources, and mine JS endpoints."""
+    if not scope_file.exists():
+        console.print(f"[bold red]Scope file not found:[/bold red] {scope_file}")
+        raise typer.Exit(code=1)
+
+    with scope_file.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    scope = load_scope_from_dict(data)
+
+    page = fetch_web_page(scope=scope, url=page_url, timeout=timeout)
+
+    table = Table(title="Page Fetch")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target", scope.target_name)
+    table.add_row("Page URL", page_url)
+    table.add_row("Allowed", "YES" if page.allowed else "NO")
+    table.add_row("Reason", page.reason)
+    table.add_row("Status", str(page.status_code) if page.status_code is not None else "none")
+    table.add_row("Error", page.error or "none")
+    console.print(table)
+
+    if not page.allowed:
+        raise typer.Exit(code=2)
+
+    if page.error:
+        raise typer.Exit(code=3)
+
+    result = collect_js_sources(
+        scope=scope,
+        page_url=page.final_url or page_url,
+        html=page.text,
+        timeout=timeout,
+    )
+
+    summary = Table(title="JavaScript Collection Summary")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Scripts discovered", str(result.script_count))
+    summary.add_row("Script fetch results", str(len(result.sources)))
+    summary.add_row("Unique JS endpoints", str(len(result.all_endpoints)))
+    console.print(summary)
+
+    if result.sources:
+        sources_table = Table(title="JavaScript Sources")
+        sources_table.add_column("#", justify="right")
+        sources_table.add_column("URL")
+        sources_table.add_column("Allowed")
+        sources_table.add_column("Status")
+        sources_table.add_column("Endpoints")
+        sources_table.add_column("Reason/Error")
+
+        for index, source in enumerate(result.sources, start=1):
+            reason_error = source.error or source.reason
+            sources_table.add_row(
+                str(index),
+                source.url,
+                "YES" if source.allowed else "NO",
+                str(source.status_code) if source.status_code is not None else "none",
+                str(len(source.endpoints)),
+                reason_error,
+            )
+
+        console.print(sources_table)
+
+    if result.all_endpoints:
+        endpoint_table = Table(title="Endpoints Mined from JavaScript")
+        endpoint_table.add_column("#", justify="right")
+        endpoint_table.add_column("Endpoint")
+
+        for index, endpoint in enumerate(result.all_endpoints, start=1):
+            endpoint_table.add_row(str(index), endpoint)
+
+        console.print(endpoint_table)
 
 
 if __name__ == "__main__":
