@@ -21,6 +21,7 @@ import yaml
 from rich.console import Console
 from rich.table import Table
 
+from bugintel.agents.report_agent import save_evidence_report
 from bugintel.analyzers.endpoint_miner import mine_endpoints
 from bugintel.analyzers.http_parser import parse_http_response
 from bugintel.analyzers.response_diff import compare_responses, summarize_response
@@ -287,6 +288,21 @@ def run_curl_command(
         console.print()
         console.print("[bold red]STDERR preview:[/bold red]")
         console.print(result.stderr[:2000])
+
+
+@app.command("generate-report")
+def generate_report_command(
+    evidence_file: Path = typer.Argument(..., help="Evidence JSON file to convert into Markdown."),
+    output_file: Path = typer.Option(..., "--output", "-o", help="Output Markdown report path."),
+):
+    """Generate a Markdown evidence report from saved evidence JSON."""
+    if not evidence_file.exists():
+        console.print(f"[bold red]Evidence file not found:[/bold red] {evidence_file}")
+        raise typer.Exit(code=1)
+
+    saved = save_evidence_report(evidence_file, output_file)
+
+    console.print(f"[bold green]Report generated:[/bold green] {saved}")
 
 
 if __name__ == "__main__":

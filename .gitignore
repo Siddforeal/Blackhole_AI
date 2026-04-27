@@ -32,3 +32,6 @@ data/logs/
 *.secret
 cookies.txt
 headers.private
+
+# Generated reports
+reports/
