@@ -139,3 +139,18 @@ The safe handoff chain is:
     bugintel generate-report data/evidence/demo-lab/<saved-browser-evidence>.json --output reports/playwright-browser-report.md
 
 This validates the evidence/report pipeline before live browser execution is implemented.
+
+### Playwright Execution Request Model
+
+BugIntel also has a pre-execution request model for future Playwright jobs.
+
+Human meaning: this is a browser job ticket. It records the target, task, start URL, browser type, config, planned actions, and artifact paths before any browser is launched.
+
+The artifact planner prepares future paths like:
+
+    artifacts/browser/<target>/<task>/screenshot.png
+    artifacts/browser/<target>/<task>/page.html
+    artifacts/browser/<target>/<task>/network.json
+    artifacts/browser/<target>/<task>/trace.zip
+
+Creating this request does not create files and does not launch a browser.

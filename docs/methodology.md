@@ -107,3 +107,19 @@ The full safe handoff chain is:
 3. `generate-report` renders the browser evidence into Markdown.
 4. The report includes Playwright execution-output fields such as runner, status, and reason.
 5. The current skeleton still does not launch a browser.
+
+## Playwright Execution Request Model
+
+Before live browser execution is implemented, BugIntel builds a reviewable execution request.
+
+The request contains:
+
+1. Target name.
+2. Task name.
+3. Start URL.
+4. Browser label.
+5. Execution config.
+6. Planned browser actions.
+7. Planned artifact paths for screenshot, HTML, network log, and trace output.
+
+This request is the future adapter input. It is safe because building it does not create files, does not install Playwright, and does not launch a browser.

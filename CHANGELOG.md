@@ -15,6 +15,8 @@
 - JSON handoff test for `execute-playwright-plan --json-output`
 - End-to-end CLI test for Playwright handoff JSON -> browser evidence -> Markdown report
 - Browser evidence reports now render Playwright execution-output reasons
+- Playwright execution request model for future browser adapter jobs
+- Playwright artifact path planner for future screenshots, HTML snapshots, network logs, and traces
 - Live browser execution remains disabled by default
 
 ## v0.3.0 - Browser Automation Foundation
