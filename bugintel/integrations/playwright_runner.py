@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import importlib.util
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from bugintel.core.scope_guard import TargetScope
@@ -93,6 +94,146 @@ class BrowserExecutionConfig:
     capture_html: bool = True
     screenshot_path: str = "artifacts/browser-screenshot.png"
     allow_live_execution: bool = False
+
+
+
+
+@dataclass(frozen=True)
+class PlaywrightArtifactPlan:
+    """
+    Planned artifact paths for future Playwright execution.
+
+    These are only paths. Creating this object does not create files, launch a
+    browser, save screenshots, or capture network traffic.
+    """
+
+    artifact_dir: str
+    screenshot_path: str
+    html_snapshot_path: str
+    network_log_path: str
+    trace_path: str
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "artifact_dir": self.artifact_dir,
+            "screenshot_path": self.screenshot_path,
+            "html_snapshot_path": self.html_snapshot_path,
+            "network_log_path": self.network_log_path,
+            "trace_path": self.trace_path,
+        }
+
+
+@dataclass(frozen=True)
+class PlaywrightExecutionRequest:
+    """
+    Reviewable request object for a future Playwright execution adapter.
+
+    This is the job ticket the real adapter will consume later. It is safe to
+    build because it does not launch a browser.
+    """
+
+    target_name: str
+    task_name: str
+    start_url: str
+    browser: str
+    config: BrowserExecutionConfig
+    artifacts: PlaywrightArtifactPlan
+    planned_actions: list[dict[str, str]]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "target_name": self.target_name,
+            "task_name": self.task_name,
+            "start_url": self.start_url,
+            "browser": self.browser,
+            "config": {
+                "headless": self.config.headless,
+                "timeout_ms": self.config.timeout_ms,
+                "wait_until": self.config.wait_until,
+                "capture_network": self.config.capture_network,
+                "capture_screenshot": self.config.capture_screenshot,
+                "capture_html": self.config.capture_html,
+                "screenshot_path": self.config.screenshot_path,
+                "allow_live_execution": self.config.allow_live_execution,
+            },
+            "artifacts": self.artifacts.to_dict(),
+            "planned_actions": self.planned_actions,
+        }
+
+
+def build_playwright_artifact_plan(
+    target_name: str,
+    task_name: str,
+    base_dir: str | Path = "artifacts/browser",
+) -> PlaywrightArtifactPlan:
+    """
+    Plan artifact paths for future Playwright execution.
+
+    This does not create directories or files. It only returns deterministic
+    safe paths that later execution can use.
+    """
+    base = Path(base_dir)
+    artifact_dir = base / _safe_artifact_name(target_name) / _safe_artifact_name(task_name)
+
+    return PlaywrightArtifactPlan(
+        artifact_dir=str(artifact_dir),
+        screenshot_path=str(artifact_dir / "screenshot.png"),
+        html_snapshot_path=str(artifact_dir / "page.html"),
+        network_log_path=str(artifact_dir / "network.json"),
+        trace_path=str(artifact_dir / "trace.zip"),
+    )
+
+
+def build_playwright_execution_request(
+    plan: BrowserPlan,
+    task_name: str,
+    config: BrowserExecutionConfig | None = None,
+    base_artifact_dir: str | Path = "artifacts/browser",
+) -> PlaywrightExecutionRequest:
+    """
+    Build a future Playwright execution request from an approved BrowserPlan.
+
+    This is still pre-execution. It does not launch a browser.
+    """
+    if not plan.allowed:
+        raise ValueError(f"Cannot build Playwright execution request from blocked browser plan: {plan.reason}")
+
+    config = config or BrowserExecutionConfig()
+    artifacts = build_playwright_artifact_plan(
+        target_name=plan.target_name,
+        task_name=task_name,
+        base_dir=base_artifact_dir,
+    )
+
+    return PlaywrightExecutionRequest(
+        target_name=plan.target_name,
+        task_name=task_name,
+        start_url=plan.start_url,
+        browser=plan.browser,
+        config=config,
+        artifacts=artifacts,
+        planned_actions=[
+            {
+                "action_type": action.action_type,
+                "value": action.value,
+                "description": action.description,
+            }
+            for action in plan.actions
+        ],
+    )
+
+
+def _safe_artifact_name(value: str) -> str:
+    allowed = []
+
+    for char in value.lower().strip():
+        if char.isalnum() or char in {"-", "_"}:
+            allowed.append(char)
+        elif char in {" ", ".", "/"}:
+            allowed.append("-")
+
+    safe = "".join(allowed).strip("-")
+    return safe or "untitled"
 
 
 def check_playwright_available() -> PlaywrightAvailability:

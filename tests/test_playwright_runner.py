@@ -376,3 +376,98 @@ def test_execute_playwright_plan_reaches_not_implemented_handoff_when_all_gates_
     assert result.network_events == []
     assert result.screenshots == []
     assert result.html_snapshots == []
+
+
+def test_build_playwright_artifact_plan_returns_safe_paths():
+    from bugintel.integrations.playwright_runner import build_playwright_artifact_plan
+
+    artifacts = build_playwright_artifact_plan(
+        target_name="Demo Lab",
+        task_name="Capture Dashboard / Admin",
+        base_dir="tmp/artifacts",
+    )
+
+    assert artifacts.artifact_dir == "tmp/artifacts/demo-lab/capture-dashboard---admin"
+    assert artifacts.screenshot_path.endswith("/screenshot.png")
+    assert artifacts.html_snapshot_path.endswith("/page.html")
+    assert artifacts.network_log_path.endswith("/network.json")
+    assert artifacts.trace_path.endswith("/trace.zip")
+
+    data = artifacts.to_dict()
+
+    assert data["artifact_dir"] == artifacts.artifact_dir
+    assert data["screenshot_path"] == artifacts.screenshot_path
+    assert data["html_snapshot_path"] == artifacts.html_snapshot_path
+    assert data["network_log_path"] == artifacts.network_log_path
+    assert data["trace_path"] == artifacts.trace_path
+
+
+def test_build_playwright_execution_request_is_pre_execution_only():
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        build_playwright_execution_request,
+    )
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    request = build_playwright_execution_request(
+        plan=plan,
+        task_name="Capture Dashboard",
+        config=BrowserExecutionConfig(
+            headless=True,
+            timeout_ms=10000,
+            allow_live_execution=False,
+        ),
+        base_artifact_dir="tmp/artifacts",
+    )
+
+    assert request.target_name == "demo-lab"
+    assert request.task_name == "Capture Dashboard"
+    assert request.start_url == "https://demo.example.com/dashboard"
+    assert request.browser == "chromium"
+    assert request.config.timeout_ms == 10000
+    assert request.config.allow_live_execution is False
+    assert request.artifacts.artifact_dir == "tmp/artifacts/demo-lab/capture-dashboard"
+
+    action_types = [
+        action["action_type"]
+        for action in request.planned_actions
+    ]
+
+    assert "navigate" in action_types
+    assert "capture_network" in action_types
+    assert "capture_screenshot" in action_types
+    assert "extract_html" in action_types
+
+    data = request.to_dict()
+
+    assert data["target_name"] == "demo-lab"
+    assert data["config"]["allow_live_execution"] is False
+    assert data["artifacts"]["network_log_path"].endswith("/network.json")
+
+
+def test_build_playwright_execution_request_rejects_blocked_plan():
+    from bugintel.integrations.playwright_runner import build_playwright_execution_request
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://evil.example.net/dashboard",
+        browser="chromium",
+    )
+
+    try:
+        build_playwright_execution_request(
+            plan=plan,
+            task_name="Blocked Capture",
+        )
+    except ValueError as exc:
+        assert "Cannot build Playwright execution request from blocked browser plan" in str(exc)
+        assert "Domain not in scope" in str(exc)
+    else:
+        raise AssertionError("Expected blocked browser plan to raise ValueError")
