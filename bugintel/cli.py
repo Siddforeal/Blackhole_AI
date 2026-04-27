@@ -23,6 +23,7 @@ from rich.table import Table
 
 from bugintel.agents.report_agent import save_evidence_report
 from bugintel.agents.recon_agent import analyze_html
+from bugintel.agents.web_recon_agent import run_website_recon
 from bugintel.agents.js_agent import collect_js_sources
 from bugintel.analyzers.endpoint_miner import mine_endpoints
 from bugintel.analyzers.http_parser import parse_http_response
@@ -579,6 +580,97 @@ def collect_js_command(
             endpoint_table.add_row(str(index), endpoint)
 
         console.print(endpoint_table)
+
+
+@app.command("web-recon")
+def web_recon_command(
+    scope_file: Path = typer.Argument(..., help="Path to target scope YAML file."),
+    page_url: str = typer.Argument(..., help="Page URL to run website recon against."),
+    timeout: int = typer.Option(15, "--timeout", help="Maximum request time in seconds."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional JSON output path for orchestration plan."),
+):
+    """Run Website Mode pipeline: fetch page, analyze HTML, collect JS, mine endpoints, orchestrate."""
+    if not scope_file.exists():
+        console.print(f"[bold red]Scope file not found:[/bold red] {scope_file}")
+        raise typer.Exit(code=1)
+
+    with scope_file.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    scope = load_scope_from_dict(data)
+
+    result = run_website_recon(
+        scope=scope,
+        page_url=page_url,
+        timeout=timeout,
+    )
+
+    fetch_table = Table(title="Website Recon Fetch")
+    fetch_table.add_column("Field", style="bold")
+    fetch_table.add_column("Value")
+    fetch_table.add_row("Target", scope.target_name)
+    fetch_table.add_row("Page URL", page_url)
+    fetch_table.add_row("Allowed", "YES" if result.fetch.allowed else "NO")
+    fetch_table.add_row("Reason", result.fetch.reason)
+    fetch_table.add_row("Status", str(result.fetch.status_code) if result.fetch.status_code is not None else "none")
+    fetch_table.add_row("Error", result.fetch.error or "none")
+    console.print(fetch_table)
+
+    if not result.fetch.allowed:
+        raise typer.Exit(code=2)
+
+    if result.fetch.error:
+        raise typer.Exit(code=3)
+
+    summary = Table(title="Website Recon Summary")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Count")
+
+    summary.add_row("HTML links", str(len(result.html_recon.links) if result.html_recon else 0))
+    summary.add_row("HTML scripts", str(len(result.html_recon.scripts) if result.html_recon else 0))
+    summary.add_row("HTML forms", str(len(result.html_recon.forms) if result.html_recon else 0))
+    summary.add_row("JS sources", str(len(result.js_recon.sources) if result.js_recon else 0))
+    summary.add_row("Merged endpoints", str(len(result.endpoints)))
+    summary.add_row(
+        "Agent assignments",
+        str(len(result.orchestration_plan.assignments) if result.orchestration_plan else 0),
+    )
+
+    console.print(summary)
+
+    if result.endpoints:
+        endpoint_table = Table(title="Merged Endpoint Inventory")
+        endpoint_table.add_column("#", justify="right")
+        endpoint_table.add_column("Endpoint")
+
+        for index, endpoint in enumerate(result.endpoints, start=1):
+            endpoint_table.add_row(str(index), endpoint)
+
+        console.print(endpoint_table)
+
+    if result.orchestration_plan:
+        assignment_table = Table(title="Agent Assignments")
+        assignment_table.add_column("#", justify="right")
+        assignment_table.add_column("Endpoint")
+        assignment_table.add_column("Agent")
+        assignment_table.add_column("Mode")
+        assignment_table.add_column("Human Approval")
+
+        for index, assignment in enumerate(result.orchestration_plan.assignments, start=1):
+            assignment_table.add_row(
+                str(index),
+                assignment.endpoint,
+                assignment.agent_name,
+                assignment.mode,
+                "YES" if assignment.requires_human_approval else "NO",
+            )
+
+        console.print(assignment_table)
+
+        if json_output:
+            json_output.parent.mkdir(parents=True, exist_ok=True)
+            json_output.write_text(json.dumps(result.orchestration_plan.to_dict(), indent=2), encoding="utf-8")
+            console.print(f"[bold green]Saved orchestration JSON:[/bold green] {json_output}")
 
 
 if __name__ == "__main__":
