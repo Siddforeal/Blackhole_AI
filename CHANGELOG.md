@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Evidence-to-Markdown report generator
+- `generate-report` CLI command
+- Analyst review checklist in generated reports
+- Generated reports are ignored by Git to avoid accidental upload of private evidence
+
 ## v0.1.0 - BugIntel AI Workbench MVP
 
 Initial MVP foundation for a human-in-the-loop AI-assisted vulnerability discovery and bug intelligence workbench.
