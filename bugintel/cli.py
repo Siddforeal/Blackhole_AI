@@ -25,6 +25,7 @@ from bugintel.agents.report_agent import save_evidence_report
 from bugintel.agents.recon_agent import analyze_html
 from bugintel.agents.web_recon_agent import run_website_recon
 from bugintel.agents.js_agent import collect_js_sources
+from bugintel.agents.android_agent import analyze_android_manifest
 from bugintel.analyzers.endpoint_miner import mine_endpoints
 from bugintel.analyzers.http_parser import parse_http_response
 from bugintel.analyzers.response_diff import compare_responses, summarize_response
@@ -749,6 +750,86 @@ def import_har_command(
             json_output.parent.mkdir(parents=True, exist_ok=True)
             json_output.write_text(json.dumps(plan.to_dict(), indent=2), encoding="utf-8")
             console.print(f"[bold green]Saved orchestration JSON:[/bold green] {json_output}")
+
+
+@app.command("analyze-android")
+def analyze_android_command(
+    manifest_file: Path = typer.Argument(..., help="AndroidManifest.xml file to analyze."),
+    extra_file: Path | None = typer.Option(None, "--extra", help="Optional extra config/source text file to mine endpoints from."),
+):
+    """Analyze Android manifest/config text for components, permissions, deep links, and endpoints."""
+    if not manifest_file.exists():
+        console.print(f"[bold red]Manifest file not found:[/bold red] {manifest_file}")
+        raise typer.Exit(code=1)
+
+    manifest_text = manifest_file.read_text(encoding="utf-8", errors="replace")
+    extra_text = ""
+
+    if extra_file:
+        if not extra_file.exists():
+            console.print(f"[bold red]Extra file not found:[/bold red] {extra_file}")
+            raise typer.Exit(code=1)
+        extra_text = extra_file.read_text(encoding="utf-8", errors="replace")
+
+    result = analyze_android_manifest(
+        manifest_text=manifest_text,
+        extra_text=extra_text,
+    )
+
+    summary = Table(title="Android Analysis Summary")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+
+    summary.add_row("Package", result.package_name or "unknown")
+    summary.add_row("Permissions", str(len(result.permissions)))
+    summary.add_row("Components", str(len(result.components)))
+    summary.add_row("Exported components", str(len(result.exported_components)))
+    summary.add_row("Deep links", str(len(result.deep_links)))
+    summary.add_row("Endpoints", str(len(result.endpoints)))
+
+    console.print(summary)
+
+    if result.permissions:
+        table = Table(title="Permissions")
+        table.add_column("#", justify="right")
+        table.add_column("Permission")
+        for index, permission in enumerate(result.permissions, start=1):
+            table.add_row(str(index), permission)
+        console.print(table)
+
+    if result.components:
+        table = Table(title="Components")
+        table.add_column("#", justify="right")
+        table.add_column("Kind")
+        table.add_column("Name")
+        table.add_column("Exported")
+        for index, component in enumerate(result.components, start=1):
+            table.add_row(
+                str(index),
+                component.kind,
+                component.name,
+                "YES" if component.exported is True else "NO" if component.exported is False else "unknown",
+            )
+        console.print(table)
+
+    if result.deep_links:
+        table = Table(title="Deep Links")
+        table.add_column("#", justify="right")
+        table.add_column("Component")
+        table.add_column("Scheme")
+        table.add_column("Host")
+        table.add_column("Path")
+        for index, link in enumerate(result.deep_links, start=1):
+            table.add_row(str(index), link.component, link.scheme, link.host, link.path)
+        console.print(table)
+
+    if result.endpoints:
+        table = Table(title="Endpoints Mined from Android Text")
+        table.add_column("#", justify="right")
+        table.add_column("Endpoint")
+        for index, endpoint in enumerate(result.endpoints, start=1):
+            table.add_row(str(index), endpoint)
+        console.print(table)
 
 
 if __name__ == "__main__":
