@@ -25,6 +25,7 @@ from bugintel.agents.report_agent import save_evidence_report
 from bugintel.agents.recon_agent import analyze_html
 from bugintel.agents.web_recon_agent import run_website_recon
 from bugintel.agents.js_agent import collect_js_sources
+from bugintel.agents.ios_agent import analyze_ios_plist
 from bugintel.agents.android_agent import analyze_android_manifest
 from bugintel.analyzers.endpoint_miner import mine_endpoints
 from bugintel.analyzers.http_parser import parse_http_response
@@ -825,6 +826,81 @@ def analyze_android_command(
 
     if result.endpoints:
         table = Table(title="Endpoints Mined from Android Text")
+        table.add_column("#", justify="right")
+        table.add_column("Endpoint")
+        for index, endpoint in enumerate(result.endpoints, start=1):
+            table.add_row(str(index), endpoint)
+        console.print(table)
+
+
+@app.command("analyze-ios")
+def analyze_ios_command(
+    plist_file: Path = typer.Argument(..., help="iOS Info.plist XML file to analyze."),
+    extra_file: Path | None = typer.Option(None, "--extra", help="Optional extra config/source text file to mine endpoints from."),
+):
+    """Analyze iOS plist/config text for bundle info, URL schemes, associated domains, ATS, hosts, and endpoints."""
+    if not plist_file.exists():
+        console.print(f"[bold red]Plist file not found:[/bold red] {plist_file}")
+        raise typer.Exit(code=1)
+
+    plist_text = plist_file.read_text(encoding="utf-8", errors="replace")
+    extra_text = ""
+
+    if extra_file:
+        if not extra_file.exists():
+            console.print(f"[bold red]Extra file not found:[/bold red] {extra_file}")
+            raise typer.Exit(code=1)
+        extra_text = extra_file.read_text(encoding="utf-8", errors="replace")
+
+    result = analyze_ios_plist(
+        plist_text=plist_text,
+        extra_text=extra_text,
+    )
+
+    summary = Table(title="iOS Analysis Summary")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+
+    summary.add_row("Bundle ID", result.bundle_id or "unknown")
+    summary.add_row("Display name", result.display_name or "unknown")
+    summary.add_row("URL scheme groups", str(len(result.url_schemes)))
+    summary.add_row("Associated domains", str(len(result.associated_domains)))
+    summary.add_row(
+        "ATS arbitrary loads",
+        "YES" if result.ats_allows_arbitrary_loads is True else "NO" if result.ats_allows_arbitrary_loads is False else "unknown",
+    )
+    summary.add_row("Hosts", str(len(result.hosts)))
+    summary.add_row("Endpoints", str(len(result.endpoints)))
+
+    console.print(summary)
+
+    if result.url_schemes:
+        table = Table(title="URL Schemes")
+        table.add_column("#", justify="right")
+        table.add_column("Name")
+        table.add_column("Schemes")
+        for index, item in enumerate(result.url_schemes, start=1):
+            table.add_row(str(index), item.name, ", ".join(item.schemes))
+        console.print(table)
+
+    if result.associated_domains:
+        table = Table(title="Associated Domains")
+        table.add_column("#", justify="right")
+        table.add_column("Domain")
+        for index, domain in enumerate(result.associated_domains, start=1):
+            table.add_row(str(index), domain)
+        console.print(table)
+
+    if result.hosts:
+        table = Table(title="Hosts")
+        table.add_column("#", justify="right")
+        table.add_column("Host")
+        for index, host in enumerate(result.hosts, start=1):
+            table.add_row(str(index), host)
+        console.print(table)
+
+    if result.endpoints:
+        table = Table(title="Endpoints Mined from iOS Text")
         table.add_column("#", justify="right")
         table.add_column("Endpoint")
         for index, endpoint in enumerate(result.endpoints, start=1):
