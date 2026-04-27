@@ -35,7 +35,12 @@ from bugintel.core.scope_guard import load_scope_from_dict
 from bugintel.core.orchestrator import create_orchestration_plan
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.integrations.kali_runner import build_curl_plan, execute_curl_plan
-from bugintel.integrations.playwright_runner import BrowserCaptureResult, build_browser_plan
+from bugintel.integrations.playwright_runner import (
+    BrowserCaptureResult,
+    BrowserExecutionConfig,
+    build_browser_plan,
+    build_playwright_execution_preview,
+)
 from bugintel.integrations.web_fetcher import fetch_web_page
 from bugintel.integrations.har_importer import load_har
 
@@ -1016,6 +1021,95 @@ def plan_browser_command(
             )
 
         console.print(action_table)
+
+
+@app.command("preview-playwright")
+def preview_playwright_command(
+    scope_file: Path = typer.Argument(..., help="Path to target scope YAML file."),
+    start_url: str = typer.Argument(..., help="Browser start URL to preview."),
+    browser: str = typer.Option("chromium", "--browser", help="Browser label: chromium, chrome, or firefox."),
+    capture_network: bool = typer.Option(True, "--capture-network/--no-capture-network", help="Preview browser network capture."),
+    capture_screenshot: bool = typer.Option(True, "--capture-screenshot/--no-capture-screenshot", help="Preview screenshot evidence capture."),
+    capture_html: bool = typer.Option(True, "--capture-html/--no-capture-html", help="Preview HTML snapshot capture."),
+    headless: bool = typer.Option(True, "--headless/--headed", help="Preview headless/headed browser setting."),
+    timeout_ms: int = typer.Option(15000, "--timeout-ms", help="Preview browser timeout in milliseconds."),
+    wait_until: str = typer.Option("load", "--wait-until", help="Preview page load wait condition."),
+    screenshot_path: str = typer.Option("artifacts/browser-screenshot.png", "--screenshot-path", help="Preview screenshot artifact path."),
+    allow_live_execution: bool = typer.Option(False, "--allow-live-execution", help="Mark preview as live-execution allowed. This command still does not launch a browser."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional path to save the preview JSON."),
+):
+    """
+    Build a safe Playwright execution preview.
+
+    This command does not launch a browser. It validates the start URL through
+    Scope Guard, builds a BrowserPlan, and emits a Playwright execution preview
+    that can later feed browser execution/evidence workflows.
+    """
+    if not scope_file.exists():
+        console.print(f"[bold red]Scope file not found:[/bold red] {scope_file}")
+        raise typer.Exit(code=1)
+
+    with scope_file.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    scope = load_scope_from_dict(data)
+
+    plan = build_browser_plan(
+        scope=scope,
+        start_url=start_url,
+        browser=browser,
+        capture_network=capture_network,
+        capture_screenshot=capture_screenshot,
+    )
+
+    if not plan.allowed:
+        console.print(f"[bold red]Browser plan blocked:[/bold red] {plan.reason}")
+        raise typer.Exit(code=2)
+
+    config = BrowserExecutionConfig(
+        headless=headless,
+        timeout_ms=timeout_ms,
+        wait_until=wait_until,
+        capture_network=capture_network,
+        capture_screenshot=capture_screenshot,
+        capture_html=capture_html,
+        screenshot_path=screenshot_path,
+        allow_live_execution=allow_live_execution,
+    )
+
+    preview = build_playwright_execution_preview(
+        plan=plan,
+        config=config,
+    )
+
+    table = Table(title="Playwright Execution Preview")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row("Runner", str(preview["runner"]))
+    table.add_row("Status", str(preview["status"]))
+    table.add_row("Browser", str(preview["browser"]))
+    table.add_row("Start URL", str(preview["start_url"]))
+    table.add_row("Live execution allowed", "YES" if preview["live_execution_allowed"] else "NO")
+    table.add_row("Playwright available", "YES" if preview["playwright_available"] else "NO")
+    table.add_row("Reason", str(preview["reason"]))
+    table.add_row("Headless", "YES" if preview["headless"] else "NO")
+    table.add_row("Timeout ms", str(preview["timeout_ms"]))
+    table.add_row("Wait until", str(preview["wait_until"]))
+    table.add_row("Capture network", "YES" if preview["capture_network"] else "NO")
+    table.add_row("Capture screenshot", "YES" if preview["capture_screenshot"] else "NO")
+    table.add_row("Capture HTML", "YES" if preview["capture_html"] else "NO")
+    table.add_row("Screenshot path", str(preview["screenshot_path"]))
+    table.add_row("Planned actions", str(len(preview["planned_actions"])))
+
+    console.print(table)
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(preview, indent=2, sort_keys=True), encoding="utf-8")
+        console.print(f"[bold green]Preview JSON saved:[/bold green] {json_output}")
+
+
 
 
 if __name__ == "__main__":
