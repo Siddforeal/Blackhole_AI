@@ -28,6 +28,8 @@ The long-term goal is to support scope-controlled testing, endpoint mining, task
 - Scope-guarded website page fetcher
 - JavaScript source collector
 - Website Mode pipeline with endpoint merging and orchestration
+- HAR traffic importer for Browser/DevTools exports
+- HAR-to-orchestration workflow for captured browser traffic
 - Unit tests
 - GitHub Actions CI
 

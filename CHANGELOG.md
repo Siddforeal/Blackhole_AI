@@ -12,6 +12,9 @@
 - Scope-guarded website page fetcher
 - JavaScript source collector
 - Website Recon pipeline combining HTML analysis, JS endpoint mining, and multi-agent orchestration
+- HAR traffic importer for Browser/DevTools and proxy exports
+- Safe HAR example file using a non-HAR extension
+- HAR-to-orchestration planning workflow
 
 ## v0.1.0 - BugIntel AI Workbench MVP
 
