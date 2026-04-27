@@ -6,6 +6,7 @@
 
 - Browser action planner for Chromium, Chrome, and Firefox workflows
 - `plan-browser` CLI command
+- `save-browser-capture` CLI command for saving future browser capture output as redacted evidence
 - Browser network capture, screenshot evidence, and HTML extraction planning
 - Browser evidence model for network events, screenshot metadata, HTML snapshots, and future Playwright execution output
 - Browser capture result model for future Playwright-to-evidence handoff

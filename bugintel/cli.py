@@ -35,7 +35,7 @@ from bugintel.core.scope_guard import load_scope_from_dict
 from bugintel.core.orchestrator import create_orchestration_plan
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.integrations.kali_runner import build_curl_plan, execute_curl_plan
-from bugintel.integrations.playwright_runner import build_browser_plan
+from bugintel.integrations.playwright_runner import BrowserCaptureResult, build_browser_plan
 from bugintel.integrations.web_fetcher import fetch_web_page
 from bugintel.integrations.har_importer import load_har
 
@@ -312,6 +312,54 @@ def generate_report_command(
     saved = save_evidence_report(evidence_file, output_file)
 
     console.print(f"[bold green]Report generated:[/bold green] {saved}")
+
+
+@app.command("save-browser-capture")
+def save_browser_capture_command(
+    capture_file: Path = typer.Argument(..., help="Browser capture result JSON file to save as evidence."),
+):
+    """
+    Save a browser capture result JSON as redacted browser evidence.
+
+    This command does not execute a browser. It stores output from a future
+    Playwright/DevTools/browser capture adapter using the browser evidence model.
+    """
+    if not capture_file.exists():
+        console.print(f"[bold red]Browser capture file not found:[/bold red] {capture_file}")
+        raise typer.Exit(code=1)
+
+    data = json.loads(capture_file.read_text(encoding="utf-8"))
+
+    required_fields = ["target_name", "task_name", "start_url", "browser"]
+    missing_fields = [
+        field
+        for field in required_fields
+        if not data.get(field)
+    ]
+
+    if missing_fields:
+        console.print(
+            "[bold red]Browser capture file missing required fields:[/bold red] "
+            + ", ".join(missing_fields)
+        )
+        raise typer.Exit(code=2)
+
+    result = BrowserCaptureResult(
+        target_name=str(data["target_name"]),
+        task_name=str(data["task_name"]),
+        start_url=str(data["start_url"]),
+        browser=str(data["browser"]),
+        network_events=list(data.get("network_events") or []),
+        screenshots=list(data.get("screenshots") or []),
+        html_snapshots=list(data.get("html_snapshots") or []),
+        execution_output=dict(data.get("execution_output") or {}),
+        notes=str(data.get("notes") or "Captured by bugintel save-browser-capture"),
+    )
+
+    store = EvidenceStore()
+    evidence_path = store.save_browser_evidence(**result.to_evidence_kwargs())
+
+    console.print(f"[bold green]Browser evidence saved:[/bold green] {evidence_path}")
 
 
 @app.command("orchestrate")
