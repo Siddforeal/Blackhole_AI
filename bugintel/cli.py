@@ -41,6 +41,7 @@ from bugintel.integrations.playwright_runner import (
     PlaywrightExecutionSafetyError,
     build_browser_plan,
     build_playwright_execution_preview,
+    build_playwright_execution_request,
     execute_playwright_plan,
 )
 from bugintel.integrations.web_fetcher import fetch_web_page
@@ -1201,6 +1202,96 @@ def execute_playwright_plan_command(
             encoding="utf-8",
         )
         console.print(f"[bold green]Capture result JSON saved:[/bold green] {json_output}")
+
+
+
+
+@app.command("build-playwright-request")
+def build_playwright_request_command(
+    scope_file: Path = typer.Argument(..., help="Path to target scope YAML file."),
+    start_url: str = typer.Argument(..., help="Browser start URL for the future request."),
+    task_name: str = typer.Option("playwright request", "--task-name", help="Task name for the browser job ticket."),
+    browser: str = typer.Option("chromium", "--browser", help="Browser label: chromium, chrome, or firefox."),
+    capture_network: bool = typer.Option(True, "--capture-network/--no-capture-network", help="Include future network capture in the request."),
+    capture_screenshot: bool = typer.Option(True, "--capture-screenshot/--no-capture-screenshot", help="Include future screenshot capture in the request."),
+    capture_html: bool = typer.Option(True, "--capture-html/--no-capture-html", help="Include future HTML snapshot capture in the request."),
+    headless: bool = typer.Option(True, "--headless/--headed", help="Future headless/headed browser setting."),
+    timeout_ms: int = typer.Option(15000, "--timeout-ms", help="Future browser timeout in milliseconds."),
+    wait_until: str = typer.Option("load", "--wait-until", help="Future page load wait condition."),
+    screenshot_path: str = typer.Option("artifacts/browser-screenshot.png", "--screenshot-path", help="Future screenshot config path."),
+    base_artifact_dir: Path = typer.Option(Path("artifacts/browser"), "--base-artifact-dir", help="Base directory for planned browser artifacts."),
+    allow_live_execution: bool = typer.Option(False, "--allow-live-execution", help="Record explicit future live-execution approval in the request. This command still does not launch a browser."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional path to save the request JSON."),
+):
+    """
+    Build a reviewable Playwright execution request JSON.
+
+    Human meaning: this creates a browser job-ticket for future execution. It
+    validates scope and plans artifact paths, but does not launch a browser.
+    """
+    if not scope_file.exists():
+        console.print(f"[bold red]Scope file not found:[/bold red] {scope_file}")
+        raise typer.Exit(code=1)
+
+    with scope_file.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    scope = load_scope_from_dict(data)
+
+    plan = build_browser_plan(
+        scope=scope,
+        start_url=start_url,
+        browser=browser,
+        capture_network=capture_network,
+        capture_screenshot=capture_screenshot,
+    )
+
+    if not plan.allowed:
+        console.print(f"[bold red]Playwright request blocked:[/bold red] {plan.reason}")
+        raise typer.Exit(code=2)
+
+    config = BrowserExecutionConfig(
+        headless=headless,
+        timeout_ms=timeout_ms,
+        wait_until=wait_until,
+        capture_network=capture_network,
+        capture_screenshot=capture_screenshot,
+        capture_html=capture_html,
+        screenshot_path=screenshot_path,
+        allow_live_execution=allow_live_execution,
+    )
+
+    request = build_playwright_execution_request(
+        plan=plan,
+        task_name=task_name,
+        config=config,
+        base_artifact_dir=base_artifact_dir,
+    )
+
+    request_data = request.to_dict()
+
+    table = Table(title="Playwright Execution Request")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row("Target", request.target_name)
+    table.add_row("Task", request.task_name)
+    table.add_row("Browser", request.browser)
+    table.add_row("Start URL", request.start_url)
+    table.add_row("Live execution allowed", "YES" if request.config.allow_live_execution else "NO")
+    table.add_row("Artifact directory", request.artifacts.artifact_dir)
+    table.add_row("Screenshot path", request.artifacts.screenshot_path)
+    table.add_row("HTML snapshot path", request.artifacts.html_snapshot_path)
+    table.add_row("Network log path", request.artifacts.network_log_path)
+    table.add_row("Trace path", request.artifacts.trace_path)
+    table.add_row("Planned actions", str(len(request.planned_actions)))
+
+    console.print(table)
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(request_data, indent=2, sort_keys=True), encoding="utf-8")
+        console.print(f"[bold green]Request JSON saved:[/bold green] {json_output}")
 
 
 

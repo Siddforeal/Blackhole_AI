@@ -542,3 +542,107 @@ human_approval_required: true
         assert "Runner: playwright" in report
         assert "Status: not_implemented" in report
         assert "Mocked handoff; browser not launched." in report
+
+
+
+def test_build_playwright_request_command_writes_json_request():
+    scope_yaml = """
+target_name: demo-lab
+allowed_domains:
+  - demo.example.com
+allowed_schemes:
+  - https
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+forbidden_paths: []
+human_approval_required: true
+"""
+
+    with runner.isolated_filesystem():
+        scope_path = Path("scope.yaml")
+        output_path = Path("request.json")
+        scope_path.write_text(scope_yaml, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "build-playwright-request",
+                str(scope_path),
+                "https://demo.example.com/dashboard",
+                "--task-name",
+                "Capture Dashboard",
+                "--browser",
+                "chromium",
+                "--timeout-ms",
+                "10000",
+                "--base-artifact-dir",
+                "tmp/artifacts",
+                "--json-output",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Playwright Execution Request" in result.output
+        assert "Request JSON saved" in result.output
+        assert output_path.exists()
+
+        data = json.loads(output_path.read_text(encoding="utf-8"))
+
+        assert data["target_name"] == "demo-lab"
+        assert data["task_name"] == "Capture Dashboard"
+        assert data["start_url"] == "https://demo.example.com/dashboard"
+        assert data["browser"] == "chromium"
+        assert data["config"]["timeout_ms"] == 10000
+        assert data["config"]["allow_live_execution"] is False
+        assert data["artifacts"]["artifact_dir"] == "tmp/artifacts/demo-lab/capture-dashboard"
+        assert data["artifacts"]["screenshot_path"].endswith("/screenshot.png")
+        assert data["artifacts"]["html_snapshot_path"].endswith("/page.html")
+        assert data["artifacts"]["network_log_path"].endswith("/network.json")
+        assert data["artifacts"]["trace_path"].endswith("/trace.zip")
+
+        action_types = [
+            action["action_type"]
+            for action in data["planned_actions"]
+        ]
+
+        assert "navigate" in action_types
+        assert "capture_network" in action_types
+        assert "capture_screenshot" in action_types
+        assert "extract_html" in action_types
+
+
+def test_build_playwright_request_command_blocks_out_of_scope_url():
+    scope_yaml = """
+target_name: demo-lab
+allowed_domains:
+  - demo.example.com
+allowed_schemes:
+  - https
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+forbidden_paths: []
+human_approval_required: true
+"""
+
+    with runner.isolated_filesystem():
+        scope_path = Path("scope.yaml")
+        scope_path.write_text(scope_yaml, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "build-playwright-request",
+                str(scope_path),
+                "https://evil.example.net/dashboard",
+            ],
+        )
+
+        assert result.exit_code == 2
+        assert "Playwright request blocked" in result.output
+        assert "Domain not in" in result.output
+        assert "scope: evil.example.net" in result.output
