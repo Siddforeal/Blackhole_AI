@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v0.2.0 - Multi-mode Workbench Foundation
+
+Released: 2026-04-27
 
 ### Added
 
