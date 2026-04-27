@@ -166,3 +166,9 @@ A safe example request is included at:
     examples/playwright_request.example.json
 
 This file is a sample request shape only. It is not browser evidence and does not mean a browser was launched.
+
+You can preview a saved request JSON:
+
+    bugintel preview-playwright-request examples/playwright_request.example.json --json-output reports/playwright-request-preview.json
+
+Human meaning: this reads the browser job ticket and shows the future Playwright preview without launching a browser.

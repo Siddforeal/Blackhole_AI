@@ -135,3 +135,9 @@ A safe example request lives at:
     examples/playwright_request.example.json
 
 Treat this example as a request format reference, not as evidence of browser execution.
+
+To preview a saved request:
+
+    bugintel preview-playwright-request examples/playwright_request.example.json --json-output reports/playwright-request-preview.json
+
+This command is useful when the request has already been created and you want to review the execution preview without reloading the original scope file.
