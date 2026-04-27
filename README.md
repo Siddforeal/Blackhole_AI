@@ -70,3 +70,28 @@ Do not use this project for unauthorized scanning, exploitation, credential atta
 ## License
 
 MIT License.
+
+## Browser Evidence Workflow
+
+BugIntel v0.3.0 includes a safe browser automation foundation.
+
+Current browser workflow:
+
+1. Plan browser actions with Scope Guard.
+2. Review the plan before execution.
+3. Save future browser/Playwright capture output as redacted evidence.
+4. Generate a Markdown report from the saved evidence.
+
+Example:
+
+    bugintel plan-browser examples/target.example.yaml https://demo.example.com/dashboard --browser chromium
+
+    bugintel save-browser-capture examples/browser_capture_result.example.json
+
+The `save-browser-capture` command stores browser capture output through the evidence model. It redacts sensitive previews and stores hashes for response bodies and HTML snapshots.
+
+After saving evidence, generate a report from the saved JSON path:
+
+    bugintel generate-report data/evidence/demo-lab/<saved-browser-evidence>.json --output reports/browser-evidence-report.md
+
+Browser execution itself is still a future step. The current implementation provides planning, capture-result normalization, redacted evidence storage, and report rendering.

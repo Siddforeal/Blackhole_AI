@@ -44,3 +44,15 @@ Browser evidence should avoid saving raw secrets, raw tokens, raw private HTML, 
 - Browser evidence storage
 - Secret redaction
 - Response-diff analysis
+
+## Browser Evidence Command Workflow
+
+The browser evidence workflow can be exercised with the safe example capture result:
+
+    bugintel plan-browser examples/target.example.yaml https://demo.example.com/dashboard --browser chromium
+
+    bugintel save-browser-capture examples/browser_capture_result.example.json
+
+    bugintel generate-report data/evidence/demo-lab/<saved-browser-evidence>.json --output reports/browser-evidence-report.md
+
+The example capture result represents the output shape expected from a future Playwright/browser execution adapter. It should be treated as a handoff file, not as proof that live browser automation has executed.

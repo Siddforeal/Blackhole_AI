@@ -91,3 +91,33 @@ def test_save_browser_capture_command_rejects_missing_required_fields():
         assert "missing required fields" in result.output
         assert "task_name" in result.output
         assert "start_url" in result.output
+
+
+def test_browser_capture_example_can_be_saved_and_reported(tmp_path):
+    from bugintel.agents.report_agent import save_evidence_report
+
+    example = Path("examples/browser_capture_result.example.json")
+    assert example.exists()
+    example_text = example.read_text(encoding="utf-8")
+
+    with runner.isolated_filesystem():
+        capture_path = Path("capture-result.json")
+        capture_path.write_text(example_text, encoding="utf-8")
+
+        result = runner.invoke(app, ["save-browser-capture", str(capture_path)])
+
+        assert result.exit_code == 0
+        assert "Browser evidence saved" in result.output
+
+        evidence_files = list(Path("data/evidence/demo-lab").glob("*.json"))
+        assert len(evidence_files) == 1
+
+        report_path = Path("browser-report.md")
+        save_evidence_report(evidence_files[0], report_path)
+
+        report = report_path.read_text(encoding="utf-8")
+
+        assert "Evidence Type: browser" in report
+        assert "## Browser Network Events" in report
+        assert "researcher@example.com" not in json.dumps(json.loads(evidence_files[0].read_text(encoding="utf-8")))
+        assert "<email>" in report

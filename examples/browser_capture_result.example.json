@@ -1,0 +1,45 @@
+{
+  "target_name": "demo-lab",
+  "task_name": "capture dashboard",
+  "start_url": "https://demo.example.com/dashboard",
+  "browser": "chromium",
+  "network_events": [
+    {
+      "method": "GET",
+      "url": "https://demo.example.com/api/me",
+      "status_code": 200,
+      "resource_type": "fetch",
+      "request_headers": {
+        "Authorization": "Bearer example.redacted.token"
+      },
+      "response_headers": {
+        "content-type": "application/json"
+      },
+      "response_body": "{\"id\":1,\"email\":\"researcher@example.com\",\"role\":\"researcher\"}"
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "artifacts/dashboard.png",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "content_type": "image/png",
+      "notes": "Example screenshot artifact reference only"
+    }
+  ],
+  "html_snapshots": [
+    {
+      "url": "https://demo.example.com/dashboard",
+      "html": "<html><body>researcher@example.com</body></html>"
+    }
+  ],
+  "execution_output": {
+    "runner": "playwright",
+    "status": "completed",
+    "stdout": "Loaded dashboard for researcher@example.com",
+    "stderr": "",
+    "artifacts": {
+      "trace": "artifacts/trace.zip"
+    }
+  },
+  "notes": "Safe example browser capture result. Secrets and emails should be redacted when saved as evidence."
+}
