@@ -4,7 +4,7 @@
 
 BugIntel AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.3.0
+Current version: 0.4.0
 
 ## Research Goal
 
@@ -73,7 +73,7 @@ MIT License.
 
 ## Browser Evidence Workflow
 
-BugIntel v0.3.0 includes a safe browser automation foundation.
+BugIntel v0.4.0 includes a safe browser automation foundation.
 
 Current browser workflow:
 
