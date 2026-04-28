@@ -103,7 +103,15 @@ Real adapter routing is also opt-in. The real Playwright adapter path requires b
 
 Without `--use-real-adapter`, the safety-gated execution path continues to use the adapter stub.
 
-When the skeleton reaches the handoff path, `execute-playwright-plan --json-output` writes a capture-result JSON compatible with the browser evidence pipeline. This is useful for validating the CLI and evidence handoff before live Playwright execution exists.
+For local validation, prefer a temporary `127.0.0.1` HTTP server and a scope file that only allows that local host. A successful real-adapter smoke test should produce:
+
+1. `status: completed`
+2. At least one browser-observed network event.
+3. One screenshot artifact.
+4. One HTML snapshot artifact.
+5. A capture-result JSON that can be passed into `save-browser-capture`.
+
+When the handoff path writes a capture-result JSON, it remains compatible with the browser evidence pipeline.
 
 The full safe handoff chain is:
 

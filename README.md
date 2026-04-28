@@ -148,6 +148,17 @@ Real adapter routing requires:
 3. `--use-real-adapter`.
 4. The optional Playwright Python package to be installed and importable.
 
+A safe local smoke test can be run against a temporary `127.0.0.1` HTTP server. Use a local scope file that only allows `http://127.0.0.1`, then run:
+
+    bugintel execute-playwright-plan /tmp/bugintel-local-scope.yaml http://127.0.0.1:8765/dashboard.html --task-name "local real adapter smoke" --allow-live-execution --use-real-adapter --json-output /tmp/bugintel-real-playwright-success.json
+
+Expected successful local result:
+
+    status: completed
+    loaded_network_events: >= 1
+    loaded_screenshots: 1
+    loaded_html_snapshots: 1
+
 The safe handoff chain is:
 
     bugintel execute-playwright-plan examples/target.example.yaml https://demo.example.com/dashboard --allow-live-execution --json-output reports/playwright-capture-result.json
