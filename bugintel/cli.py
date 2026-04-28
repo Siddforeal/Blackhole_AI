@@ -40,11 +40,15 @@ from bugintel.integrations.playwright_runner import (
     BrowserCaptureResult,
     BrowserExecutionConfig,
     BrowserPlan,
+    PlaywrightArtifactPlan,
+    PlaywrightExecutionRequest,
     PlaywrightExecutionSafetyError,
     build_browser_plan,
+    build_playwright_adapter_context,
     build_playwright_execution_preview,
     build_playwright_execution_request,
     execute_playwright_plan,
+    load_browser_capture_result_from_artifacts,
 )
 from bugintel.integrations.web_fetcher import fetch_web_page
 from bugintel.integrations.har_importer import load_har
@@ -1476,6 +1480,130 @@ def execute_playwright_request_command(
     table.add_row("Reason", str(output.get("reason", "")))
     table.add_row("Live execution allowed", "YES" if output.get("live_execution_allowed") else "NO")
     table.add_row("Playwright available", "YES" if output.get("playwright_available") else "NO")
+
+    console.print(table)
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(
+            json.dumps(result.to_evidence_kwargs(), indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        console.print(f"[bold green]Capture result JSON saved:[/bold green] {json_output}")
+
+
+
+@app.command("load-browser-artifacts")
+def load_browser_artifacts_command(
+    request_file: Path = typer.Argument(..., help="Path to Playwright execution request JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional path to save the capture result JSON."),
+):
+    """Load planned browser artifacts into a capture result JSON."""
+    if not request_file.exists():
+        console.print(f"[bold red]Playwright request file not found:[/bold red] {request_file}")
+        raise typer.Exit(code=1)
+
+    request_data = json.loads(request_file.read_text(encoding="utf-8"))
+
+    required_fields = [
+        "target_name",
+        "task_name",
+        "start_url",
+        "browser",
+        "config",
+        "planned_actions",
+        "artifacts",
+    ]
+    missing_fields = [
+        field
+        for field in required_fields
+        if field not in request_data
+    ]
+
+    if missing_fields:
+        console.print(
+            "[bold red]Playwright request file missing required fields:[/bold red] "
+            + ", ".join(missing_fields)
+        )
+        raise typer.Exit(code=2)
+
+    config_data = request_data.get("config") or {}
+    artifacts_data = request_data.get("artifacts") or {}
+
+    required_artifact_fields = [
+        "artifact_dir",
+        "screenshot_path",
+        "html_snapshot_path",
+        "network_log_path",
+        "trace_path",
+    ]
+    missing_artifact_fields = [
+        field
+        for field in required_artifact_fields
+        if field not in artifacts_data
+    ]
+
+    if missing_artifact_fields:
+        console.print(
+            "[bold red]Playwright request artifacts missing required fields:[/bold red] "
+            + ", ".join(missing_artifact_fields)
+        )
+        raise typer.Exit(code=2)
+
+    config = BrowserExecutionConfig(
+        headless=bool(config_data.get("headless", True)),
+        timeout_ms=int(config_data.get("timeout_ms", 15000)),
+        wait_until=str(config_data.get("wait_until", "load")),
+        capture_network=bool(config_data.get("capture_network", True)),
+        capture_screenshot=bool(config_data.get("capture_screenshot", True)),
+        capture_html=bool(config_data.get("capture_html", True)),
+        screenshot_path=str(config_data.get("screenshot_path", "artifacts/browser-screenshot.png")),
+        allow_live_execution=bool(config_data.get("allow_live_execution", False)),
+    )
+
+    artifacts = PlaywrightArtifactPlan(
+        artifact_dir=str(artifacts_data["artifact_dir"]),
+        screenshot_path=str(artifacts_data["screenshot_path"]),
+        html_snapshot_path=str(artifacts_data["html_snapshot_path"]),
+        network_log_path=str(artifacts_data["network_log_path"]),
+        trace_path=str(artifacts_data["trace_path"]),
+    )
+
+    request = PlaywrightExecutionRequest(
+        target_name=str(request_data["target_name"]),
+        task_name=str(request_data["task_name"]),
+        start_url=str(request_data["start_url"]),
+        browser=str(request_data["browser"]),
+        config=config,
+        artifacts=artifacts,
+        planned_actions=list(request_data.get("planned_actions") or []),
+    )
+
+    context = build_playwright_adapter_context(request)
+
+    try:
+        result = load_browser_capture_result_from_artifacts(
+            context,
+            notes="Loaded by bugintel load-browser-artifacts.",
+        )
+    except ValueError as exc:
+        console.print(f"[bold red]Browser artifact loading failed:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    output = result.execution_output
+
+    table = Table(title="Browser Artifacts Loaded")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row("Target", result.target_name)
+    table.add_row("Task", result.task_name)
+    table.add_row("Browser", result.browser)
+    table.add_row("Start URL", result.start_url)
+    table.add_row("Status", str(output.get("status", "unknown")))
+    table.add_row("Network events", str(output.get("loaded_network_events", 0)))
+    table.add_row("Screenshots", str(output.get("loaded_screenshots", 0)))
+    table.add_row("HTML snapshots", str(output.get("loaded_html_snapshots", 0)))
 
     console.print(table)
 

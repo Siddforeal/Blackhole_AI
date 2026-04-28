@@ -906,3 +906,68 @@ def test_execute_playwright_request_command_writes_json_when_handoff_reached(mon
         assert data["execution_output"]["status"] == "not_implemented"
         assert data["execution_output"]["live_execution_allowed"] is True
         assert data["execution_output"]["playwright_available"] is True
+
+
+def test_load_browser_artifacts_command_writes_capture_result_json():
+    request_example = Path("examples/playwright_request.example.json")
+    assert request_example.exists()
+
+    request_data = json.loads(request_example.read_text(encoding="utf-8"))
+
+    with runner.isolated_filesystem():
+        request_path = Path("request.json")
+        output_path = Path("capture-result.json")
+
+        request_path.write_text(json.dumps(request_data), encoding="utf-8")
+
+        artifacts = request_data["artifacts"]
+        network_path = Path(artifacts["network_log_path"])
+        html_path = Path(artifacts["html_snapshot_path"])
+        screenshot_path = Path(artifacts["screenshot_path"])
+
+        network_path.parent.mkdir(parents=True, exist_ok=True)
+
+        network_path.write_text(
+            json.dumps(
+                [
+                    {
+                        "method": "GET",
+                        "url": "https://demo.example.com/api/me",
+                        "status_code": 200,
+                        "resource_type": "fetch",
+                        "response_body": '{"email":"sidd@example.com"}',
+                    }
+                ]
+            ),
+            encoding="utf-8",
+        )
+        html_path.write_text("<html>sidd@example.com</html>", encoding="utf-8")
+        screenshot_path.write_bytes(b"fake png bytes")
+
+        result = runner.invoke(
+            app,
+            [
+                "load-browser-artifacts",
+                str(request_path),
+                "--json-output",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Browser Artifacts Loaded" in result.output
+        assert "Capture result JSON saved" in result.output
+        assert output_path.exists()
+
+        data = json.loads(output_path.read_text(encoding="utf-8"))
+
+        assert data["target_name"] == "demo-lab"
+        assert data["task_name"] == "Capture Dashboard"
+        assert data["browser"] == "chromium"
+        assert data["execution_output"]["status"] == "artifacts_loaded"
+        assert data["execution_output"]["loaded_network_events"] == 1
+        assert data["execution_output"]["loaded_screenshots"] == 1
+        assert data["execution_output"]["loaded_html_snapshots"] == 1
+        assert data["network_events"][0]["url"] == "https://demo.example.com/api/me"
+        assert data["html_snapshots"][0]["url"] == "https://demo.example.com/dashboard"
+        assert len(data["screenshots"][0]["sha256"]) == 64
