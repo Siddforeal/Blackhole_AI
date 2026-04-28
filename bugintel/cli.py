@@ -1225,12 +1225,7 @@ def build_playwright_request_command(
     allow_live_execution: bool = typer.Option(False, "--allow-live-execution", help="Record explicit future live-execution approval in the request. This command still does not launch a browser."),
     json_output: Path | None = typer.Option(None, "--json-output", help="Optional path to save the request JSON."),
 ):
-    """
-    Build a reviewable Playwright execution request JSON.
-
-    Human meaning: this creates a browser job-ticket for future execution. It
-    validates scope and plans artifact paths, but does not launch a browser.
-    """
+    """Build a reviewable Playwright execution request JSON."""
     if not scope_file.exists():
         console.print(f"[bold red]Scope file not found:[/bold red] {scope_file}")
         raise typer.Exit(code=1)
@@ -1303,12 +1298,7 @@ def preview_playwright_request_command(
     request_file: Path = typer.Argument(..., help="Path to Playwright execution request JSON."),
     json_output: Path | None = typer.Option(None, "--json-output", help="Optional path to save the preview JSON."),
 ):
-    """
-    Build a safe Playwright preview from a saved execution request JSON.
-
-    Human meaning: this reads a browser job-ticket and previews what the future
-    Playwright execution would look like. It does not launch a browser.
-    """
+    """Build a Playwright execution preview from a saved request JSON."""
     if not request_file.exists():
         console.print(f"[bold red]Playwright request file not found:[/bold red] {request_file}")
         raise typer.Exit(code=1)
@@ -1406,13 +1396,7 @@ def execute_playwright_request_command(
     allow_live_execution: bool = typer.Option(False, "--allow-live-execution", help="Explicitly pass the live execution safety gate. Browser launch is still not implemented yet."),
     json_output: Path | None = typer.Option(None, "--json-output", help="Optional path to save the capture result JSON if the skeleton reaches handoff."),
 ):
-    """
-    Exercise the safety-gated Playwright execution skeleton from a saved request.
-
-    Human meaning: this reads a browser job-ticket, re-checks the start URL
-    against scope, then applies the same execution safety gate. It does not
-    launch a browser.
-    """
+    """Run the safety-gated Playwright execution handoff from a saved request."""
     if not request_file.exists():
         console.print(f"[bold red]Playwright request file not found:[/bold red] {request_file}")
         raise typer.Exit(code=1)

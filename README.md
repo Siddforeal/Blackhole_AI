@@ -144,7 +144,7 @@ This validates the evidence/report pipeline before live browser execution is imp
 
 BugIntel also has a pre-execution request model for future Playwright jobs.
 
-Human meaning: this is a browser job ticket. It records the target, task, start URL, browser type, config, planned actions, and artifact paths before any browser is launched.
+A Playwright request records the target, task, start URL, browser type, config, planned actions, and artifact paths before execution.
 
 The artifact planner prepares future paths like:
 
@@ -159,7 +159,7 @@ You can create a request JSON from the CLI:
 
     bugintel build-playwright-request examples/target.example.yaml https://demo.example.com/dashboard --task-name "Capture Dashboard" --json-output reports/playwright-request.json
 
-Human meaning: this gives you a reviewable browser job ticket before execution exists.
+This creates a reviewable Playwright request before live execution is implemented.
 
 A safe example request is included at:
 
@@ -171,13 +171,13 @@ You can preview a saved request JSON:
 
     bugintel preview-playwright-request examples/playwright_request.example.json --json-output reports/playwright-request-preview.json
 
-Human meaning: this reads the browser job ticket and shows the future Playwright preview without launching a browser.
+This reads the Playwright request and generates an execution preview without launching a browser.
 
 You can also pass a saved request through the execution safety gate:
 
     bugintel execute-playwright-request examples/playwright_request.example.json examples/target.example.yaml
 
-Human meaning: this re-checks the saved request against scope, then blocks by default because live execution is disabled.
+This re-checks the saved request against scope, then blocks by default because live execution is disabled.
 
 To test the future handoff path:
 
@@ -189,7 +189,7 @@ In the current skeleton, this still does not launch a browser. It only reaches t
 
 BugIntel now has an internal Playwright adapter context.
 
-Human meaning: this is the future engine connector package. It carries the request and planned artifact paths toward the future browser adapter.
+The adapter context carries the request and planned artifact paths toward the browser adapter.
 
 By default it does not create files. It can optionally create only the artifact directory, but it still does not launch a browser, capture network traffic, save screenshots, save HTML, or create traces.
 
@@ -197,6 +197,6 @@ By default it does not create files. It can optionally create only the artifact 
 
 BugIntel now has a stub runner for the future Playwright adapter.
 
-Human meaning: this is the future engine entry point. Today it deliberately returns `status: not_implemented` as a browser capture result.
+The adapter stub returns `status: not_implemented` as a browser capture result.
 
 It proves the adapter can hand results into the evidence pipeline shape, but it still does not launch a browser, capture network traffic, save screenshots, save HTML, or create traces.
