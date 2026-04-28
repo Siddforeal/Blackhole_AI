@@ -86,7 +86,12 @@ def test_build_browser_plan_can_disable_optional_capture():
 
 def test_build_browser_capture_result_matches_evidence_store_shape(tmp_path):
     from bugintel.core.evidence_store import EvidenceStore
-    from bugintel.integrations.playwright_runner import build_browser_capture_result
+    from bugintel.integrations.playwright_runner import (
+        BrowserHtmlSnapshot,
+        BrowserNetworkEvent,
+        BrowserScreenshot,
+        build_browser_capture_result,
+    )
 
     scope = make_scope()
     plan = build_browser_plan(
@@ -131,7 +136,10 @@ def test_build_browser_capture_result_matches_evidence_store_shape(tmp_path):
     assert result.task_name == "capture dashboard"
     assert result.start_url == "https://demo.example.com/dashboard"
     assert result.browser == "chromium"
-    assert result.network_events[0]["method"] == "GET"
+    assert isinstance(result.network_events[0], BrowserNetworkEvent)
+    assert isinstance(result.screenshots[0], BrowserScreenshot)
+    assert isinstance(result.html_snapshots[0], BrowserHtmlSnapshot)
+    assert result.network_events[0].method == "GET"
 
     kwargs = result.to_evidence_kwargs()
 

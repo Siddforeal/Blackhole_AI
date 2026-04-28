@@ -36,25 +36,175 @@ class BrowserPlan:
     requires_human_approval: bool = True
 
 
-@dataclass
-class BrowserCaptureResult:
-    """
-    Normalized result shape for future browser execution.
+@dataclass(frozen=True)
+class BrowserNetworkEvent:
+    """Typed browser network evidence item."""
 
-    This is intentionally execution-engine neutral. A future Playwright runner,
-    Chrome runner, Firefox runner, or imported DevTools capture can populate the
-    same shape before handing it to EvidenceStore.save_browser_evidence().
-    """
+    method: str
+    url: str
+    status_code: int | None = None
+    resource_type: str = ""
+    request_headers: dict[str, Any] = field(default_factory=dict)
+    response_headers: dict[str, Any] = field(default_factory=dict)
+    request_post_data: str = ""
+    response_body: str = ""
+    extra: dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_value(cls, value: "BrowserNetworkEvent | dict[str, Any]") -> "BrowserNetworkEvent":
+        if isinstance(value, cls):
+            return value
+
+        data = dict(value)
+        known_keys = {
+            "method",
+            "url",
+            "status_code",
+            "resource_type",
+            "request_headers",
+            "response_headers",
+            "request_post_data",
+            "response_body",
+        }
+
+        return cls(
+            method=str(data.get("method", "GET")).upper(),
+            url=str(data.get("url", "")),
+            status_code=data.get("status_code"),
+            resource_type=str(data.get("resource_type", "")),
+            request_headers=dict(data.get("request_headers") or {}),
+            response_headers=dict(data.get("response_headers") or {}),
+            request_post_data=str(data.get("request_post_data") or ""),
+            response_body=str(data.get("response_body") or ""),
+            extra={key: value for key, value in data.items() if key not in known_keys},
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        data: dict[str, Any] = {
+            "method": self.method.upper(),
+            "url": self.url,
+        }
+
+        if self.status_code is not None:
+            data["status_code"] = self.status_code
+        if self.resource_type:
+            data["resource_type"] = self.resource_type
+        if self.request_headers:
+            data["request_headers"] = self.request_headers
+        if self.response_headers:
+            data["response_headers"] = self.response_headers
+        if self.request_post_data:
+            data["request_post_data"] = self.request_post_data
+        if self.response_body:
+            data["response_body"] = self.response_body
+
+        data.update(self.extra)
+        return data
+
+
+@dataclass(frozen=True)
+class BrowserScreenshot:
+    """Typed browser screenshot evidence item."""
+
+    path: str
+    sha256: str = ""
+    content_type: str = "image/png"
+    extra: dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_value(cls, value: "BrowserScreenshot | dict[str, Any]") -> "BrowserScreenshot":
+        if isinstance(value, cls):
+            return value
+
+        data = dict(value)
+        known_keys = {"path", "sha256", "content_type"}
+
+        return cls(
+            path=str(data.get("path", "")),
+            sha256=str(data.get("sha256", "")),
+            content_type=str(data.get("content_type") or "image/png"),
+            extra={key: value for key, value in data.items() if key not in known_keys},
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        data: dict[str, Any] = {
+            "path": self.path,
+            "content_type": self.content_type,
+        }
+
+        if self.sha256:
+            data["sha256"] = self.sha256
+
+        data.update(self.extra)
+        return data
+
+
+@dataclass(frozen=True)
+class BrowserHtmlSnapshot:
+    """Typed browser HTML snapshot evidence item."""
+
+    url: str
+    html: str = ""
+    extra: dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_value(cls, value: "BrowserHtmlSnapshot | dict[str, Any]") -> "BrowserHtmlSnapshot":
+        if isinstance(value, cls):
+            return value
+
+        data = dict(value)
+        raw_html = data.get("html") or data.get("content") or data.get("html_preview") or ""
+        known_keys = {"url", "html", "content", "html_preview"}
+
+        return cls(
+            url=str(data.get("url", "")),
+            html=str(raw_html),
+            extra={key: value for key, value in data.items() if key not in known_keys},
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        data: dict[str, Any] = {
+            "url": self.url,
+        }
+
+        if self.html:
+            data["html"] = self.html
+
+        data.update(self.extra)
+        return data
+
+
+@dataclass(frozen=True)
+class BrowserCaptureResult:
+    """Normalized browser capture result."""
 
     target_name: str
     task_name: str
     start_url: str
     browser: str
-    network_events: list[dict[str, Any]] = field(default_factory=list)
-    screenshots: list[dict[str, Any]] = field(default_factory=list)
-    html_snapshots: list[dict[str, Any]] = field(default_factory=list)
+    network_events: list[BrowserNetworkEvent] = field(default_factory=list)
+    screenshots: list[BrowserScreenshot] = field(default_factory=list)
+    html_snapshots: list[BrowserHtmlSnapshot] = field(default_factory=list)
     execution_output: dict[str, Any] = field(default_factory=dict)
     notes: str = ""
+
+    def __post_init__(self) -> None:
+        """Normalize dictionary evidence items into typed browser evidence models."""
+        object.__setattr__(
+            self,
+            "network_events",
+            [BrowserNetworkEvent.from_value(event) for event in self.network_events],
+        )
+        object.__setattr__(
+            self,
+            "screenshots",
+            [BrowserScreenshot.from_value(screenshot) for screenshot in self.screenshots],
+        )
+        object.__setattr__(
+            self,
+            "html_snapshots",
+            [BrowserHtmlSnapshot.from_value(snapshot) for snapshot in self.html_snapshots],
+        )
 
     def to_evidence_kwargs(self) -> dict[str, Any]:
         return {
@@ -62,9 +212,9 @@ class BrowserCaptureResult:
             "task_name": self.task_name,
             "start_url": self.start_url,
             "browser": self.browser,
-            "network_events": self.network_events,
-            "screenshots": self.screenshots,
-            "html_snapshots": self.html_snapshots,
+            "network_events": [event.to_dict() for event in self.network_events],
+            "screenshots": [screenshot.to_dict() for screenshot in self.screenshots],
+            "html_snapshots": [snapshot.to_dict() for snapshot in self.html_snapshots],
             "execution_output": self.execution_output,
             "notes": self.notes,
         }
@@ -79,12 +229,7 @@ class PlaywrightAvailability:
 
 @dataclass(frozen=True)
 class BrowserExecutionConfig:
-    """
-    Safe execution configuration for future Playwright runs.
-
-    Live execution is intentionally disabled by default. This lets BugIntel
-    build reviewable execution previews without launching a browser.
-    """
+    """Safe execution configuration for Playwright runs."""
 
     headless: bool = True
     timeout_ms: int = 15000
@@ -100,12 +245,7 @@ class BrowserExecutionConfig:
 
 @dataclass(frozen=True)
 class PlaywrightArtifactPlan:
-    """
-    Planned artifact paths for future Playwright execution.
-
-    These are only paths. Creating this object does not create files, launch a
-    browser, save screenshots, or capture network traffic.
-    """
+    """Planned artifact paths for Playwright execution."""
 
     artifact_dir: str
     screenshot_path: str
@@ -125,12 +265,7 @@ class PlaywrightArtifactPlan:
 
 @dataclass(frozen=True)
 class PlaywrightExecutionRequest:
-    """
-    Reviewable request object for a future Playwright execution adapter.
-
-    This is the job ticket the real adapter will consume later. It is safe to
-    build because it does not launch a browser.
-    """
+    """Request object for the Playwright execution adapter."""
 
     target_name: str
     task_name: str
@@ -165,13 +300,7 @@ class PlaywrightExecutionRequest:
 
 @dataclass(frozen=True)
 class PlaywrightAdapterContext:
-    """
-    Internal context object for the future Playwright adapter.
-
-    Human meaning: this is the safe engine-connector package. It carries the
-    request and artifact paths to the future adapter, but it does not launch a
-    browser by itself.
-    """
+    """Internal context object for the Playwright adapter."""
 
     request: PlaywrightExecutionRequest
     artifact_dir_created: bool = False
@@ -196,13 +325,7 @@ def build_playwright_adapter_context(
     request: PlaywrightExecutionRequest,
     create_artifact_dir: bool = False,
 ) -> PlaywrightAdapterContext:
-    """
-    Build internal context for the future Playwright adapter.
-
-    This function does not launch a browser. By default, it also does not create
-    directories. When create_artifact_dir=True, it creates only the planned
-    artifact directory so future execution can write files there.
-    """
+    """Build internal context for the Playwright adapter."""
     artifact_dir_created = False
 
     if create_artifact_dir:
@@ -220,12 +343,7 @@ def build_playwright_artifact_plan(
     task_name: str,
     base_dir: str | Path = "artifacts/browser",
 ) -> PlaywrightArtifactPlan:
-    """
-    Plan artifact paths for future Playwright execution.
-
-    This does not create directories or files. It only returns deterministic
-    safe paths that later execution can use.
-    """
+    """Plan artifact paths for Playwright execution."""
     base = Path(base_dir)
     artifact_dir = base / _safe_artifact_name(target_name) / _safe_artifact_name(task_name)
 
@@ -244,11 +362,7 @@ def build_playwright_execution_request(
     config: BrowserExecutionConfig | None = None,
     base_artifact_dir: str | Path = "artifacts/browser",
 ) -> PlaywrightExecutionRequest:
-    """
-    Build a future Playwright execution request from an approved BrowserPlan.
-
-    This is still pre-execution. It does not launch a browser.
-    """
+    """Build a Playwright execution request from an approved BrowserPlan."""
     if not plan.allowed:
         raise ValueError(f"Cannot build Playwright execution request from blocked browser plan: {plan.reason}")
 
@@ -297,13 +411,7 @@ def run_playwright_adapter_stub(
     notes: str = "",
     availability: PlaywrightAvailability | None = None,
 ) -> BrowserCaptureResult:
-    """
-    Stub runner for the future Playwright adapter.
-
-    Human meaning: this is the future engine entry point, but the engine is not
-    installed yet. It converts an adapter context into a BrowserCaptureResult
-    with status "not_implemented" and does not launch a browser.
-    """
+    """Return a BrowserCaptureResult from the Playwright adapter stub."""
     request = context.request
 
     execution_output = {
@@ -335,11 +443,7 @@ def run_playwright_adapter_stub(
 
 
 def check_playwright_available() -> PlaywrightAvailability:
-    """
-    Check whether the optional Playwright Python package is importable.
-
-    This does not install packages, download browsers, or launch a browser.
-    """
+    """Check whether the optional Playwright Python package is importable."""
     if importlib.util.find_spec("playwright") is None:
         return PlaywrightAvailability(
             available=False,
@@ -361,18 +465,13 @@ def check_playwright_available() -> PlaywrightAvailability:
 def build_browser_capture_result(
     plan: BrowserPlan,
     task_name: str,
-    network_events: list[dict[str, Any]] | None = None,
-    screenshots: list[dict[str, Any]] | None = None,
-    html_snapshots: list[dict[str, Any]] | None = None,
+    network_events: list[BrowserNetworkEvent | dict[str, Any]] | None = None,
+    screenshots: list[BrowserScreenshot | dict[str, Any]] | None = None,
+    html_snapshots: list[BrowserHtmlSnapshot | dict[str, Any]] | None = None,
     execution_output: dict[str, Any] | None = None,
     notes: str = "",
 ) -> BrowserCaptureResult:
-    """
-    Build a BrowserCaptureResult from an approved browser plan.
-
-    This normalizes future Playwright adapter output into the evidence-store
-    shape. It does not launch a browser by itself.
-    """
+    """Build a BrowserCaptureResult from an approved browser plan."""
     if not plan.allowed:
         raise ValueError(f"Cannot build capture result from blocked browser plan: {plan.reason}")
 
@@ -381,9 +480,9 @@ def build_browser_capture_result(
         task_name=task_name,
         start_url=plan.start_url,
         browser=plan.browser,
-        network_events=network_events or [],
-        screenshots=screenshots or [],
-        html_snapshots=html_snapshots or [],
+        network_events=[BrowserNetworkEvent.from_value(event) for event in network_events or []],
+        screenshots=[BrowserScreenshot.from_value(screenshot) for screenshot in screenshots or []],
+        html_snapshots=[BrowserHtmlSnapshot.from_value(snapshot) for snapshot in html_snapshots or []],
         execution_output=execution_output or {},
         notes=notes,
     )
@@ -393,12 +492,7 @@ def build_playwright_execution_preview(
     plan: BrowserPlan,
     config: BrowserExecutionConfig | None = None,
 ) -> dict[str, Any]:
-    """
-    Build a safe, reviewable Playwright execution preview.
-
-    This does not launch a browser. It records whether live execution would be
-    allowed and whether the optional Playwright package is available.
-    """
+    """Build a Playwright execution preview."""
     if not plan.allowed:
         raise ValueError(f"Cannot build Playwright execution preview from blocked browser plan: {plan.reason}")
 
@@ -535,21 +629,7 @@ def execute_playwright_plan(
     config: BrowserExecutionConfig | None = None,
     notes: str = "",
 ) -> BrowserCaptureResult:
-    """
-    Safety-gated skeleton for future live Playwright execution.
-
-    This function intentionally does not launch a browser yet. It enforces the
-    checks that must pass before a future live adapter is allowed to run:
-
-    - BrowserPlan must be allowed by Scope Guard.
-    - BrowserExecutionConfig.allow_live_execution must be True.
-    - Optional Playwright package must be importable.
-
-    Once those gates pass, this function now routes through the internal
-    Playwright adapter context and adapter stub runner. The stub still returns
-    execution_output status "not_implemented" so real browser launch can be
-    added behind the same safety gate later.
-    """
+    """Run the safety-gated Playwright execution handoff."""
     if not plan.allowed:
         raise PlaywrightExecutionSafetyError(f"Cannot execute blocked browser plan: {plan.reason}")
 
