@@ -295,6 +295,7 @@ def _safe_artifact_name(value: str) -> str:
 def run_playwright_adapter_stub(
     context: PlaywrightAdapterContext,
     notes: str = "",
+    availability: PlaywrightAvailability | None = None,
 ) -> BrowserCaptureResult:
     """
     Stub runner for the future Playwright adapter.
@@ -315,6 +316,10 @@ def run_playwright_adapter_stub(
         "artifacts": request.artifacts.to_dict(),
         "safety_notes": list(context.safety_notes),
     }
+
+    if availability is not None:
+        execution_output["playwright_available"] = availability.available
+        execution_output["playwright_availability_reason"] = availability.reason
 
     return BrowserCaptureResult(
         target_name=request.target_name,
@@ -350,6 +355,37 @@ def check_playwright_available() -> PlaywrightAvailability:
     return PlaywrightAvailability(
         available=True,
         reason="Playwright Python package is available.",
+    )
+
+
+def build_browser_capture_result(
+    plan: BrowserPlan,
+    task_name: str,
+    network_events: list[dict[str, Any]] | None = None,
+    screenshots: list[dict[str, Any]] | None = None,
+    html_snapshots: list[dict[str, Any]] | None = None,
+    execution_output: dict[str, Any] | None = None,
+    notes: str = "",
+) -> BrowserCaptureResult:
+    """
+    Build a BrowserCaptureResult from an approved browser plan.
+
+    This normalizes future Playwright adapter output into the evidence-store
+    shape. It does not launch a browser by itself.
+    """
+    if not plan.allowed:
+        raise ValueError(f"Cannot build capture result from blocked browser plan: {plan.reason}")
+
+    return BrowserCaptureResult(
+        target_name=plan.target_name,
+        task_name=task_name,
+        start_url=plan.start_url,
+        browser=plan.browser,
+        network_events=network_events or [],
+        screenshots=screenshots or [],
+        html_snapshots=html_snapshots or [],
+        execution_output=execution_output or {},
+        notes=notes,
     )
 
 
@@ -509,69 +545,36 @@ def execute_playwright_plan(
     - BrowserExecutionConfig.allow_live_execution must be True.
     - Optional Playwright package must be importable.
 
-    Once those gates pass, this skeleton returns a BrowserCaptureResult with
-    execution_output status "not_implemented" so the future implementation can
-    be added behind the same safety gate.
+    Once those gates pass, this function now routes through the internal
+    Playwright adapter context and adapter stub runner. The stub still returns
+    execution_output status "not_implemented" so real browser launch can be
+    added behind the same safety gate later.
     """
     if not plan.allowed:
-        raise PlaywrightExecutionSafetyError(
-            f"Cannot execute blocked browser plan: {plan.reason}"
-        )
+        raise PlaywrightExecutionSafetyError(f"Cannot execute blocked browser plan: {plan.reason}")
 
     config = config or BrowserExecutionConfig()
-    preview = build_playwright_execution_preview(plan=plan, config=config)
 
     if not config.allow_live_execution:
         raise PlaywrightExecutionSafetyError(
-            "Live Playwright execution is disabled. Set allow_live_execution=True "
-            "only after human approval."
+            "Live Playwright execution is disabled. Set allow_live_execution=True only after human approval."
         )
 
     availability = check_playwright_available()
+
     if not availability.available:
         raise PlaywrightExecutionSafetyError(availability.reason)
 
-    execution_output = dict(preview)
-    execution_output["status"] = "not_implemented"
-    execution_output["reason"] = (
-        "Playwright execution adapter skeleton is safety-gated, "
-        "but live browser launch is not implemented yet."
-    )
-
-    return build_browser_capture_result(
+    request = build_playwright_execution_request(
         plan=plan,
         task_name=task_name,
-        execution_output=execution_output,
-        notes=notes or "Playwright execution adapter skeleton; browser not launched.",
+        config=config,
     )
 
+    context = build_playwright_adapter_context(request)
 
-def build_browser_capture_result(
-    plan: BrowserPlan,
-    task_name: str,
-    network_events: list[dict[str, Any]] | None = None,
-    screenshots: list[dict[str, Any]] | None = None,
-    html_snapshots: list[dict[str, Any]] | None = None,
-    execution_output: dict[str, Any] | None = None,
-    notes: str = "",
-) -> BrowserCaptureResult:
-    """
-    Build a normalized browser capture result from an approved BrowserPlan.
-
-    This does not execute a browser. It creates the handoff object that future
-    Playwright execution can populate and then save as browser evidence.
-    """
-    if not plan.allowed:
-        raise ValueError(f"Cannot build capture result from blocked browser plan: {plan.reason}")
-
-    return BrowserCaptureResult(
-        target_name=plan.target_name,
-        task_name=task_name,
-        start_url=plan.start_url,
-        browser=plan.browser,
-        network_events=list(network_events or []),
-        screenshots=list(screenshots or []),
-        html_snapshots=list(html_snapshots or []),
-        execution_output=dict(execution_output or {}),
+    return run_playwright_adapter_stub(
+        context=context,
         notes=notes,
+        availability=availability,
     )

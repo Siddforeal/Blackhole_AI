@@ -643,3 +643,62 @@ def test_run_playwright_adapter_stub_preserves_artifact_directory_state(tmp_path
     assert not Path(request.artifacts.trace_path).exists()
 
     assert result.notes == "Stub handoff test."
+
+
+
+def test_execute_playwright_plan_routes_through_adapter_stub_after_safety_gates(monkeypatch):
+    import bugintel.integrations.playwright_runner as playwright_runner
+
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        PlaywrightAvailability,
+        execute_playwright_plan,
+    )
+
+    def fake_playwright_available():
+        return PlaywrightAvailability(
+            available=True,
+            reason="Playwright mocked as available for adapter-stub routing test.",
+        )
+
+    monkeypatch.setattr(
+        playwright_runner,
+        "check_playwright_available",
+        fake_playwright_available,
+    )
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    result = execute_playwright_plan(
+        plan=plan,
+        task_name="adapter stub route",
+        config=BrowserExecutionConfig(allow_live_execution=True),
+        notes="Adapter stub route test.",
+    )
+
+    output = result.execution_output
+
+    assert result.target_name == "demo-lab"
+    assert result.task_name == "adapter stub route"
+    assert result.network_events == []
+    assert result.screenshots == []
+    assert result.html_snapshots == []
+    assert result.notes == "Adapter stub route test."
+
+    assert output["runner"] == "playwright"
+    assert output["status"] == "not_implemented"
+    assert output["browser_launch_implemented"] is False
+    assert output["artifact_dir_created"] is False
+    assert output["live_execution_allowed"] is True
+    assert output["playwright_available"] is True
+    assert output["playwright_availability_reason"] == "Playwright mocked as available for adapter-stub routing test."
+    assert output["artifacts"]["screenshot_path"].endswith("/screenshot.png")
+    assert output["artifacts"]["html_snapshot_path"].endswith("/page.html")
+    assert output["artifacts"]["network_log_path"].endswith("/network.json")
+    assert output["artifacts"]["trace_path"].endswith("/trace.zip")
+    assert "No browser launched." in output["safety_notes"]
