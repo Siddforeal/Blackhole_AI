@@ -919,6 +919,7 @@ def test_run_playwright_adapter_uses_factory_and_loads_artifacts(tmp_path):
     assert output["browser_launch_implemented"] is True
     assert output["artifact_dir_created"] is True
     assert output["live_execution_allowed"] is True
+    assert output["playwright_available"] is True
     assert output["loaded_network_events"] == 1
     assert output["loaded_screenshots"] == 1
     assert output["loaded_html_snapshots"] == 1
@@ -1109,6 +1110,7 @@ def test_run_playwright_adapter_returns_failed_capture_result_on_navigation_erro
     assert "ERR_NAME_NOT_RESOLVED" in result.execution_output["reason"]
     assert result.execution_output["live_execution_allowed"] is True
     assert result.execution_output["use_real_adapter"] is True
+    assert result.execution_output["playwright_available"] is True
     assert result.execution_output["browser_launch_implemented"] is True
     assert result.execution_output["loaded_network_events"] == 0
     assert result.network_events == []

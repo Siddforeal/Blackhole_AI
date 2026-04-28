@@ -702,6 +702,7 @@ def run_playwright_adapter(
             "reason": error_message or "Playwright execution completed.",
             "live_execution_allowed": config.allow_live_execution,
             "use_real_adapter": config.use_real_adapter,
+            "playwright_available": True,
         }
     )
 
