@@ -802,3 +802,157 @@ def test_load_browser_capture_result_from_artifacts_reads_planned_files(tmp_path
 
     assert "sidd@example.com" not in serialized
     assert "<email>" in serialized
+
+
+def test_run_playwright_adapter_uses_factory_and_loads_artifacts(tmp_path):
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        BrowserHtmlSnapshot,
+        BrowserNetworkEvent,
+        BrowserScreenshot,
+        build_browser_plan,
+        build_playwright_adapter_context,
+        build_playwright_execution_request,
+        run_playwright_adapter,
+    )
+
+    class FakeRequest:
+        method = "GET"
+        resource_type = "document"
+        headers = {"Authorization": "Bearer abc.def.ghi"}
+        post_data = ""
+
+    class FakeResponse:
+        request = FakeRequest()
+        url = "https://demo.example.com/api/me"
+        status = 200
+        headers = {"content-type": "application/json"}
+
+    class FakePage:
+        def __init__(self):
+            self.handlers = {}
+
+        def on(self, event_name, handler):
+            self.handlers[event_name] = handler
+
+        def goto(self, url, wait_until, timeout):
+            assert url == "https://demo.example.com/dashboard"
+            assert wait_until == "load"
+            assert timeout == 15000
+            self.handlers["response"](FakeResponse())
+
+        def content(self):
+            return "<html>sidd@example.com</html>"
+
+        def screenshot(self, path, full_page):
+            assert full_page is True
+            Path(path).write_bytes(b"fake png bytes")
+
+    class FakeBrowser:
+        def __init__(self):
+            self.closed = False
+
+        def new_page(self):
+            return FakePage()
+
+        def close(self):
+            self.closed = True
+
+    class FakeLauncher:
+        def launch(self, **kwargs):
+            assert kwargs["headless"] is True
+            return FakeBrowser()
+
+    class FakePlaywright:
+        chromium = FakeLauncher()
+        firefox = FakeLauncher()
+
+    class FakePlaywrightManager:
+        def __enter__(self):
+            return FakePlaywright()
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    request = build_playwright_execution_request(
+        plan=plan,
+        task_name="Real Adapter Smoke",
+        config=BrowserExecutionConfig(allow_live_execution=True),
+        base_artifact_dir=tmp_path / "artifacts",
+    )
+
+    context = build_playwright_adapter_context(request)
+
+    result = run_playwright_adapter(
+        context,
+        notes="Fake Playwright adapter run.",
+        playwright_factory=FakePlaywrightManager,
+    )
+
+    assert result.target_name == "demo-lab"
+    assert result.task_name == "Real Adapter Smoke"
+    assert result.start_url == "https://demo.example.com/dashboard"
+    assert result.browser == "chromium"
+
+    assert isinstance(result.network_events[0], BrowserNetworkEvent)
+    assert isinstance(result.screenshots[0], BrowserScreenshot)
+    assert isinstance(result.html_snapshots[0], BrowserHtmlSnapshot)
+
+    assert result.network_events[0].url == "https://demo.example.com/api/me"
+    assert result.network_events[0].method == "GET"
+    assert result.screenshots[0].path == request.artifacts.screenshot_path
+    assert len(result.screenshots[0].sha256) == 64
+    assert result.html_snapshots[0].html == "<html>sidd@example.com</html>"
+
+    output = result.execution_output
+
+    assert output["runner"] == "playwright"
+    assert output["status"] == "completed"
+    assert output["reason"] == "Playwright execution completed."
+    assert output["browser_launch_implemented"] is True
+    assert output["artifact_dir_created"] is True
+    assert output["live_execution_allowed"] is True
+    assert output["loaded_network_events"] == 1
+    assert output["loaded_screenshots"] == 1
+    assert output["loaded_html_snapshots"] == 1
+
+
+def test_run_playwright_adapter_blocks_without_live_execution(tmp_path):
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        PlaywrightExecutionSafetyError,
+        build_browser_plan,
+        build_playwright_adapter_context,
+        build_playwright_execution_request,
+        run_playwright_adapter,
+    )
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    request = build_playwright_execution_request(
+        plan=plan,
+        task_name="Blocked Adapter Run",
+        config=BrowserExecutionConfig(allow_live_execution=False),
+        base_artifact_dir=tmp_path / "artifacts",
+    )
+
+    context = build_playwright_adapter_context(request)
+
+    try:
+        run_playwright_adapter(context)
+    except PlaywrightExecutionSafetyError as exc:
+        assert "Live Playwright execution is disabled" in str(exc)
+    else:
+        raise AssertionError("Expected live execution safety gate to block adapter run")

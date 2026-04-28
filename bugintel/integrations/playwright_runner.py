@@ -552,6 +552,164 @@ def load_browser_capture_result_from_artifacts(
     )
 
 
+
+def _import_sync_playwright():
+    from playwright.sync_api import sync_playwright
+
+    return sync_playwright
+
+
+def _select_browser_launcher(playwright: Any, browser: str) -> tuple[Any, dict[str, Any]]:
+    browser = browser.lower().strip()
+
+    if browser == "firefox":
+        return playwright.firefox, {}
+
+    if browser == "chrome":
+        return playwright.chromium, {"channel": "chrome"}
+
+    return playwright.chromium, {}
+
+
+def _playwright_response_to_network_event(response: Any) -> BrowserNetworkEvent:
+    request = getattr(response, "request", None)
+
+    request_headers = getattr(request, "headers", {}) if request is not None else {}
+    response_headers = getattr(response, "headers", {})
+
+    post_data = getattr(request, "post_data", "") if request is not None else ""
+    if callable(post_data):
+        post_data = post_data()
+
+    return BrowserNetworkEvent(
+        method=str(getattr(request, "method", "GET") if request is not None else "GET"),
+        url=str(getattr(response, "url", "")),
+        status_code=getattr(response, "status", None),
+        resource_type=str(getattr(request, "resource_type", "") if request is not None else ""),
+        request_headers=dict(request_headers or {}),
+        response_headers=dict(response_headers or {}),
+        request_post_data=str(post_data or ""),
+    )
+
+
+def run_playwright_adapter(
+    context: PlaywrightAdapterContext,
+    notes: str = "",
+    playwright_factory: Any | None = None,
+) -> BrowserCaptureResult:
+    """Execute a Playwright adapter run and return a browser capture result."""
+    request = context.request
+    config = request.config
+
+    if not config.allow_live_execution:
+        raise PlaywrightExecutionSafetyError(
+            "Live Playwright execution is disabled. Set allow_live_execution=True only after human approval."
+        )
+
+    if playwright_factory is None:
+        availability = check_playwright_available()
+        if not availability.available:
+            raise PlaywrightExecutionSafetyError(availability.reason)
+
+        playwright_factory = _import_sync_playwright()
+
+    artifact_context = build_playwright_adapter_context(
+        request,
+        create_artifact_dir=True,
+    )
+
+    artifacts = request.artifacts
+    network_events: list[dict[str, Any]] = []
+
+    with playwright_factory() as playwright:
+        launcher, launch_kwargs = _select_browser_launcher(playwright, request.browser)
+        browser = launcher.launch(
+            headless=config.headless,
+            **launch_kwargs,
+        )
+
+        try:
+            page = browser.new_page()
+
+            if config.capture_network:
+                def on_response(response: Any) -> None:
+                    network_events.append(
+                        _playwright_response_to_network_event(response).to_dict()
+                    )
+
+                page.on("response", on_response)
+
+            page.goto(
+                request.start_url,
+                wait_until=config.wait_until,
+                timeout=config.timeout_ms,
+            )
+
+            if config.capture_html:
+                html_path = Path(artifacts.html_snapshot_path)
+                html_path.parent.mkdir(parents=True, exist_ok=True)
+                html_path.write_text(
+                    page.content(),
+                    encoding="utf-8",
+                )
+
+            if config.capture_screenshot:
+                screenshot_path = Path(artifacts.screenshot_path)
+                screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+                page.screenshot(
+                    path=str(screenshot_path),
+                    full_page=True,
+                )
+
+            if config.capture_network:
+                network_path = Path(artifacts.network_log_path)
+                network_path.parent.mkdir(parents=True, exist_ok=True)
+                network_path.write_text(
+                    json.dumps(network_events, indent=2, sort_keys=True),
+                    encoding="utf-8",
+                )
+        finally:
+            browser.close()
+
+    executed_context = PlaywrightAdapterContext(
+        request=request,
+        artifact_dir_created=artifact_context.artifact_dir_created,
+        browser_launch_implemented=True,
+        safety_notes=(
+            "Playwright browser launched.",
+            "Network capture used configured setting.",
+            "Screenshot capture used configured setting.",
+            "HTML capture used configured setting.",
+        ),
+    )
+
+    result = load_browser_capture_result_from_artifacts(
+        executed_context,
+        notes=notes,
+    )
+
+    execution_output = dict(result.execution_output)
+    execution_output.update(
+        {
+            "status": "completed",
+            "reason": "Playwright execution completed.",
+            "live_execution_allowed": config.allow_live_execution,
+        }
+    )
+
+    return BrowserCaptureResult(
+        target_name=result.target_name,
+        task_name=result.task_name,
+        start_url=result.start_url,
+        browser=result.browser,
+        network_events=result.network_events,
+        screenshots=result.screenshots,
+        html_snapshots=result.html_snapshots,
+        execution_output=execution_output,
+        notes=result.notes,
+    )
+
+
 def check_playwright_available() -> PlaywrightAvailability:
     """Check whether the optional Playwright Python package is importable."""
     if importlib.util.find_spec("playwright") is None:
