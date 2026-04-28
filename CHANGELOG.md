@@ -19,6 +19,8 @@
 - `build-playwright-request` CLI command for creating reviewable browser job-ticket JSON
 - Safe `examples/playwright_request.example.json` browser job-ticket example
 - `preview-playwright-request` CLI command for previewing saved browser job-ticket JSON
+- `execute-playwright-request` CLI command for safety-gated execution from saved browser job-ticket JSON
+- Scope re-validation for saved Playwright request execution
 - Playwright artifact path planner for future screenshots, HTML snapshots, network logs, and traces
 - Live browser execution remains disabled by default
 

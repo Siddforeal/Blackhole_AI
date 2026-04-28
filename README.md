@@ -172,3 +172,15 @@ You can preview a saved request JSON:
     bugintel preview-playwright-request examples/playwright_request.example.json --json-output reports/playwright-request-preview.json
 
 Human meaning: this reads the browser job ticket and shows the future Playwright preview without launching a browser.
+
+You can also pass a saved request through the execution safety gate:
+
+    bugintel execute-playwright-request examples/playwright_request.example.json examples/target.example.yaml
+
+Human meaning: this re-checks the saved request against scope, then blocks by default because live execution is disabled.
+
+To test the future handoff path:
+
+    bugintel execute-playwright-request examples/playwright_request.example.json examples/target.example.yaml --allow-live-execution --json-output reports/playwright-request-capture-result.json
+
+In the current skeleton, this still does not launch a browser. It only reaches the safe `not_implemented` handoff path when the safety gates pass.

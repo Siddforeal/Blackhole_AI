@@ -141,3 +141,11 @@ To preview a saved request:
     bugintel preview-playwright-request examples/playwright_request.example.json --json-output reports/playwright-request-preview.json
 
 This command is useful when the request has already been created and you want to review the execution preview without reloading the original scope file.
+
+To execute a saved request through the safety gate:
+
+    bugintel execute-playwright-request examples/playwright_request.example.json examples/target.example.yaml
+
+This command intentionally requires the scope file again. Saved request JSON can be edited, so BugIntel re-validates the start URL before applying the execution safety gate.
+
+Default behavior is refusal because `allow_live_execution` is false. Passing `--allow-live-execution` only reaches the current `not_implemented` handoff path; it still does not launch a browser.
