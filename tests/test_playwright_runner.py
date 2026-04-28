@@ -956,3 +956,87 @@ def test_run_playwright_adapter_blocks_without_live_execution(tmp_path):
         assert "Live Playwright execution is disabled" in str(exc)
     else:
         raise AssertionError("Expected live execution safety gate to block adapter run")
+
+
+def test_execute_playwright_plan_uses_real_adapter_only_when_enabled(monkeypatch):
+    import bugintel.integrations.playwright_runner as playwright_runner
+
+    from bugintel.integrations.playwright_runner import (
+        BrowserCaptureResult,
+        BrowserExecutionConfig,
+        PlaywrightAvailability,
+        build_browser_plan,
+        execute_playwright_plan,
+    )
+
+    called = {"real_adapter": False}
+
+    def fake_playwright_available():
+        return PlaywrightAvailability(
+            available=True,
+            reason="Playwright mocked as available.",
+        )
+
+    def fake_run_playwright_adapter(context, notes=""):
+        called["real_adapter"] = True
+
+        assert context.request.config.allow_live_execution is True
+        assert context.request.config.use_real_adapter is True
+        assert notes == "Route to real adapter."
+
+        return BrowserCaptureResult(
+            target_name=context.request.target_name,
+            task_name=context.request.task_name,
+            start_url=context.request.start_url,
+            browser=context.request.browser,
+            execution_output={
+                "runner": "playwright",
+                "status": "completed",
+                "reason": "Mocked real adapter.",
+                "live_execution_allowed": True,
+                "use_real_adapter": True,
+            },
+            notes=notes,
+        )
+
+    monkeypatch.setattr(
+        playwright_runner,
+        "check_playwright_available",
+        fake_playwright_available,
+    )
+    monkeypatch.setattr(
+        playwright_runner,
+        "run_playwright_adapter",
+        fake_run_playwright_adapter,
+    )
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    result = execute_playwright_plan(
+        plan=plan,
+        task_name="real adapter route",
+        config=BrowserExecutionConfig(
+            allow_live_execution=True,
+            use_real_adapter=True,
+        ),
+        notes="Route to real adapter.",
+    )
+
+    assert called["real_adapter"] is True
+    assert result.execution_output["status"] == "completed"
+    assert result.execution_output["use_real_adapter"] is True
+    assert result.notes == "Route to real adapter."
+
+
+def test_browser_execution_config_defaults_to_stub_adapter():
+    from bugintel.integrations.playwright_runner import BrowserExecutionConfig
+
+    config = BrowserExecutionConfig(allow_live_execution=True)
+
+    assert config.allow_live_execution is True
+    assert config.use_real_adapter is False

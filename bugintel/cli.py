@@ -1355,6 +1355,7 @@ def preview_playwright_request_command(
         capture_html=bool(config_data.get("capture_html", True)),
         screenshot_path=str(config_data.get("screenshot_path", "artifacts/browser-screenshot.png")),
         allow_live_execution=bool(config_data.get("allow_live_execution", False)),
+        use_real_adapter=bool(config_data.get("use_real_adapter", False)),
     )
 
     preview = build_playwright_execution_preview(
@@ -1559,6 +1560,7 @@ def load_browser_artifacts_command(
         capture_html=bool(config_data.get("capture_html", True)),
         screenshot_path=str(config_data.get("screenshot_path", "artifacts/browser-screenshot.png")),
         allow_live_execution=bool(config_data.get("allow_live_execution", False)),
+        use_real_adapter=bool(config_data.get("use_real_adapter", False)),
     )
 
     artifacts = PlaywrightArtifactPlan(

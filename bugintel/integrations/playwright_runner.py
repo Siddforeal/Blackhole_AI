@@ -242,6 +242,7 @@ class BrowserExecutionConfig:
     capture_html: bool = True
     screenshot_path: str = "artifacts/browser-screenshot.png"
     allow_live_execution: bool = False
+    use_real_adapter: bool = False
 
 
 
@@ -293,6 +294,7 @@ class PlaywrightExecutionRequest:
                 "capture_html": self.config.capture_html,
                 "screenshot_path": self.config.screenshot_path,
                 "allow_live_execution": self.config.allow_live_execution,
+                "use_real_adapter": self.config.use_real_adapter,
             },
             "artifacts": self.artifacts.to_dict(),
             "planned_actions": self.planned_actions,
@@ -778,6 +780,7 @@ def build_playwright_execution_preview(
         "runner": "playwright",
         "status": status,
         "live_execution_allowed": config.allow_live_execution,
+        "use_real_adapter": config.use_real_adapter,
         "playwright_available": availability.available,
         "reason": availability.reason,
         "browser": plan.browser,
@@ -920,6 +923,12 @@ def execute_playwright_plan(
     )
 
     context = build_playwright_adapter_context(request)
+
+    if config.use_real_adapter:
+        return run_playwright_adapter(
+            context=context,
+            notes=notes,
+        )
 
     return run_playwright_adapter_stub(
         context=context,
