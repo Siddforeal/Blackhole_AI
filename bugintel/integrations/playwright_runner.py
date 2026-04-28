@@ -10,6 +10,9 @@ runners can execute only after Scope Guard approval and human approval.
 
 from __future__ import annotations
 
+import hashlib
+import json
+
 import importlib.util
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -439,6 +442,113 @@ def run_playwright_adapter_stub(
         html_snapshots=[],
         execution_output=execution_output,
         notes=notes or "Playwright adapter stub only; browser not launched.",
+    )
+
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(chunk)
+
+    return digest.hexdigest()
+
+
+def _guess_browser_artifact_content_type(path: Path) -> str:
+    suffix = path.suffix.lower()
+
+    if suffix in {".jpg", ".jpeg"}:
+        return "image/jpeg"
+    if suffix == ".webp":
+        return "image/webp"
+
+    return "image/png"
+
+
+def _load_browser_network_events(path: str | Path) -> list[BrowserNetworkEvent]:
+    network_path = Path(path)
+
+    if not network_path.exists():
+        return []
+
+    data = json.loads(network_path.read_text(encoding="utf-8"))
+
+    if isinstance(data, dict):
+        raw_events = (
+            data.get("network_events")
+            or data.get("events")
+            or data.get("entries")
+            or []
+        )
+    else:
+        raw_events = data
+
+    if not isinstance(raw_events, list):
+        raise ValueError("Network artifact must contain a list of events")
+
+    return [
+        BrowserNetworkEvent.from_value(event)
+        for event in raw_events
+    ]
+
+
+def load_browser_capture_result_from_artifacts(
+    context: PlaywrightAdapterContext,
+    notes: str = "",
+) -> BrowserCaptureResult:
+    """Load existing browser artifacts into a BrowserCaptureResult."""
+    request = context.request
+    artifacts = request.artifacts
+
+    network_events = _load_browser_network_events(artifacts.network_log_path)
+
+    screenshots: list[BrowserScreenshot] = []
+    screenshot_path = Path(artifacts.screenshot_path)
+
+    if screenshot_path.exists():
+        screenshots.append(
+            BrowserScreenshot(
+                path=str(screenshot_path),
+                sha256=_sha256_file(screenshot_path),
+                content_type=_guess_browser_artifact_content_type(screenshot_path),
+            )
+        )
+
+    html_snapshots: list[BrowserHtmlSnapshot] = []
+    html_snapshot_path = Path(artifacts.html_snapshot_path)
+
+    if html_snapshot_path.exists():
+        html_snapshots.append(
+            BrowserHtmlSnapshot(
+                url=request.start_url,
+                html=html_snapshot_path.read_text(encoding="utf-8", errors="replace"),
+                extra={"path": str(html_snapshot_path)},
+            )
+        )
+
+    execution_output = {
+        "runner": "playwright",
+        "status": "artifacts_loaded",
+        "browser_launch_implemented": context.browser_launch_implemented,
+        "artifact_dir_created": context.artifact_dir_created,
+        "artifacts": artifacts.to_dict(),
+        "loaded_network_events": len(network_events),
+        "loaded_screenshots": len(screenshots),
+        "loaded_html_snapshots": len(html_snapshots),
+    }
+
+    return BrowserCaptureResult(
+        target_name=request.target_name,
+        task_name=request.task_name,
+        start_url=request.start_url,
+        browser=request.browser,
+        network_events=network_events,
+        screenshots=screenshots,
+        html_snapshots=html_snapshots,
+        execution_output=execution_output,
+        notes=notes,
     )
 
 

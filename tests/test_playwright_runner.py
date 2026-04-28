@@ -710,3 +710,95 @@ def test_execute_playwright_plan_routes_through_adapter_stub_after_safety_gates(
     assert output["artifacts"]["network_log_path"].endswith("/network.json")
     assert output["artifacts"]["trace_path"].endswith("/trace.zip")
     assert "No browser launched." in output["safety_notes"]
+
+
+def test_load_browser_capture_result_from_artifacts_reads_planned_files(tmp_path):
+    import json
+
+    from bugintel.core.evidence_store import EvidenceStore
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        BrowserHtmlSnapshot,
+        BrowserNetworkEvent,
+        BrowserScreenshot,
+        build_browser_plan,
+        build_playwright_adapter_context,
+        build_playwright_execution_request,
+        load_browser_capture_result_from_artifacts,
+    )
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    request = build_playwright_execution_request(
+        plan=plan,
+        task_name="Capture Dashboard",
+        config=BrowserExecutionConfig(allow_live_execution=True),
+        base_artifact_dir=tmp_path / "artifacts",
+    )
+
+    context = build_playwright_adapter_context(
+        request,
+        create_artifact_dir=True,
+    )
+
+    network_path = Path(request.artifacts.network_log_path)
+    html_path = Path(request.artifacts.html_snapshot_path)
+    screenshot_path = Path(request.artifacts.screenshot_path)
+
+    network_path.write_text(
+        json.dumps(
+            [
+                {
+                    "method": "GET",
+                    "url": "https://demo.example.com/api/me",
+                    "status_code": 200,
+                    "resource_type": "fetch",
+                    "response_body": '{"email":"sidd@example.com"}',
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    html_path.write_text("<html>sidd@example.com</html>", encoding="utf-8")
+    screenshot_path.write_bytes(b"fake png bytes")
+
+    result = load_browser_capture_result_from_artifacts(
+        context,
+        notes="Loaded planned browser artifacts.",
+    )
+
+    assert result.target_name == "demo-lab"
+    assert result.task_name == "Capture Dashboard"
+    assert result.start_url == "https://demo.example.com/dashboard"
+    assert result.browser == "chromium"
+
+    assert isinstance(result.network_events[0], BrowserNetworkEvent)
+    assert isinstance(result.screenshots[0], BrowserScreenshot)
+    assert isinstance(result.html_snapshots[0], BrowserHtmlSnapshot)
+
+    assert result.network_events[0].method == "GET"
+    assert result.screenshots[0].path == str(screenshot_path)
+    assert len(result.screenshots[0].sha256) == 64
+    assert result.html_snapshots[0].url == "https://demo.example.com/dashboard"
+
+    output = result.execution_output
+    assert output["runner"] == "playwright"
+    assert output["status"] == "artifacts_loaded"
+    assert output["loaded_network_events"] == 1
+    assert output["loaded_screenshots"] == 1
+    assert output["loaded_html_snapshots"] == 1
+
+    store = EvidenceStore(base_dir=tmp_path / "evidence")
+    evidence_path = store.save_browser_evidence(**result.to_evidence_kwargs())
+
+    data = json.loads(evidence_path.read_text(encoding="utf-8"))
+    serialized = json.dumps(data)
+
+    assert "sidd@example.com" not in serialized
+    assert "<email>" in serialized
