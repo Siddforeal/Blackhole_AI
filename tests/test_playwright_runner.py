@@ -1040,3 +1040,75 @@ def test_browser_execution_config_defaults_to_stub_adapter():
 
     assert config.allow_live_execution is True
     assert config.use_real_adapter is False
+
+
+def test_run_playwright_adapter_returns_failed_capture_result_on_navigation_error(tmp_path):
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        build_browser_plan,
+        build_playwright_adapter_context,
+        build_playwright_execution_request,
+        run_playwright_adapter,
+    )
+
+    class FakePage:
+        def on(self, event_name, handler):
+            pass
+
+        def goto(self, url, wait_until, timeout):
+            raise RuntimeError("Page.goto: net::ERR_NAME_NOT_RESOLVED")
+
+    class FakeBrowser:
+        def new_page(self):
+            return FakePage()
+
+        def close(self):
+            pass
+
+    class FakeLauncher:
+        def launch(self, **kwargs):
+            return FakeBrowser()
+
+    class FakePlaywright:
+        chromium = FakeLauncher()
+        firefox = FakeLauncher()
+
+    class FakePlaywrightManager:
+        def __enter__(self):
+            return FakePlaywright()
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    request = build_playwright_execution_request(
+        plan=plan,
+        task_name="Navigation Failure",
+        config=BrowserExecutionConfig(
+            allow_live_execution=True,
+            use_real_adapter=True,
+        ),
+        base_artifact_dir=tmp_path / "artifacts",
+    )
+
+    context = build_playwright_adapter_context(request)
+
+    result = run_playwright_adapter(
+        context,
+        notes="Navigation failure smoke.",
+        playwright_factory=FakePlaywrightManager,
+    )
+
+    assert result.execution_output["status"] == "failed"
+    assert "ERR_NAME_NOT_RESOLVED" in result.execution_output["reason"]
+    assert result.execution_output["live_execution_allowed"] is True
+    assert result.execution_output["use_real_adapter"] is True
+    assert result.execution_output["browser_launch_implemented"] is True
+    assert result.execution_output["loaded_network_events"] == 0
+    assert result.network_events == []

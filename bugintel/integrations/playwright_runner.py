@@ -623,6 +623,8 @@ def run_playwright_adapter(
     artifacts = request.artifacts
     network_events: list[dict[str, Any]] = []
 
+    error_message = ""
+
     with playwright_factory() as playwright:
         launcher, launch_kwargs = _select_browser_launcher(playwright, request.browser)
         browser = launcher.launch(
@@ -641,35 +643,38 @@ def run_playwright_adapter(
 
                 page.on("response", on_response)
 
-            page.goto(
-                request.start_url,
-                wait_until=config.wait_until,
-                timeout=config.timeout_ms,
-            )
-
-            if config.capture_html:
-                html_path = Path(artifacts.html_snapshot_path)
-                html_path.parent.mkdir(parents=True, exist_ok=True)
-                html_path.write_text(
-                    page.content(),
-                    encoding="utf-8",
+            try:
+                page.goto(
+                    request.start_url,
+                    wait_until=config.wait_until,
+                    timeout=config.timeout_ms,
                 )
 
-            if config.capture_screenshot:
-                screenshot_path = Path(artifacts.screenshot_path)
-                screenshot_path.parent.mkdir(parents=True, exist_ok=True)
-                page.screenshot(
-                    path=str(screenshot_path),
-                    full_page=True,
-                )
+                if config.capture_html:
+                    html_path = Path(artifacts.html_snapshot_path)
+                    html_path.parent.mkdir(parents=True, exist_ok=True)
+                    html_path.write_text(
+                        page.content(),
+                        encoding="utf-8",
+                    )
 
-            if config.capture_network:
-                network_path = Path(artifacts.network_log_path)
-                network_path.parent.mkdir(parents=True, exist_ok=True)
-                network_path.write_text(
-                    json.dumps(network_events, indent=2, sort_keys=True),
-                    encoding="utf-8",
-                )
+                if config.capture_screenshot:
+                    screenshot_path = Path(artifacts.screenshot_path)
+                    screenshot_path.parent.mkdir(parents=True, exist_ok=True)
+                    page.screenshot(
+                        path=str(screenshot_path),
+                        full_page=True,
+                    )
+            except Exception as exc:
+                error_message = str(exc)
+            finally:
+                if config.capture_network:
+                    network_path = Path(artifacts.network_log_path)
+                    network_path.parent.mkdir(parents=True, exist_ok=True)
+                    network_path.write_text(
+                        json.dumps(network_events, indent=2, sort_keys=True),
+                        encoding="utf-8",
+                    )
         finally:
             browser.close()
 
@@ -693,9 +698,10 @@ def run_playwright_adapter(
     execution_output = dict(result.execution_output)
     execution_output.update(
         {
-            "status": "completed",
-            "reason": "Playwright execution completed.",
+            "status": "failed" if error_message else "completed",
+            "reason": error_message or "Playwright execution completed.",
             "live_execution_allowed": config.allow_live_execution,
+            "use_real_adapter": config.use_real_adapter,
         }
     )
 
