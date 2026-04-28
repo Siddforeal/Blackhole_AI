@@ -1,3 +1,4 @@
+from pathlib import Path
 from bugintel.core.scope_guard import TargetScope
 from bugintel.integrations.playwright_runner import build_browser_plan
 
@@ -471,3 +472,80 @@ def test_build_playwright_execution_request_rejects_blocked_plan():
         assert "Domain not in scope" in str(exc)
     else:
         raise AssertionError("Expected blocked browser plan to raise ValueError")
+
+
+
+def test_build_playwright_adapter_context_is_safe_by_default():
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        build_playwright_adapter_context,
+        build_playwright_execution_request,
+    )
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    request = build_playwright_execution_request(
+        plan=plan,
+        task_name="Capture Dashboard",
+        config=BrowserExecutionConfig(allow_live_execution=False),
+        base_artifact_dir="tmp/artifacts",
+    )
+
+    context = build_playwright_adapter_context(request)
+
+    assert context.request == request
+    assert context.artifact_dir_created is False
+    assert context.browser_launch_implemented is False
+    assert "No browser launched." in context.safety_notes
+    assert "No network captured." in context.safety_notes
+    assert "No screenshots captured." in context.safety_notes
+
+    data = context.to_dict()
+
+    assert data["request"]["target_name"] == "demo-lab"
+    assert data["request"]["task_name"] == "Capture Dashboard"
+    assert data["artifact_dir_created"] is False
+    assert data["browser_launch_implemented"] is False
+    assert "No browser launched." in data["safety_notes"]
+
+
+def test_build_playwright_adapter_context_can_create_only_artifact_directory(tmp_path):
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        build_playwright_adapter_context,
+        build_playwright_execution_request,
+    )
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    request = build_playwright_execution_request(
+        plan=plan,
+        task_name="Capture Dashboard",
+        config=BrowserExecutionConfig(allow_live_execution=False),
+        base_artifact_dir=tmp_path / "artifacts",
+    )
+
+    assert not Path(request.artifacts.artifact_dir).exists()
+
+    context = build_playwright_adapter_context(
+        request,
+        create_artifact_dir=True,
+    )
+
+    assert context.artifact_dir_created is True
+    assert Path(request.artifacts.artifact_dir).is_dir()
+    assert not Path(request.artifacts.screenshot_path).exists()
+    assert not Path(request.artifacts.html_snapshot_path).exists()
+    assert not Path(request.artifacts.network_log_path).exists()
+    assert not Path(request.artifacts.trace_path).exists()
+    assert context.browser_launch_implemented is False

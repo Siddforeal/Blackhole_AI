@@ -161,6 +161,60 @@ class PlaywrightExecutionRequest:
         }
 
 
+
+
+@dataclass(frozen=True)
+class PlaywrightAdapterContext:
+    """
+    Internal context object for the future Playwright adapter.
+
+    Human meaning: this is the safe engine-connector package. It carries the
+    request and artifact paths to the future adapter, but it does not launch a
+    browser by itself.
+    """
+
+    request: PlaywrightExecutionRequest
+    artifact_dir_created: bool = False
+    browser_launch_implemented: bool = False
+    safety_notes: tuple[str, ...] = (
+        "Adapter context prepared only.",
+        "No browser launched.",
+        "No network captured.",
+        "No screenshots captured.",
+    )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "request": self.request.to_dict(),
+            "artifact_dir_created": self.artifact_dir_created,
+            "browser_launch_implemented": self.browser_launch_implemented,
+            "safety_notes": list(self.safety_notes),
+        }
+
+
+def build_playwright_adapter_context(
+    request: PlaywrightExecutionRequest,
+    create_artifact_dir: bool = False,
+) -> PlaywrightAdapterContext:
+    """
+    Build internal context for the future Playwright adapter.
+
+    This function does not launch a browser. By default, it also does not create
+    directories. When create_artifact_dir=True, it creates only the planned
+    artifact directory so future execution can write files there.
+    """
+    artifact_dir_created = False
+
+    if create_artifact_dir:
+        Path(request.artifacts.artifact_dir).mkdir(parents=True, exist_ok=True)
+        artifact_dir_created = True
+
+    return PlaywrightAdapterContext(
+        request=request,
+        artifact_dir_created=artifact_dir_created,
+    )
+
+
 def build_playwright_artifact_plan(
     target_name: str,
     task_name: str,
