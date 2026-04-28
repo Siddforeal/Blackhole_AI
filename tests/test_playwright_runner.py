@@ -549,3 +549,97 @@ def test_build_playwright_adapter_context_can_create_only_artifact_directory(tmp
     assert not Path(request.artifacts.network_log_path).exists()
     assert not Path(request.artifacts.trace_path).exists()
     assert context.browser_launch_implemented is False
+
+
+
+def test_run_playwright_adapter_stub_returns_not_implemented_capture_result():
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        build_playwright_adapter_context,
+        build_playwright_execution_request,
+        run_playwright_adapter_stub,
+    )
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    request = build_playwright_execution_request(
+        plan=plan,
+        task_name="Capture Dashboard",
+        config=BrowserExecutionConfig(allow_live_execution=False),
+        base_artifact_dir="tmp/artifacts",
+    )
+
+    context = build_playwright_adapter_context(request)
+    result = run_playwright_adapter_stub(context)
+
+    assert result.target_name == "demo-lab"
+    assert result.task_name == "Capture Dashboard"
+    assert result.start_url == "https://demo.example.com/dashboard"
+    assert result.browser == "chromium"
+
+    assert result.network_events == []
+    assert result.screenshots == []
+    assert result.html_snapshots == []
+
+    output = result.execution_output
+
+    assert output["runner"] == "playwright"
+    assert output["status"] == "not_implemented"
+    assert output["browser_launch_implemented"] is False
+    assert output["artifact_dir_created"] is False
+    assert output["live_execution_allowed"] is False
+    assert output["artifacts"]["network_log_path"].endswith("/network.json")
+    assert "No browser launched." in output["safety_notes"]
+    assert "not implemented yet" in output["reason"]
+
+
+def test_run_playwright_adapter_stub_preserves_artifact_directory_state(tmp_path):
+    from bugintel.integrations.playwright_runner import (
+        BrowserExecutionConfig,
+        build_playwright_adapter_context,
+        build_playwright_execution_request,
+        run_playwright_adapter_stub,
+    )
+
+    scope = make_scope()
+    plan = build_browser_plan(
+        scope=scope,
+        start_url="https://demo.example.com/dashboard",
+        browser="chromium",
+    )
+
+    request = build_playwright_execution_request(
+        plan=plan,
+        task_name="Capture Dashboard",
+        config=BrowserExecutionConfig(allow_live_execution=True),
+        base_artifact_dir=tmp_path / "artifacts",
+    )
+
+    context = build_playwright_adapter_context(
+        request,
+        create_artifact_dir=True,
+    )
+
+    result = run_playwright_adapter_stub(
+        context,
+        notes="Stub handoff test.",
+    )
+
+    output = result.execution_output
+
+    assert output["status"] == "not_implemented"
+    assert output["artifact_dir_created"] is True
+    assert output["live_execution_allowed"] is True
+    assert Path(request.artifacts.artifact_dir).is_dir()
+
+    assert not Path(request.artifacts.screenshot_path).exists()
+    assert not Path(request.artifacts.html_snapshot_path).exists()
+    assert not Path(request.artifacts.network_log_path).exists()
+    assert not Path(request.artifacts.trace_path).exists()
+
+    assert result.notes == "Stub handoff test."

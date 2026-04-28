@@ -290,6 +290,45 @@ def _safe_artifact_name(value: str) -> str:
     return safe or "untitled"
 
 
+
+
+def run_playwright_adapter_stub(
+    context: PlaywrightAdapterContext,
+    notes: str = "",
+) -> BrowserCaptureResult:
+    """
+    Stub runner for the future Playwright adapter.
+
+    Human meaning: this is the future engine entry point, but the engine is not
+    installed yet. It converts an adapter context into a BrowserCaptureResult
+    with status "not_implemented" and does not launch a browser.
+    """
+    request = context.request
+
+    execution_output = {
+        "runner": "playwright",
+        "status": "not_implemented",
+        "reason": "Playwright adapter stub reached; live browser launch is not implemented yet.",
+        "browser_launch_implemented": context.browser_launch_implemented,
+        "artifact_dir_created": context.artifact_dir_created,
+        "live_execution_allowed": request.config.allow_live_execution,
+        "artifacts": request.artifacts.to_dict(),
+        "safety_notes": list(context.safety_notes),
+    }
+
+    return BrowserCaptureResult(
+        target_name=request.target_name,
+        task_name=request.task_name,
+        start_url=request.start_url,
+        browser=request.browser,
+        network_events=[],
+        screenshots=[],
+        html_snapshots=[],
+        execution_output=execution_output,
+        notes=notes or "Playwright adapter stub only; browser not launched.",
+    )
+
+
 def check_playwright_available() -> PlaywrightAvailability:
     """
     Check whether the optional Playwright Python package is importable.
