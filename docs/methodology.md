@@ -96,7 +96,12 @@ The CLI safety-gate command is:
 
 Expected default behavior is refusal, because `allow_live_execution` is false unless explicitly requested.
 
-Even if all current gates pass in tests, the skeleton returns `status: not_implemented` and does not produce network events, screenshots, or HTML snapshots. Real browser launch must be added deliberately behind this same gate.
+Real adapter routing is also opt-in. The real Playwright adapter path requires both:
+
+1. `--allow-live-execution`
+2. `--use-real-adapter`
+
+Without `--use-real-adapter`, the safety-gated execution path continues to use the adapter stub.
 
 When the skeleton reaches the handoff path, `execute-playwright-plan --json-output` writes a capture-result JSON compatible with the browser evidence pipeline. This is useful for validating the CLI and evidence handoff before live Playwright execution exists.
 
@@ -148,7 +153,11 @@ To execute a saved request through the safety gate:
 
 This command intentionally requires the scope file again. Saved request JSON can be edited, so BugIntel re-validates the start URL before applying the execution safety gate.
 
-Default behavior is refusal because `allow_live_execution` is false. Passing `--allow-live-execution` only reaches the current `not_implemented` handoff path; it still does not launch a browser.
+Default behavior is refusal because `allow_live_execution` is false. Passing only `--allow-live-execution` keeps the stub route by default.
+
+To route a saved request through the real adapter, use:
+
+    bugintel execute-playwright-request examples/playwright_request.example.json examples/target.example.yaml --allow-live-execution --use-real-adapter
 
 ## Browser Artifact Loading
 

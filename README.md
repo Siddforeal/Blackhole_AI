@@ -124,11 +124,20 @@ You can exercise the safety gate from the CLI:
 
 By default, this command blocks with a safety message. Passing `--allow-live-execution` only passes the explicit opt-in gate; the command still does not launch a browser until real Playwright execution is implemented.
 
-The command can also write a future capture-result handoff JSON when the skeleton reaches the handoff stage:
+The command can also write a capture-result handoff JSON when the safety gates pass:
 
     bugintel execute-playwright-plan examples/target.example.yaml https://demo.example.com/dashboard --allow-live-execution --json-output reports/playwright-capture-result.json
 
-In the current skeleton, this handoff remains `status: not_implemented`.
+By default, this still routes through the adapter stub. To opt into the real Playwright adapter route, pass both gates explicitly:
+
+    bugintel execute-playwright-plan examples/target.example.yaml https://demo.example.com/dashboard --allow-live-execution --use-real-adapter --json-output reports/playwright-capture-result.json
+
+Real adapter routing requires:
+
+1. Scope Guard approval.
+2. `--allow-live-execution`.
+3. `--use-real-adapter`.
+4. The optional Playwright Python package to be installed and importable.
 
 The safe handoff chain is:
 
@@ -178,6 +187,10 @@ You can also pass a saved request through the execution safety gate:
     bugintel execute-playwright-request examples/playwright_request.example.json examples/target.example.yaml
 
 This re-checks the saved request against scope, then blocks by default because live execution is disabled.
+
+To route a saved request through the real Playwright adapter, both opt-in flags must be passed:
+
+    bugintel execute-playwright-request examples/playwright_request.example.json examples/target.example.yaml --allow-live-execution --use-real-adapter
 
 To test the future handoff path:
 

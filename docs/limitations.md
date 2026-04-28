@@ -5,7 +5,7 @@ BugIntel AI Workbench is an early research prototype.
 ## Current Limitations
 
 - Web/API only.
-- No live browser execution yet. Browser planning, Playwright execution preview, execution request modeling, adapter context/stub preparation, safety-gated execution skeleton/CLI, artifact loading, capture-result evidence import, and report rendering are supported.
+- Real Playwright execution is opt-in and early. Browser planning, Playwright execution preview, execution request modeling, adapter context/stub preparation, safety-gated execution CLI, artifact loading, capture-result evidence import, and report rendering are supported.
 - No Android or iOS analysis yet.
 - No LLM integration yet.
 - No Burp/HAR importer yet.
