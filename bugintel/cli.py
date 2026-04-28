@@ -1045,6 +1045,7 @@ def preview_playwright_command(
     wait_until: str = typer.Option("load", "--wait-until", help="Preview page load wait condition."),
     screenshot_path: str = typer.Option("artifacts/browser-screenshot.png", "--screenshot-path", help="Preview screenshot artifact path."),
     allow_live_execution: bool = typer.Option(False, "--allow-live-execution", help="Mark preview as live-execution allowed. This command still does not launch a browser."),
+    use_real_adapter: bool = typer.Option(False, "--use-real-adapter", help="Preview routing through the real Playwright adapter."),
     json_output: Path | None = typer.Option(None, "--json-output", help="Optional path to save the preview JSON."),
 ):
     """
@@ -1084,6 +1085,7 @@ def preview_playwright_command(
         capture_html=capture_html,
         screenshot_path=screenshot_path,
         allow_live_execution=allow_live_execution,
+        use_real_adapter=use_real_adapter,
     )
 
     preview = build_playwright_execution_preview(
@@ -1100,6 +1102,7 @@ def preview_playwright_command(
     table.add_row("Browser", str(preview["browser"]))
     table.add_row("Start URL", str(preview["start_url"]))
     table.add_row("Live execution allowed", "YES" if preview["live_execution_allowed"] else "NO")
+    table.add_row("Use real adapter", "YES" if preview.get("use_real_adapter") else "NO")
     table.add_row("Playwright available", "YES" if preview["playwright_available"] else "NO")
     table.add_row("Reason", str(preview["reason"]))
     table.add_row("Headless", "YES" if preview["headless"] else "NO")
@@ -1134,8 +1137,9 @@ def execute_playwright_plan_command(
     timeout_ms: int = typer.Option(15000, "--timeout-ms", help="Future browser timeout in milliseconds."),
     wait_until: str = typer.Option("load", "--wait-until", help="Future page load wait condition."),
     screenshot_path: str = typer.Option("artifacts/browser-screenshot.png", "--screenshot-path", help="Future screenshot artifact path."),
-    allow_live_execution: bool = typer.Option(False, "--allow-live-execution", help="Explicitly pass the live execution safety gate. Browser launch is still not implemented yet."),
-    json_output: Path | None = typer.Option(None, "--json-output", help="Optional path to save the capture result JSON if the skeleton reaches the handoff stage."),
+    allow_live_execution: bool = typer.Option(False, "--allow-live-execution", help="Explicitly pass the live execution safety gate."),
+    use_real_adapter: bool = typer.Option(False, "--use-real-adapter", help="Route through the real Playwright adapter after safety gates pass."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional path to save the capture result JSON."),
 ):
     """
     Exercise the safety-gated Playwright execution skeleton.
@@ -1170,6 +1174,7 @@ def execute_playwright_plan_command(
         capture_html=capture_html,
         screenshot_path=screenshot_path,
         allow_live_execution=allow_live_execution,
+        use_real_adapter=use_real_adapter,
     )
 
     try:
@@ -1197,6 +1202,7 @@ def execute_playwright_plan_command(
     table.add_row("Status", str(output.get("status", "unknown")))
     table.add_row("Reason", str(output.get("reason", "")))
     table.add_row("Live execution allowed", "YES" if output.get("live_execution_allowed") else "NO")
+    table.add_row("Use real adapter", "YES" if output.get("use_real_adapter") else "NO")
     table.add_row("Playwright available", "YES" if output.get("playwright_available") else "NO")
 
     console.print(table)
@@ -1226,7 +1232,8 @@ def build_playwright_request_command(
     wait_until: str = typer.Option("load", "--wait-until", help="Future page load wait condition."),
     screenshot_path: str = typer.Option("artifacts/browser-screenshot.png", "--screenshot-path", help="Future screenshot config path."),
     base_artifact_dir: Path = typer.Option(Path("artifacts/browser"), "--base-artifact-dir", help="Base directory for planned browser artifacts."),
-    allow_live_execution: bool = typer.Option(False, "--allow-live-execution", help="Record explicit future live-execution approval in the request. This command still does not launch a browser."),
+    allow_live_execution: bool = typer.Option(False, "--allow-live-execution", help="Record explicit live-execution approval in the request."),
+    use_real_adapter: bool = typer.Option(False, "--use-real-adapter", help="Record real Playwright adapter routing in the request."),
     json_output: Path | None = typer.Option(None, "--json-output", help="Optional path to save the request JSON."),
 ):
     """Build a reviewable Playwright execution request JSON."""
@@ -1260,6 +1267,7 @@ def build_playwright_request_command(
         capture_html=capture_html,
         screenshot_path=screenshot_path,
         allow_live_execution=allow_live_execution,
+        use_real_adapter=use_real_adapter,
     )
 
     request = build_playwright_execution_request(
@@ -1280,6 +1288,7 @@ def build_playwright_request_command(
     table.add_row("Browser", request.browser)
     table.add_row("Start URL", request.start_url)
     table.add_row("Live execution allowed", "YES" if request.config.allow_live_execution else "NO")
+    table.add_row("Use real adapter", "YES" if request.config.use_real_adapter else "NO")
     table.add_row("Artifact directory", request.artifacts.artifact_dir)
     table.add_row("Screenshot path", request.artifacts.screenshot_path)
     table.add_row("HTML snapshot path", request.artifacts.html_snapshot_path)
@@ -1398,8 +1407,9 @@ def preview_playwright_request_command(
 def execute_playwright_request_command(
     request_file: Path = typer.Argument(..., help="Path to Playwright execution request JSON."),
     scope_file: Path = typer.Argument(..., help="Path to target scope YAML file for re-validation."),
-    allow_live_execution: bool = typer.Option(False, "--allow-live-execution", help="Explicitly pass the live execution safety gate. Browser launch is still not implemented yet."),
-    json_output: Path | None = typer.Option(None, "--json-output", help="Optional path to save the capture result JSON if the skeleton reaches handoff."),
+    allow_live_execution: bool = typer.Option(False, "--allow-live-execution", help="Explicitly pass the live execution safety gate."),
+    use_real_adapter: bool = typer.Option(False, "--use-real-adapter", help="Route through the real Playwright adapter after safety gates pass."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional path to save the capture result JSON."),
 ):
     """Run the safety-gated Playwright execution handoff from a saved request."""
     if not request_file.exists():
@@ -1453,6 +1463,7 @@ def execute_playwright_request_command(
         capture_html=bool(config_data.get("capture_html", True)),
         screenshot_path=str(config_data.get("screenshot_path", "artifacts/browser-screenshot.png")),
         allow_live_execution=allow_live_execution,
+        use_real_adapter=bool(config_data.get("use_real_adapter", False)) or use_real_adapter,
     )
 
     try:
@@ -1480,6 +1491,7 @@ def execute_playwright_request_command(
     table.add_row("Status", str(output.get("status", "unknown")))
     table.add_row("Reason", str(output.get("reason", "")))
     table.add_row("Live execution allowed", "YES" if output.get("live_execution_allowed") else "NO")
+    table.add_row("Use real adapter", "YES" if output.get("use_real_adapter") else "NO")
     table.add_row("Playwright available", "YES" if output.get("playwright_available") else "NO")
 
     console.print(table)

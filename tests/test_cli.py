@@ -971,3 +971,181 @@ def test_load_browser_artifacts_command_writes_capture_result_json():
         assert data["network_events"][0]["url"] == "https://demo.example.com/api/me"
         assert data["html_snapshots"][0]["url"] == "https://demo.example.com/dashboard"
         assert len(data["screenshots"][0]["sha256"]) == 64
+
+
+def test_build_playwright_request_command_records_real_adapter_flag():
+    scope_yaml = """
+target_name: demo-lab
+allowed_domains:
+  - demo.example.com
+allowed_schemes:
+  - https
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+forbidden_paths: []
+human_approval_required: true
+"""
+
+    with runner.isolated_filesystem():
+        scope_path = Path("scope.yaml")
+        output_path = Path("request.json")
+        scope_path.write_text(scope_yaml, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "build-playwright-request",
+                str(scope_path),
+                "https://demo.example.com/dashboard",
+                "--allow-live-execution",
+                "--use-real-adapter",
+                "--json-output",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Use real adapter" in result.output
+        assert output_path.exists()
+
+        data = json.loads(output_path.read_text(encoding="utf-8"))
+
+        assert data["config"]["allow_live_execution"] is True
+        assert data["config"]["use_real_adapter"] is True
+
+
+def test_execute_playwright_plan_command_passes_real_adapter_flag(monkeypatch):
+    import bugintel.cli as cli_module
+    from bugintel.integrations.playwright_runner import BrowserCaptureResult
+
+    scope_yaml = """
+target_name: demo-lab
+allowed_domains:
+  - demo.example.com
+allowed_schemes:
+  - https
+allowed_methods:
+  - GET
+  - HEAD
+  - OPTIONS
+forbidden_paths: []
+human_approval_required: true
+"""
+
+    def fake_execute_playwright_plan(plan, task_name, config, notes):
+        return BrowserCaptureResult(
+            target_name=plan.target_name,
+            task_name=task_name,
+            start_url=plan.start_url,
+            browser=plan.browser,
+            execution_output={
+                "runner": "playwright",
+                "status": "completed",
+                "reason": "Mocked real adapter route.",
+                "live_execution_allowed": config.allow_live_execution,
+                "use_real_adapter": config.use_real_adapter,
+                "playwright_available": True,
+            },
+            notes=notes,
+        )
+
+    monkeypatch.setattr(
+        cli_module,
+        "execute_playwright_plan",
+        fake_execute_playwright_plan,
+    )
+
+    with runner.isolated_filesystem():
+        scope_path = Path("scope.yaml")
+        output_path = Path("capture-result.json")
+        scope_path.write_text(scope_yaml, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "execute-playwright-plan",
+                str(scope_path),
+                "https://demo.example.com/dashboard",
+                "--allow-live-execution",
+                "--use-real-adapter",
+                "--json-output",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Use real adapter" in result.output
+        assert output_path.exists()
+
+        data = json.loads(output_path.read_text(encoding="utf-8"))
+
+        assert data["execution_output"]["live_execution_allowed"] is True
+        assert data["execution_output"]["use_real_adapter"] is True
+
+
+def test_execute_playwright_request_command_passes_real_adapter_flag(monkeypatch):
+    import bugintel.cli as cli_module
+    from bugintel.integrations.playwright_runner import BrowserCaptureResult
+
+    request_example = Path("examples/playwright_request.example.json")
+    scope_example = Path("examples/target.example.yaml")
+    assert request_example.exists()
+    assert scope_example.exists()
+
+    request_text = request_example.read_text(encoding="utf-8")
+    scope_text = scope_example.read_text(encoding="utf-8")
+
+    def fake_execute_playwright_plan(plan, task_name, config, notes):
+        return BrowserCaptureResult(
+            target_name=plan.target_name,
+            task_name=task_name,
+            start_url=plan.start_url,
+            browser=plan.browser,
+            execution_output={
+                "runner": "playwright",
+                "status": "completed",
+                "reason": "Mocked request real adapter route.",
+                "live_execution_allowed": config.allow_live_execution,
+                "use_real_adapter": config.use_real_adapter,
+                "playwright_available": True,
+            },
+            notes=notes,
+        )
+
+    monkeypatch.setattr(
+        cli_module,
+        "execute_playwright_plan",
+        fake_execute_playwright_plan,
+    )
+
+    with runner.isolated_filesystem():
+        request_path = Path("request.json")
+        scope_path = Path("scope.yaml")
+        output_path = Path("capture-result.json")
+
+        request_path.write_text(request_text, encoding="utf-8")
+        scope_path.write_text(scope_text, encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "execute-playwright-request",
+                str(request_path),
+                str(scope_path),
+                "--allow-live-execution",
+                "--use-real-adapter",
+                "--json-output",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Use real adapter" in result.output
+        assert output_path.exists()
+
+        data = json.loads(output_path.read_text(encoding="utf-8"))
+
+        assert data["execution_output"]["live_execution_allowed"] is True
+        assert data["execution_output"]["use_real_adapter"] is True
