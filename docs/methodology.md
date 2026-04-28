@@ -149,3 +149,17 @@ To execute a saved request through the safety gate:
 This command intentionally requires the scope file again. Saved request JSON can be edited, so BugIntel re-validates the start URL before applying the execution safety gate.
 
 Default behavior is refusal because `allow_live_execution` is false. Passing `--allow-live-execution` only reaches the current `not_implemented` handoff path; it still does not launch a browser.
+
+## Playwright Adapter Context
+
+The adapter context is the internal package that will later be handed to the real Playwright engine.
+
+It contains:
+
+1. The Playwright execution request.
+2. Planned artifact paths.
+3. Whether the artifact directory was created.
+4. Safety notes confirming no browser launch or capture happened.
+5. A flag showing browser launch is not implemented yet.
+
+Creating the context is safe. It does not launch a browser. Optional directory creation creates only the planned artifact folder, not screenshots, HTML, network logs, or traces.

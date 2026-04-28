@@ -21,6 +21,8 @@
 - `preview-playwright-request` CLI command for previewing saved browser job-ticket JSON
 - `execute-playwright-request` CLI command for safety-gated execution from saved browser job-ticket JSON
 - Scope re-validation for saved Playwright request execution
+- Playwright adapter context for future browser-engine integration
+- Optional artifact directory creation without browser launch or evidence capture
 - Playwright artifact path planner for future screenshots, HTML snapshots, network logs, and traces
 - Live browser execution remains disabled by default
 

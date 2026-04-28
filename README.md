@@ -184,3 +184,11 @@ To test the future handoff path:
     bugintel execute-playwright-request examples/playwright_request.example.json examples/target.example.yaml --allow-live-execution --json-output reports/playwright-request-capture-result.json
 
 In the current skeleton, this still does not launch a browser. It only reaches the safe `not_implemented` handoff path when the safety gates pass.
+
+### Playwright Adapter Context
+
+BugIntel now has an internal Playwright adapter context.
+
+Human meaning: this is the future engine connector package. It carries the request and planned artifact paths toward the future browser adapter.
+
+By default it does not create files. It can optionally create only the artifact directory, but it still does not launch a browser, capture network traffic, save screenshots, save HTML, or create traces.
