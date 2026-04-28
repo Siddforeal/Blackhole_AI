@@ -192,3 +192,11 @@ BugIntel now has an internal Playwright adapter context.
 Human meaning: this is the future engine connector package. It carries the request and planned artifact paths toward the future browser adapter.
 
 By default it does not create files. It can optionally create only the artifact directory, but it still does not launch a browser, capture network traffic, save screenshots, save HTML, or create traces.
+
+### Playwright Adapter Stub Runner
+
+BugIntel now has a stub runner for the future Playwright adapter.
+
+Human meaning: this is the future engine entry point. Today it deliberately returns `status: not_implemented` as a browser capture result.
+
+It proves the adapter can hand results into the evidence pipeline shape, but it still does not launch a browser, capture network traffic, save screenshots, save HTML, or create traces.

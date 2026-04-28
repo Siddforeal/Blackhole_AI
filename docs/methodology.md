@@ -163,3 +163,18 @@ It contains:
 5. A flag showing browser launch is not implemented yet.
 
 Creating the context is safe. It does not launch a browser. Optional directory creation creates only the planned artifact folder, not screenshots, HTML, network logs, or traces.
+
+## Playwright Adapter Stub Runner
+
+The adapter stub runner is the placeholder for the future real Playwright engine.
+
+Current behavior:
+
+1. Accepts a Playwright adapter context.
+2. Returns a browser capture result.
+3. Sets execution status to `not_implemented`.
+4. Preserves artifact path metadata.
+5. Confirms no browser launch is implemented.
+6. Produces no network events, screenshots, HTML snapshots, or traces.
+
+This lets BugIntel test the future adapter-to-evidence handoff before real browser execution is added.
