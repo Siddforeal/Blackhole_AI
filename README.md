@@ -75,6 +75,15 @@ MIT License.
 
 BugIntel v0.4.0 includes a safe browser automation foundation.
 
+Install optional Playwright support with:
+
+    pip install -e ".[browser]"
+
+Then install browser binaries when you are ready to run real Playwright locally:
+
+    python -m playwright install chromium
+
+
 Current browser workflow:
 
 1. Plan browser actions with Scope Guard.

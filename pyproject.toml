@@ -31,6 +31,9 @@ dependencies = [
 dev = [
   "pytest>=8.0.0"
 ]
+browser = [
+  "playwright>=1.40.0"
+]
 
 [project.scripts]
 bugintel = "bugintel.cli:app"
