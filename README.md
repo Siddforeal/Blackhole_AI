@@ -185,6 +185,26 @@ To test the future handoff path:
 
 In the current skeleton, this still does not launch a browser. It only reaches the safe `not_implemented` handoff path when the safety gates pass.
 
+### Browser Artifact Loading
+
+BugIntel can load planned browser artifacts from a saved Playwright request and convert them into a browser capture result JSON.
+
+Expected artifact paths come from the request JSON:
+
+    artifacts/browser/<target>/<task>/network.json
+    artifacts/browser/<target>/<task>/page.html
+    artifacts/browser/<target>/<task>/screenshot.png
+
+Example:
+
+    bugintel load-browser-artifacts examples/playwright_request.example.json --json-output reports/browser-capture-result.json
+
+Then save the capture result as redacted evidence:
+
+    bugintel save-browser-capture reports/browser-capture-result.json
+
+This command does not launch a browser. It only reads artifact files that already exist.
+
 ### Playwright Adapter Context
 
 BugIntel now has an internal Playwright adapter context.

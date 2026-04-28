@@ -150,6 +150,24 @@ This command intentionally requires the scope file again. Saved request JSON can
 
 Default behavior is refusal because `allow_live_execution` is false. Passing `--allow-live-execution` only reaches the current `not_implemented` handoff path; it still does not launch a browser.
 
+## Browser Artifact Loading
+
+The artifact-loading command converts existing planned artifact files into a browser capture result:
+
+    bugintel load-browser-artifacts examples/playwright_request.example.json --json-output reports/browser-capture-result.json
+
+It reads the artifact paths from the saved request JSON. Supported inputs are:
+
+1. `network.json` for browser-observed network events.
+2. `page.html` for the HTML snapshot.
+3. `screenshot.png` for screenshot metadata and SHA-256 hashing.
+
+The output is compatible with the browser evidence workflow:
+
+    bugintel save-browser-capture reports/browser-capture-result.json
+
+This command does not execute Playwright or launch a browser.
+
 ## Playwright Adapter Context
 
 The adapter context is the internal package that will later be handed to the real Playwright engine.
