@@ -74,7 +74,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="0.8.0",
+                version="0.9.0",
                 force=True,
             )
         )
@@ -86,7 +86,7 @@ def intro_command():
     """Show the BugIntel UFO startup intro."""
     show_intro(
         config=IntroConfig(
-            version="0.8.0",
+            version="0.9.0",
             force=True,
         )
     )
@@ -95,7 +95,7 @@ def intro_command():
 @app.command()
 def version():
     """Show BugIntel version."""
-    console.print("[bold green]BugIntel AI Workbench[/bold green] version 0.8.0")
+    console.print("[bold green]BugIntel AI Workbench[/bold green] version 0.9.0")
 
 
 @app.command("scope-check")
