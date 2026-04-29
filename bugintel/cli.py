@@ -20,6 +20,7 @@ import typer
 import yaml
 from rich.console import Console
 from rich.table import Table
+from bugintel.ui.intro import IntroConfig, show_intro
 
 from bugintel.agents.report_agent import save_evidence_report
 from bugintel.agents.recon_agent import analyze_html
@@ -59,9 +60,35 @@ from bugintel.integrations.har_importer import load_har
 app = typer.Typer(
     name="bugintel",
     help="BugIntel AI Workbench: human-in-the-loop vulnerability discovery and bug intelligence.",
+no_args_is_help=False,
 )
 
 console = Console()
+
+
+
+@app.callback(invoke_without_command=True)
+def main_callback(ctx: typer.Context):
+    """BugIntel AI Workbench."""
+    if ctx.invoked_subcommand is None:
+        show_intro(
+            config=IntroConfig(
+                version="0.8.0-dev",
+                force=True,
+            )
+        )
+        raise typer.Exit()
+
+
+@app.command("intro")
+def intro_command():
+    """Show the BugIntel UFO startup intro."""
+    show_intro(
+        config=IntroConfig(
+            version="0.8.0-dev",
+            force=True,
+        )
+    )
 
 
 @app.command()

@@ -1504,3 +1504,21 @@ def test_run_llm_provider_command_blocks_invalid_json():
 
         assert result.exit_code == 2
         assert "Invalid LLM prompt package JSON" in result.output
+
+
+def test_intro_command_shows_ufo_intro():
+    result = runner.invoke(app, ["intro"])
+
+    assert result.exit_code == 0
+    assert "Welcome to BugIntel AI Workbench" in result.output
+    assert "BugIntel UFO Signal" in result.output
+    assert "Scope Guard online" in result.output
+
+
+def test_root_command_shows_ufo_intro():
+    result = runner.invoke(app, [])
+
+    assert result.exit_code == 0
+    assert "Welcome to BugIntel AI Workbench" in result.output
+    assert "BugIntel UFO Signal" in result.output
+    assert "BugIntel UFO Signal" in result.output
