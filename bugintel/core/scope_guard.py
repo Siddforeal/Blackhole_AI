@@ -1,5 +1,5 @@
 """
-Scope Guard for BugIntel AI Workbench.
+Scope Guard for Blackhole AI Workbench.
 
 This module prevents agents from running tests outside the user-defined
 authorized scope. It is intentionally conservative.

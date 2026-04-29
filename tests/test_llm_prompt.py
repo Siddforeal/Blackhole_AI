@@ -50,7 +50,7 @@ def test_build_llm_prompt_package_from_research_plan_is_offline_and_redacted():
     assert data["source"] == "research_plan"
     assert data["redaction_applied"] is False
     assert "cybersecurity research assistant" in data["system_prompt"]
-    assert "Review this deterministic BugIntel research plan" in data["user_prompt"]
+    assert "Review this deterministic Blackhole research plan" in data["user_prompt"]
     assert "sidd@example.com" not in data["user_prompt"]
     assert "eyJaaaaaaaaaa.bbbbbbbbbbbb.cccccccccccc" not in data["user_prompt"]
     assert "Do not invent evidence" in data["user_prompt"]

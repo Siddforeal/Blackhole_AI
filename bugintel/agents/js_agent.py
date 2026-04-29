@@ -1,5 +1,5 @@
 """
-JavaScript Agent for BugIntel AI Workbench.
+JavaScript Agent for Blackhole AI Workbench.
 
 Collects JavaScript sources discovered in HTML and mines endpoints from them.
 

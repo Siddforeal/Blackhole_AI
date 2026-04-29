@@ -1,6 +1,6 @@
 # Architecture
 
-BugIntel AI Workbench is designed as a human-in-the-loop, multi-agent security research platform for authorized vulnerability discovery and bug intelligence.
+Blackhole AI Workbench is designed as a human-in-the-loop, multi-agent security research platform for authorized vulnerability discovery and bug intelligence.
 
 ## Core Idea
 
@@ -168,7 +168,7 @@ Current and planned agents:
 
 ## Evidence Model
 
-BugIntel stores security-testing evidence as redacted JSON records.
+Blackhole stores security-testing evidence as redacted JSON records.
 
 Current evidence types:
 
@@ -181,7 +181,7 @@ The Browser Capture Result model acts as the bridge between a reviewed browser p
 
 ## Safety Model
 
-BugIntel is designed for authorized testing only.
+Blackhole is designed for authorized testing only.
 
 All network-capable actions should follow this flow:
 

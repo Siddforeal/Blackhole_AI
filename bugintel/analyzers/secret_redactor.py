@@ -1,5 +1,5 @@
 """
-Secret Redactor for BugIntel AI Workbench.
+Secret Redactor for Blackhole AI Workbench.
 
 Redacts sensitive values from logs, HTTP evidence, reports, and command output.
 This helps prevent accidental exposure of tokens, cookies, emails, API keys,

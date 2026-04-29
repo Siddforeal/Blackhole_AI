@@ -1,5 +1,5 @@
 """
-HAR Importer for BugIntel AI Workbench.
+HAR Importer for Blackhole AI Workbench.
 
 Parses HAR files exported from browser DevTools, proxy tools, or compatible
 traffic capture utilities.

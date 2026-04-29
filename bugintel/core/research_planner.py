@@ -1,5 +1,5 @@
 """
-Deterministic research planning models for BugIntel AI Workbench.
+Deterministic research planning models for Blackhole AI Workbench.
 
 This module does not call an LLM, does not execute commands, and does not
 perform network activity. It only converts existing evidence into structured

@@ -1,5 +1,5 @@
 """
-Safe Kali Runner for BugIntel AI Workbench.
+Safe Kali Runner for Blackhole AI Workbench.
 
 This module prepares and executes Kali/Linux command-line actions only after
 Scope Guard approval.

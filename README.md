@@ -1,8 +1,8 @@
-# BugIntel AI Workbench
+# Blackhole AI Workbench
 
 [![Tests](https://github.com/Siddforeal/bugintel-ai-workbench/actions/workflows/tests.yml/badge.svg)](https://github.com/Siddforeal/bugintel-ai-workbench/actions/workflows/tests.yml)
 
-BugIntel AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
+Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
 Current version: 0.9.0
 
@@ -53,7 +53,7 @@ The long-term goal is to support scope-controlled testing, endpoint mining, task
 
 ## Safety Model
 
-BugIntel AI Workbench is designed for authorized security testing only.
+Blackhole AI Workbench is designed for authorized security testing only.
 
 Every network-capable module should pass through the Scope Guard before execution.
 
@@ -73,7 +73,7 @@ MIT License.
 
 ## Research Planner Workflow
 
-BugIntel includes a deterministic research planner that turns existing browser evidence into structured hypotheses and recommendations.
+Blackhole includes a deterministic research planner that turns existing browser evidence into structured hypotheses and recommendations.
 
 Example:
 
@@ -93,7 +93,7 @@ Use the output as a manual research guide. Confirm every hypothesis with authori
 
 ### Safe LLM Prompt Package
 
-BugIntel can convert a deterministic research plan into a reviewable LLM prompt package:
+Blackhole can convert a deterministic research plan into a reviewable LLM prompt package:
 
     bugintel build-llm-prompt /tmp/research-plan.json --json-output /tmp/llm-prompt.json --markdown-output /tmp/llm-prompt.md
 
@@ -103,7 +103,7 @@ Use this package as an optional bridge to a future LLM provider. Treat any futur
 
 ### LLM Prompt Safety Audit
 
-BugIntel can audit a prompt package locally before provider use:
+Blackhole can audit a prompt package locally before provider use:
 
     bugintel audit-llm-prompt /tmp/llm-prompt.json --json-output /tmp/llm-prompt-audit.json --markdown-output /tmp/llm-prompt-audit.md
 
@@ -123,7 +123,7 @@ Current checks include:
 
 ### Disabled LLM Provider Stub
 
-BugIntel includes a disabled-by-default provider stub:
+Blackhole includes a disabled-by-default provider stub:
 
     bugintel run-llm-provider /tmp/llm-prompt.json --json-output /tmp/llm-provider-result.json
 
@@ -131,7 +131,7 @@ The current provider does not call OpenAI, Anthropic, local models, or any netwo
 
 ### UFO Startup Intro
 
-BugIntel includes an optional terminal UFO startup screen:
+Blackhole includes an optional terminal UFO startup screen:
 
     bugintel intro
 
@@ -139,7 +139,7 @@ Running `bugintel` with no command also shows the UFO loading screen. Normal com
 
 ## Browser Evidence Workflow
 
-BugIntel v0.9.0 includes a safe browser automation foundation.
+Blackhole v0.9.0 includes a safe browser automation foundation.
 
 Install optional Playwright support with:
 
@@ -183,7 +183,7 @@ The preview keeps live execution disabled by default.
 
 ### Playwright Execution Safety Gate
 
-BugIntel now includes a safety-gated `execute_playwright_plan()` skeleton for future live browser execution.
+Blackhole now includes a safety-gated `execute_playwright_plan()` skeleton for future live browser execution.
 
 The skeleton does not launch a browser yet. It blocks execution unless:
 
@@ -237,7 +237,7 @@ This validates the evidence/report pipeline before live browser execution is imp
 
 ### Playwright Execution Request Model
 
-BugIntel also has a pre-execution request model for future Playwright jobs.
+Blackhole also has a pre-execution request model for future Playwright jobs.
 
 A Playwright request records the target, task, start URL, browser type, config, planned actions, and artifact paths before execution.
 
@@ -286,7 +286,7 @@ In the current skeleton, this still does not launch a browser. It only reaches t
 
 ### Browser Artifact Loading
 
-BugIntel can load planned browser artifacts from a saved Playwright request and convert them into a browser capture result JSON.
+Blackhole can load planned browser artifacts from a saved Playwright request and convert them into a browser capture result JSON.
 
 Expected artifact paths come from the request JSON:
 
@@ -306,7 +306,7 @@ This command does not launch a browser. It only reads artifact files that alread
 
 ### Playwright Adapter Context
 
-BugIntel now has an internal Playwright adapter context.
+Blackhole now has an internal Playwright adapter context.
 
 The adapter context carries the request and planned artifact paths toward the browser adapter.
 
@@ -314,7 +314,7 @@ By default it does not create files. It can optionally create only the artifact 
 
 ### Playwright Adapter Stub Runner
 
-BugIntel now has a stub runner for the future Playwright adapter.
+Blackhole now has a stub runner for the future Playwright adapter.
 
 The adapter stub returns `status: not_implemented` as a browser capture result.
 

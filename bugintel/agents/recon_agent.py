@@ -1,5 +1,5 @@
 """
-Recon Agent for BugIntel AI Workbench.
+Recon Agent for Blackhole AI Workbench.
 
 Website-mode passive recon utilities.
 

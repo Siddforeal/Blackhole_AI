@@ -1,5 +1,5 @@
 """
-BugIntel AI Workbench CLI.
+Blackhole AI Workbench CLI.
 
 Commands:
 - version
@@ -61,7 +61,7 @@ from bugintel.integrations.har_importer import load_har
 
 app = typer.Typer(
     name="bugintel",
-    help="BugIntel AI Workbench: human-in-the-loop vulnerability discovery and bug intelligence.",
+    help="Blackhole AI Workbench: human-in-the-loop vulnerability discovery and bug intelligence.",
 no_args_is_help=False,
 )
 
@@ -71,7 +71,7 @@ console = Console()
 
 @app.callback(invoke_without_command=True)
 def main_callback(ctx: typer.Context):
-    """BugIntel AI Workbench."""
+    """Blackhole AI Workbench."""
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
@@ -84,7 +84,7 @@ def main_callback(ctx: typer.Context):
 
 @app.command("intro")
 def intro_command():
-    """Show the BugIntel UFO startup intro."""
+    """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
             version="0.9.0",
@@ -95,8 +95,8 @@ def intro_command():
 
 @app.command()
 def version():
-    """Show BugIntel version."""
-    console.print("[bold green]BugIntel AI Workbench[/bold green] version 0.9.0")
+    """Show Blackhole version."""
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 0.9.0")
 
 
 @app.command("scope-check")

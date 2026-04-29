@@ -1,5 +1,5 @@
 """
-Response Diff Analyzer for BugIntel AI Workbench.
+Response Diff Analyzer for Blackhole AI Workbench.
 
 Compares HTTP responses to identify interesting authorization/security signals.
 

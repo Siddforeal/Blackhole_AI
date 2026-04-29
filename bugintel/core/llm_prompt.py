@@ -1,5 +1,5 @@
 """
-Safe LLM prompt packaging for BugIntel AI Workbench.
+Safe LLM prompt packaging for Blackhole AI Workbench.
 
 This module does not call an LLM provider, does not read API keys, does not
 perform network activity, and does not execute commands. It only converts an
@@ -72,7 +72,7 @@ def build_llm_prompt_package_from_research_plan(
     """Build a safe, reviewable prompt package from a deterministic plan."""
     plan_json = json.dumps(plan.to_dict(), indent=2, sort_keys=True)
 
-    user_prompt = f"""Review this deterministic BugIntel research plan.
+    user_prompt = f"""Review this deterministic Blackhole research plan.
 
 Task:
 - Identify the highest-signal hypotheses.

@@ -1,5 +1,5 @@
 """
-Browser Action Planner for BugIntel AI Workbench.
+Browser Action Planner for Blackhole AI Workbench.
 
 v0.9.0 foundation for browser automation.
 

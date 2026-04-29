@@ -1,5 +1,5 @@
 """
-Agent Registry for BugIntel AI Workbench.
+Agent Registry for Blackhole AI Workbench.
 
 Defines specialist agents used by the future AI orchestrator.
 

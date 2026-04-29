@@ -16,7 +16,7 @@ def test_render_intro_panel_includes_status_text():
     panel = render_intro_panel("0.8.0-dev")
     rendered = str(panel.renderable)
 
-    assert "Welcome to BugIntel AI Workbench" in rendered
+    assert "Welcome to Blackhole AI Workbench" in rendered
     assert "Scope Guard online" in rendered
     assert "Evidence engine ready" in rendered
     assert "Research planner ready" in rendered

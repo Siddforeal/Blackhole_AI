@@ -1,5 +1,5 @@
 """
-iOS Agent for BugIntel AI Workbench.
+iOS Agent for Blackhole AI Workbench.
 
 iOS Mode foundation.
 

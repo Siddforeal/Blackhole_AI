@@ -1399,7 +1399,7 @@ def test_build_llm_prompt_command_writes_json_and_markdown():
         markdown = markdown_path.read_text(encoding="utf-8")
 
         assert data["source"] == "research_plan"
-        assert "Review this deterministic BugIntel research plan" in data["user_prompt"]
+        assert "Review this deterministic Blackhole research plan" in data["user_prompt"]
         assert "# LLM Prompt Package" in markdown
         assert "## System Prompt" in markdown
         assert "## User Prompt" in markdown
@@ -1510,8 +1510,8 @@ def test_intro_command_shows_ufo_intro():
     result = runner.invoke(app, ["intro"])
 
     assert result.exit_code == 0
-    assert "Welcome to BugIntel AI Workbench" in result.output
-    assert "BugIntel UFO Signal" in result.output
+    assert "Welcome to Blackhole AI Workbench" in result.output
+    assert "Blackhole Signal" in result.output
     assert "Scope Guard online" in result.output
 
 
@@ -1519,9 +1519,9 @@ def test_root_command_shows_ufo_intro():
     result = runner.invoke(app, [])
 
     assert result.exit_code == 0
-    assert "Welcome to BugIntel AI Workbench" in result.output
-    assert "BugIntel UFO Signal" in result.output
-    assert "BugIntel UFO Signal" in result.output
+    assert "Welcome to Blackhole AI Workbench" in result.output
+    assert "Blackhole Signal" in result.output
+    assert "Blackhole Signal" in result.output
 
 
 def test_audit_llm_prompt_command_writes_json_and_markdown():

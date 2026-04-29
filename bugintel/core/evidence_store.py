@@ -1,5 +1,5 @@
 """
-Evidence Store for BugIntel AI Workbench.
+Evidence Store for Blackhole AI Workbench.
 
 Stores redacted security-testing evidence as JSON files.
 

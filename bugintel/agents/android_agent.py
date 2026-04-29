@@ -1,5 +1,5 @@
 """
-Android Agent for BugIntel AI Workbench.
+Android Agent for Blackhole AI Workbench.
 
 Android Mode foundation.
 

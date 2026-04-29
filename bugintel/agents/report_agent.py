@@ -1,5 +1,5 @@
 """
-Report Agent for BugIntel AI Workbench.
+Report Agent for Blackhole AI Workbench.
 
 Converts structured evidence JSON into a human-reviewable Markdown evidence report.
 """

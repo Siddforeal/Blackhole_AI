@@ -1,6 +1,6 @@
 # Methodology
 
-BugIntel AI Workbench follows a human-in-the-loop methodology for authorized vulnerability research.
+Blackhole AI Workbench follows a human-in-the-loop methodology for authorized vulnerability research.
 
 ## Workflow
 
@@ -192,7 +192,7 @@ The full safe handoff chain is:
 
 ## Playwright Execution Request Model
 
-Before live browser execution is implemented, BugIntel builds a reviewable execution request.
+Before live browser execution is implemented, Blackhole builds a reviewable execution request.
 
 The request contains:
 
@@ -228,7 +228,7 @@ To execute a saved request through the safety gate:
 
     bugintel execute-playwright-request examples/playwright_request.example.json examples/target.example.yaml
 
-This command intentionally requires the scope file again. Saved request JSON can be edited, so BugIntel re-validates the start URL before applying the execution safety gate.
+This command intentionally requires the scope file again. Saved request JSON can be edited, so Blackhole re-validates the start URL before applying the execution safety gate.
 
 Default behavior is refusal because `allow_live_execution` is false. Passing only `--allow-live-execution` keeps the stub route by default.
 
@@ -281,4 +281,4 @@ Current behavior:
 5. Confirms no browser launch is implemented.
 6. Produces no network events, screenshots, HTML snapshots, or traces.
 
-This lets BugIntel test the future adapter-to-evidence handoff before real browser execution is added.
+This lets Blackhole test the future adapter-to-evidence handoff before real browser execution is added.

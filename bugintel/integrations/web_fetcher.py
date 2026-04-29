@@ -1,5 +1,5 @@
 """
-Scope-guarded Website Fetcher for BugIntel AI Workbench.
+Scope-guarded Website Fetcher for Blackhole AI Workbench.
 
 Fetches a website page only after Scope Guard approval.
 
@@ -61,7 +61,7 @@ def fetch_web_page(
             url,
             headers={
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                "User-Agent": "BugIntel-AI-Workbench/0.1 authorized-research",
+                "User-Agent": "Blackhole-AI-Workbench/0.1 authorized-research",
             },
             follow_redirects=True,
             timeout=timeout,

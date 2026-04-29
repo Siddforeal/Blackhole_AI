@@ -1,5 +1,5 @@
 """
-Orchestrator Planner for BugIntel AI Workbench.
+Orchestrator Planner for Blackhole AI Workbench.
 
 The orchestrator is the planning brain of the workbench.
 

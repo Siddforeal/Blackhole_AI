@@ -1,6 +1,6 @@
 # Limitations
 
-BugIntel AI Workbench is an early research prototype.
+Blackhole AI Workbench is an early research prototype.
 
 ## Current Limitations
 

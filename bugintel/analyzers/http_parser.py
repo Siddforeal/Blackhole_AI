@@ -1,5 +1,5 @@
 """
-HTTP Parser for BugIntel AI Workbench.
+HTTP Parser for Blackhole AI Workbench.
 
 Parses raw curl -i output into:
 - status code

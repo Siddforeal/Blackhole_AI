@@ -1,5 +1,5 @@
 """
-Website Recon Agent for BugIntel AI Workbench.
+Website Recon Agent for Blackhole AI Workbench.
 
 This is the first Website Mode pipeline.
 

@@ -1,5 +1,5 @@
 """
-Endpoint Miner for BugIntel AI Workbench.
+Endpoint Miner for Blackhole AI Workbench.
 
 Extracts API-like endpoints from JavaScript, HTML, HAR text, Burp exports,
 curl logs, and general text.

@@ -1,5 +1,5 @@
 """
-Optional terminal UFO intro for BugIntel AI Workbench.
+Optional terminal UFO intro for Blackhole AI Workbench.
 
 The intro is shown only for human-facing startup/intro flows. Normal CLI
 commands, JSON-output workflows, tests, CI, and automation should stay clean.
@@ -56,7 +56,7 @@ def should_show_intro(force: bool = False) -> bool:
 
 def render_intro_panel(version: str) -> Panel:
     body = (
-        f"[bold bright_green]Welcome to BugIntel AI Workbench[/bold bright_green] "
+        f"[bold bright_green]Welcome to Blackhole AI Workbench[/bold bright_green] "
         f"[dim]{version}[/dim]\n"
         f"[green]{'.' * 72}[/green]\n"
         f"[bright_green]{UFO_ASCII}[/bright_green]\n"
@@ -70,7 +70,7 @@ def render_intro_panel(version: str) -> Panel:
 
     return Panel(
         body,
-        title="[bold bright_green]BugIntel UFO Signal[/bold bright_green]",
+        title="[bold bright_green]Blackhole Signal[/bold bright_green]",
         border_style="green",
     )
 

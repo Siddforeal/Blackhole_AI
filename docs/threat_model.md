@@ -1,6 +1,6 @@
 # Threat Model
 
-BugIntel AI Workbench is designed to reduce risk during AI-assisted security testing.
+Blackhole AI Workbench is designed to reduce risk during AI-assisted security testing.
 
 ## Main Risks
 

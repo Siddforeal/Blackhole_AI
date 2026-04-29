@@ -1,5 +1,5 @@
 """
-Task Tree for BugIntel AI Workbench.
+Task Tree for Blackhole AI Workbench.
 
 Represents security research as a tree of tasks.
 

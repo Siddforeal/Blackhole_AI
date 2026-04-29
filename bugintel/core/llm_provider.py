@@ -1,5 +1,5 @@
 """
-Disabled-by-default LLM provider abstraction for BugIntel AI Workbench.
+Disabled-by-default LLM provider abstraction for Blackhole AI Workbench.
 
 This module does not call OpenAI, Anthropic, local models, or any network API.
 It only defines a provider result shape and a disabled provider stub so future
