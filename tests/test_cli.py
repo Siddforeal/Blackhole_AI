@@ -1149,3 +1149,93 @@ def test_execute_playwright_request_command_passes_real_adapter_flag(monkeypatch
 
         assert data["execution_output"]["live_execution_allowed"] is True
         assert data["execution_output"]["use_real_adapter"] is True
+
+
+def test_plan_research_command_writes_json_plan():
+    evidence = {
+        "target_name": "demo-lab",
+        "task_name": "capture dashboard",
+        "evidence_type": "browser",
+        "network_events": [
+            {
+                "method": "GET",
+                "url": "https://demo.example.com/api/accounts/123/users",
+                "status_code": 200,
+                "resource_type": "fetch",
+            }
+        ],
+        "screenshots": [
+            {
+                "path": "artifacts/browser/demo/screenshot.png",
+                "sha256": "a" * 64,
+            }
+        ],
+        "html_snapshots": [
+            {
+                "url": "https://demo.example.com/dashboard",
+                "html_sha256": "b" * 64,
+            }
+        ],
+    }
+
+    with runner.isolated_filesystem():
+        evidence_path = Path("browser-evidence.json")
+        output_path = Path("research-plan.json")
+
+        evidence_path.write_text(json.dumps(evidence), encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "plan-research",
+                str(evidence_path),
+                "--json-output",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Research Plan" in result.output
+        assert "Research Hypotheses" in result.output
+        assert "Research Recommendations" in result.output
+        assert "Research plan JSON saved" in result.output
+        assert output_path.exists()
+
+        data = json.loads(output_path.read_text(encoding="utf-8"))
+
+        assert data["target_name"] == "demo-lab"
+        assert data["source_evidence_type"] == "browser"
+        assert data["generated_by"] == "deterministic"
+        assert len(data["hypotheses"]) >= 2
+        assert data["recommendations"][0]["priority"] == 1
+
+
+def test_plan_research_command_blocks_missing_file():
+    with runner.isolated_filesystem():
+        result = runner.invoke(
+            app,
+            [
+                "plan-research",
+                "missing.json",
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert "Evidence file not found" in result.output
+
+
+def test_plan_research_command_blocks_invalid_json():
+    with runner.isolated_filesystem():
+        evidence_path = Path("broken.json")
+        evidence_path.write_text("{not-json", encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "plan-research",
+                str(evidence_path),
+            ],
+        )
+
+        assert result.exit_code == 2
+        assert "Invalid JSON evidence file" in result.output
