@@ -38,6 +38,7 @@ from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
 from bugintel.core.llm_provider import run_disabled_llm_provider
+from bugintel.core.llm_safety import audit_llm_prompt_package, render_llm_prompt_safety_markdown
 from bugintel.integrations.kali_runner import build_curl_plan, execute_curl_plan
 from bugintel.integrations.playwright_runner import (
     BrowserAction,
@@ -471,6 +472,78 @@ def _llm_prompt_package_from_dict(data: dict) -> LLMPromptPackage:
         source=str(data.get("source", "research_plan")),
         safety_notes=tuple(safety_notes),
     )
+
+
+
+@app.command("audit-llm-prompt")
+def audit_llm_prompt_command(
+    prompt_package_file: Path = typer.Argument(..., help="Path to LLM prompt package JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional path to save the prompt safety audit JSON."),
+    markdown_output: Path | None = typer.Option(None, "--markdown-output", help="Optional path to save the prompt safety audit Markdown."),
+):
+    """Audit an LLM prompt package locally before provider use."""
+    if not prompt_package_file.exists():
+        console.print(f"[bold red]LLM prompt package file not found:[/bold red] {prompt_package_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        data = json.loads(prompt_package_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid LLM prompt package JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print("[bold red]LLM prompt package JSON must be an object.[/bold red]")
+        raise typer.Exit(code=2)
+
+    package = _llm_prompt_package_from_dict(data)
+    report = audit_llm_prompt_package(package)
+    report_data = report.to_dict()
+
+    table = Table(title="LLM Prompt Safety Audit")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row("Status", report.status)
+    table.add_row("Findings", str(report.finding_count))
+    table.add_row("High", str(report.high_count))
+    table.add_row("Medium", str(report.medium_count))
+    table.add_row("Low", str(report.low_count))
+
+    console.print(table)
+
+    if report.findings:
+        findings_table = Table(title="Prompt Safety Findings")
+        findings_table.add_column("Severity", style="bold")
+        findings_table.add_column("Category")
+        findings_table.add_column("Label")
+        findings_table.add_column("Evidence")
+
+        for finding in report.findings:
+            findings_table.add_row(
+                finding.severity,
+                finding.category,
+                finding.label,
+                finding.evidence,
+            )
+
+        console.print(findings_table)
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(
+            json.dumps(report_data, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        console.print(f"[bold green]LLM prompt safety audit JSON saved:[/bold green] {json_output}")
+
+    if markdown_output:
+        markdown_output.parent.mkdir(parents=True, exist_ok=True)
+        markdown_output.write_text(
+            render_llm_prompt_safety_markdown(report),
+            encoding="utf-8",
+        )
+        console.print(f"[bold green]LLM prompt safety audit Markdown saved:[/bold green] {markdown_output}")
 
 
 @app.command("run-llm-provider")

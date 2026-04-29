@@ -1522,3 +1522,81 @@ def test_root_command_shows_ufo_intro():
     assert "Welcome to BugIntel AI Workbench" in result.output
     assert "BugIntel UFO Signal" in result.output
     assert "BugIntel UFO Signal" in result.output
+
+
+def test_audit_llm_prompt_command_writes_json_and_markdown():
+    prompt_package = {
+        "system_prompt": "System prompt",
+        "user_prompt": "token=secret-value",
+        "redaction_applied": False,
+        "source": "research_plan",
+        "safety_notes": ["Review before provider use."],
+    }
+
+    with runner.isolated_filesystem():
+        package_path = Path("llm-prompt.json")
+        json_path = Path("llm-prompt-audit.json")
+        markdown_path = Path("llm-prompt-audit.md")
+
+        package_path.write_text(json.dumps(prompt_package), encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "audit-llm-prompt",
+                str(package_path),
+                "--json-output",
+                str(json_path),
+                "--markdown-output",
+                str(markdown_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Status" in result.output
+        assert "Findings" in result.output
+        assert "blocked" in result.output
+        assert "LLM prompt safety audit JSON saved" in result.output
+        assert "LLM prompt safety audit Markdown saved" in result.output
+        assert json_path.exists()
+        assert markdown_path.exists()
+
+        data = json.loads(json_path.read_text(encoding="utf-8"))
+        markdown = markdown_path.read_text(encoding="utf-8")
+
+        assert data["status"] == "blocked"
+        assert data["finding_count"] >= 1
+        assert data["high_count"] >= 1
+        assert "# LLM Prompt Safety Audit" in markdown
+        assert "Secret assignment present" in markdown
+
+
+def test_audit_llm_prompt_command_blocks_missing_file():
+    with runner.isolated_filesystem():
+        result = runner.invoke(
+            app,
+            [
+                "audit-llm-prompt",
+                "missing-prompt.json",
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert "LLM prompt package file not found" in result.output
+
+
+def test_audit_llm_prompt_command_blocks_invalid_json():
+    with runner.isolated_filesystem():
+        package_path = Path("broken-prompt.json")
+        package_path.write_text("{not-json", encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "audit-llm-prompt",
+                str(package_path),
+            ],
+        )
+
+        assert result.exit_code == 2
+        assert "Invalid LLM prompt package JSON" in result.output
