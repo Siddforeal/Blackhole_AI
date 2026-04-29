@@ -1285,3 +1285,46 @@ def test_plan_research_command_accepts_saved_evidence_wrapper():
         assert data["target_name"] == "saved-lab"
         assert data["source_evidence_type"] == "browser"
         assert len(data["hypotheses"]) >= 2
+
+
+def test_plan_research_command_writes_markdown_plan():
+    evidence = {
+        "target_name": "demo-lab",
+        "task_name": "capture dashboard",
+        "evidence_type": "browser",
+        "network_events": [
+            {
+                "method": "GET",
+                "url": "https://demo.example.com/api/accounts/123/users",
+                "status_code": 200,
+                "resource_type": "fetch",
+            }
+        ],
+    }
+
+    with runner.isolated_filesystem():
+        evidence_path = Path("browser-evidence.json")
+        output_path = Path("research-plan.md")
+
+        evidence_path.write_text(json.dumps(evidence), encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "plan-research",
+                str(evidence_path),
+                "--markdown-output",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Research plan Markdown saved" in result.output
+        assert output_path.exists()
+
+        markdown = output_path.read_text(encoding="utf-8")
+
+        assert "# Research Plan: demo-lab" in markdown
+        assert "## Hypotheses" in markdown
+        assert "## Recommendations" in markdown
+        assert "Browser-observed API surface" in markdown

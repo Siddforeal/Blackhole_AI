@@ -222,3 +222,32 @@ def test_build_research_plan_accepts_saved_data_wrapper():
     assert "object-authorization" in categories
     assert "sensitive-surface-review" in categories
     assert "browser-evidence-review" in categories
+
+
+def test_render_research_plan_markdown_includes_hypotheses_and_recommendations():
+    from bugintel.core.research_planner import (
+        build_research_plan_from_browser_evidence,
+        render_research_plan_markdown,
+    )
+
+    evidence = {
+        "target_name": "demo-lab",
+        "task_name": "capture dashboard",
+        "evidence_type": "browser",
+        "network_events": [
+            {
+                "method": "GET",
+                "url": "https://demo.example.com/api/accounts/123/users",
+                "status_code": 200,
+            }
+        ],
+    }
+
+    plan = build_research_plan_from_browser_evidence(evidence)
+    markdown = render_research_plan_markdown(plan)
+
+    assert "# Research Plan: demo-lab" in markdown
+    assert "## Hypotheses" in markdown
+    assert "## Recommendations" in markdown
+    assert "Browser-observed API surface" in markdown
+    assert "Priority 1" in markdown

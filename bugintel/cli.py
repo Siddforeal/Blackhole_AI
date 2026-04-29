@@ -34,7 +34,7 @@ from bugintel.core.evidence_store import EvidenceStore
 from bugintel.core.scope_guard import load_scope_from_dict
 from bugintel.core.orchestrator import create_orchestration_plan
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
-from bugintel.core.research_planner import build_research_plan_from_browser_evidence
+from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown
 from bugintel.integrations.kali_runner import build_curl_plan, execute_curl_plan
 from bugintel.integrations.playwright_runner import (
     BrowserAction,
@@ -382,6 +382,7 @@ def save_browser_capture_command(
 def plan_research_command(
     evidence_file: Path = typer.Argument(..., help="Path to browser evidence or browser capture-result JSON."),
     json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional path to save the research plan JSON."),
+    markdown_output: Path | None = typer.Option(None, "--markdown-output", help="Optional path to save the research plan Markdown report."),
 ):
     """Build a deterministic research plan from existing browser evidence."""
     if not evidence_file.exists():
@@ -450,6 +451,14 @@ def plan_research_command(
             encoding="utf-8",
         )
         console.print(f"[bold green]Research plan JSON saved:[/bold green] {json_output}")
+
+    if markdown_output:
+        markdown_output.parent.mkdir(parents=True, exist_ok=True)
+        markdown_output.write_text(
+            render_research_plan_markdown(plan),
+            encoding="utf-8",
+        )
+        console.print(f"[bold green]Research plan Markdown saved:[/bold green] {markdown_output}")
 
 
 @app.command("orchestrate")
