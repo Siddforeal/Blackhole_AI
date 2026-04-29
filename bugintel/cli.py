@@ -35,7 +35,8 @@ from bugintel.core.scope_guard import load_scope_from_dict
 from bugintel.core.orchestrator import create_orchestration_plan
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
-from bugintel.core.llm_prompt import build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
+from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
+from bugintel.core.llm_provider import run_disabled_llm_provider
 from bugintel.integrations.kali_runner import build_curl_plan, execute_curl_plan
 from bugintel.integrations.playwright_runner import (
     BrowserAction,
@@ -430,6 +431,64 @@ def _research_plan_from_dict(data: dict) -> ResearchPlan:
         recommendations=tuple(recommendations),
         safety_notes=tuple(data.get("safety_notes", ())),
     )
+
+
+
+def _llm_prompt_package_from_dict(data: dict) -> LLMPromptPackage:
+    safety_notes = data.get("safety_notes", ())
+
+    return LLMPromptPackage(
+        system_prompt=str(data.get("system_prompt", "")),
+        user_prompt=str(data.get("user_prompt", "")),
+        redaction_applied=bool(data.get("redaction_applied", False)),
+        source=str(data.get("source", "research_plan")),
+        safety_notes=tuple(safety_notes),
+    )
+
+
+@app.command("run-llm-provider")
+def run_llm_provider_command(
+    prompt_package_file: Path = typer.Argument(..., help="Path to LLM prompt package JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional path to save the disabled provider result JSON."),
+):
+    """Run the disabled-by-default LLM provider stub."""
+    if not prompt_package_file.exists():
+        console.print(f"[bold red]LLM prompt package file not found:[/bold red] {prompt_package_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        data = json.loads(prompt_package_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid LLM prompt package JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print("[bold red]LLM prompt package JSON must be an object.[/bold red]")
+        raise typer.Exit(code=2)
+
+    package = _llm_prompt_package_from_dict(data)
+    result = run_disabled_llm_provider(package)
+    result_data = result.to_dict()
+
+    table = Table(title="LLM Provider Result")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row("Provider", result.provider_name)
+    table.add_row("Status", result.status)
+    table.add_row("Reason", result.reason)
+    table.add_row("Model", result.model or "-")
+    table.add_row("Output Bytes", str(len(result.output_text.encode("utf-8"))))
+
+    console.print(table)
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(
+            json.dumps(result_data, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        console.print(f"[bold green]LLM provider result JSON saved:[/bold green] {json_output}")
 
 
 @app.command("build-llm-prompt")

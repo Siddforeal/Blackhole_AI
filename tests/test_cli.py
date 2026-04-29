@@ -1434,3 +1434,73 @@ def test_build_llm_prompt_command_blocks_invalid_json():
 
         assert result.exit_code == 2
         assert "Invalid research plan JSON" in result.output
+
+
+def test_run_llm_provider_command_returns_disabled_result_json():
+    prompt_package = {
+        "system_prompt": "System prompt",
+        "user_prompt": "User prompt",
+        "redaction_applied": False,
+        "source": "research_plan",
+        "safety_notes": ["Review before provider use."],
+    }
+
+    with runner.isolated_filesystem():
+        package_path = Path("llm-prompt.json")
+        output_path = Path("llm-provider-result.json")
+
+        package_path.write_text(json.dumps(prompt_package), encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "run-llm-provider",
+                str(package_path),
+                "--json-output",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "LLM Provider Result" in result.output
+        assert "disabled" in result.output
+        assert "LLM provider result JSON saved" in result.output
+        assert output_path.exists()
+
+        data = json.loads(output_path.read_text(encoding="utf-8"))
+
+        assert data["provider_name"] == "disabled"
+        assert data["status"] == "disabled"
+        assert data["reason"] == "LLM provider execution is disabled by default."
+        assert data["output_text"] == ""
+
+
+def test_run_llm_provider_command_blocks_missing_file():
+    with runner.isolated_filesystem():
+        result = runner.invoke(
+            app,
+            [
+                "run-llm-provider",
+                "missing-prompt.json",
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert "LLM prompt package file not found" in result.output
+
+
+def test_run_llm_provider_command_blocks_invalid_json():
+    with runner.isolated_filesystem():
+        package_path = Path("broken-prompt.json")
+        package_path.write_text("{not-json", encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "run-llm-provider",
+                str(package_path),
+            ],
+        )
+
+        assert result.exit_code == 2
+        assert "Invalid LLM prompt package JSON" in result.output
