@@ -1328,3 +1328,109 @@ def test_plan_research_command_writes_markdown_plan():
         assert "## Hypotheses" in markdown
         assert "## Recommendations" in markdown
         assert "Browser-observed API surface" in markdown
+
+
+def test_build_llm_prompt_command_writes_json_and_markdown():
+    research_plan = {
+        "target_name": "demo-lab",
+        "source_evidence_type": "browser",
+        "generated_by": "deterministic",
+        "hypotheses": [
+            {
+                "title": "API route may need authorization review",
+                "category": "api-authorization",
+                "rationale": "Browser evidence includes API requests.",
+                "confidence": "medium",
+                "evidence": [
+                    {
+                        "evidence_type": "browser",
+                        "source": "capture dashboard",
+                        "locator": "network_events",
+                        "summary": "GET /api/accounts/123/users",
+                        "tags": ["api"],
+                    }
+                ],
+                "suggested_tests": [
+                    "Compare own-object, foreign-object, random-object, and unauthenticated responses."
+                ],
+                "tags": ["api", "bac"],
+            }
+        ],
+        "recommendations": [
+            {
+                "priority": 1,
+                "title": "Review browser-observed API routes",
+                "reason": "The plan identified API routes.",
+                "next_actions": ["Group API requests by authorization boundary."],
+                "related_hypotheses": ["API route may need authorization review"],
+                "safety_notes": ["Keep tests in scope."],
+            }
+        ],
+        "safety_notes": ["Use Scope Guard before testing."],
+    }
+
+    with runner.isolated_filesystem():
+        plan_path = Path("research-plan.json")
+        json_path = Path("llm-prompt.json")
+        markdown_path = Path("llm-prompt.md")
+
+        plan_path.write_text(json.dumps(research_plan), encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "build-llm-prompt",
+                str(plan_path),
+                "--json-output",
+                str(json_path),
+                "--markdown-output",
+                str(markdown_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "LLM Prompt Package" in result.output
+        assert "LLM prompt package JSON saved" in result.output
+        assert "LLM prompt package Markdown saved" in result.output
+        assert json_path.exists()
+        assert markdown_path.exists()
+
+        data = json.loads(json_path.read_text(encoding="utf-8"))
+        markdown = markdown_path.read_text(encoding="utf-8")
+
+        assert data["source"] == "research_plan"
+        assert "Review this deterministic BugIntel research plan" in data["user_prompt"]
+        assert "# LLM Prompt Package" in markdown
+        assert "## System Prompt" in markdown
+        assert "## User Prompt" in markdown
+
+
+def test_build_llm_prompt_command_blocks_missing_file():
+    with runner.isolated_filesystem():
+        result = runner.invoke(
+            app,
+            [
+                "build-llm-prompt",
+                "missing-plan.json",
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert "Research plan file not found" in result.output
+
+
+def test_build_llm_prompt_command_blocks_invalid_json():
+    with runner.isolated_filesystem():
+        plan_path = Path("broken-plan.json")
+        plan_path.write_text("{not-json", encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "build-llm-prompt",
+                str(plan_path),
+            ],
+        )
+
+        assert result.exit_code == 2
+        assert "Invalid research plan JSON" in result.output

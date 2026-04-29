@@ -34,7 +34,8 @@ from bugintel.core.evidence_store import EvidenceStore
 from bugintel.core.scope_guard import load_scope_from_dict
 from bugintel.core.orchestrator import create_orchestration_plan
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
-from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown
+from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
+from bugintel.core.llm_prompt import build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
 from bugintel.integrations.kali_runner import build_curl_plan, execute_curl_plan
 from bugintel.integrations.playwright_runner import (
     BrowserAction,
@@ -376,6 +377,113 @@ def save_browser_capture_command(
 
     console.print(f"[bold green]Browser evidence saved:[/bold green] {evidence_path}")
 
+
+
+
+def _research_plan_from_dict(data: dict) -> ResearchPlan:
+    hypotheses = []
+
+    for item in data.get("hypotheses", []):
+        evidence_refs = tuple(
+            EvidenceReference(
+                evidence_type=str(ref.get("evidence_type", "")),
+                source=str(ref.get("source", "")),
+                locator=str(ref.get("locator", "")),
+                summary=str(ref.get("summary", "")),
+                tags=tuple(ref.get("tags", [])),
+            )
+            for ref in item.get("evidence", [])
+            if isinstance(ref, dict)
+        )
+
+        hypotheses.append(
+            ResearchHypothesis(
+                title=str(item.get("title", "")),
+                category=str(item.get("category", "")),
+                rationale=str(item.get("rationale", "")),
+                confidence=str(item.get("confidence", "medium")),
+                evidence=evidence_refs,
+                suggested_tests=tuple(item.get("suggested_tests", [])),
+                tags=tuple(item.get("tags", [])),
+            )
+        )
+
+    recommendations = []
+
+    for item in data.get("recommendations", []):
+        recommendations.append(
+            ResearchRecommendation(
+                priority=int(item.get("priority", 1)),
+                title=str(item.get("title", "")),
+                reason=str(item.get("reason", "")),
+                next_actions=tuple(item.get("next_actions", [])),
+                related_hypotheses=tuple(item.get("related_hypotheses", [])),
+                safety_notes=tuple(item.get("safety_notes", [])),
+            )
+        )
+
+    return ResearchPlan(
+        target_name=str(data.get("target_name", "unknown-target")),
+        source_evidence_type=str(data.get("source_evidence_type", "browser")),
+        generated_by=str(data.get("generated_by", "deterministic")),
+        hypotheses=tuple(hypotheses),
+        recommendations=tuple(recommendations),
+        safety_notes=tuple(data.get("safety_notes", ())),
+    )
+
+
+@app.command("build-llm-prompt")
+def build_llm_prompt_command(
+    research_plan_file: Path = typer.Argument(..., help="Path to deterministic research plan JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional path to save the LLM prompt package JSON."),
+    markdown_output: Path | None = typer.Option(None, "--markdown-output", help="Optional path to save the LLM prompt package Markdown."),
+):
+    """Build a safe reviewable LLM prompt package from a deterministic research plan."""
+    if not research_plan_file.exists():
+        console.print(f"[bold red]Research plan file not found:[/bold red] {research_plan_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        data = json.loads(research_plan_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid research plan JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print("[bold red]Research plan JSON must be an object.[/bold red]")
+        raise typer.Exit(code=2)
+
+    plan = _research_plan_from_dict(data)
+    package = build_llm_prompt_package_from_research_plan(plan)
+    package_data = package.to_dict()
+
+    table = Table(title="LLM Prompt Package")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row("Source", package.source)
+    table.add_row("Redaction Applied", "YES" if package.redaction_applied else "NO")
+    table.add_row("Safety Notes", str(len(package.safety_notes)))
+    table.add_row("System Prompt Bytes", str(len(package.system_prompt.encode("utf-8"))))
+    table.add_row("User Prompt Bytes", str(len(package.user_prompt.encode("utf-8"))))
+
+    console.print(table)
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(
+            json.dumps(package_data, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        console.print(f"[bold green]LLM prompt package JSON saved:[/bold green] {json_output}")
+
+    if markdown_output:
+        markdown_output.parent.mkdir(parents=True, exist_ok=True)
+        markdown_output.write_text(
+            render_llm_prompt_package_markdown(package),
+            encoding="utf-8",
+        )
+        console.print(f"[bold green]LLM prompt package Markdown saved:[/bold green] {markdown_output}")
 
 
 @app.command("plan-research")
