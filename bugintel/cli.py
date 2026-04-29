@@ -38,6 +38,7 @@ from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
 from bugintel.core.llm_provider import run_disabled_llm_provider
+from bugintel.core.llm_provider_config import LLMProviderConfig, validate_provider_config
 from bugintel.core.llm_safety import audit_llm_prompt_package, render_llm_prompt_safety_markdown
 from bugintel.integrations.kali_runner import build_curl_plan, execute_curl_plan
 from bugintel.integrations.playwright_runner import (
@@ -544,6 +545,69 @@ def audit_llm_prompt_command(
             encoding="utf-8",
         )
         console.print(f"[bold green]LLM prompt safety audit Markdown saved:[/bold green] {markdown_output}")
+
+
+
+@app.command("llm-provider-status")
+def llm_provider_status_command(
+    provider_name: str = typer.Option("disabled", "--provider", help="LLM provider name to validate."),
+    allow_provider_execution: bool = typer.Option(
+        False,
+        "--allow-provider-execution",
+        help="Explicit future-provider execution opt-in. This command still does not run a provider.",
+    ),
+    require_prompt_audit_pass: bool = typer.Option(
+        True,
+        "--require-prompt-audit-pass/--no-require-prompt-audit-pass",
+        help="Require a passing prompt audit before any future provider execution.",
+    ),
+    model: str = typer.Option("", "--model", help="Future model label. Does not trigger provider execution."),
+    timeout_seconds: int = typer.Option(30, "--timeout-seconds", help="Future provider timeout setting."),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        "--output",
+        help="Optional path to save provider gate status JSON.",
+    ),
+):
+    """Show the disabled-by-default LLM provider gate status."""
+    config = LLMProviderConfig(
+        provider_name=provider_name,
+        allow_provider_execution=allow_provider_execution,
+        require_prompt_audit_pass=require_prompt_audit_pass,
+        model=model,
+        timeout_seconds=timeout_seconds,
+    )
+    gate = validate_provider_config(config)
+    payload = {
+        "config": config.to_dict(),
+        "gate": gate.to_dict(),
+        "notes": (
+            "This command only validates configuration. "
+            "It does not read API keys, call providers, make network requests, or execute commands."
+        ),
+    }
+
+    table = Table(title="LLM Provider Gate Status")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Provider", gate.provider_name)
+    table.add_row("Allowed", str(gate.allowed))
+    table.add_row("Reason", gate.reason)
+    table.add_row("Require prompt audit pass", str(config.require_prompt_audit_pass))
+    table.add_row("Model", config.model or "<unset>")
+    table.add_row("Timeout seconds", str(config.timeout_seconds))
+    console.print(table)
+
+    if gate.required_actions:
+        console.print("[bold yellow]Required actions:[/bold yellow]")
+        for action in gate.required_actions:
+            console.print(f"- {action}")
+
+    if json_output is not None:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        console.print(f"[bold green]LLM provider gate status JSON saved:[/bold green] {json_output}")
 
 
 @app.command("run-llm-provider")
