@@ -59,7 +59,7 @@ The example capture result represents the output shape expected from a future Pl
 
 ## Playwright Preview Workflow
 
-The Playwright preview workflow is the first v0.4.0 step toward live browser execution:
+The Playwright preview workflow is part of the v0.5.0 path toward live browser execution:
 
     bugintel preview-playwright examples/target.example.yaml https://demo.example.com/dashboard --browser chromium --json-output reports/playwright-preview.json
 

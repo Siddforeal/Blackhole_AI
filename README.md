@@ -4,7 +4,7 @@
 
 BugIntel AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.4.0
+Current version: 0.5.0
 
 ## Research Goal
 
@@ -73,7 +73,7 @@ MIT License.
 
 ## Browser Evidence Workflow
 
-BugIntel v0.4.0 includes a safe browser automation foundation.
+BugIntel v0.5.0 includes a safe browser automation foundation.
 
 Install optional Playwright support with:
 
@@ -107,7 +107,7 @@ Browser execution itself is still a future step. The current implementation prov
 
 ### Playwright Execution Preview
 
-The v0.4.0 foundation adds a safe Playwright execution preview command. It does not launch a browser. It validates scope, checks whether the optional Playwright package is available, and writes a JSON preview that can later feed execution/evidence workflows.
+The v0.5.0 foundation adds a safe Playwright execution preview command. It does not launch a browser. It validates scope, checks whether the optional Playwright package is available, and writes a JSON preview that can later feed execution/evidence workflows.
 
 Example:
 

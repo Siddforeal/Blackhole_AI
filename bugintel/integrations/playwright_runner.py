@@ -1,7 +1,7 @@
 """
 Browser Action Planner for BugIntel AI Workbench.
 
-v0.4.0 foundation for browser automation.
+v0.5.0 foundation for browser automation.
 
 This module does not launch a browser yet. It creates safe, reviewable browser
 action plans and capture result models that future Playwright/Chrome/Firefox
