@@ -14,6 +14,7 @@ from typing import Any
 
 from bugintel.core.agent_registry import AgentSpec, suggest_agents_for_endpoint
 from bugintel.core.task_tree import TaskNode, build_endpoint_task_tree
+from bugintel.core.endpoint_investigation import expand_endpoint_task_tree
 
 
 @dataclass
@@ -65,6 +66,7 @@ def create_orchestration_plan(target_name: str, endpoints: list[str]) -> Orchest
     """
     clean_endpoints = sorted(set(endpoints))
     root = build_endpoint_task_tree(target_name=target_name, endpoints=clean_endpoints)
+    investigation_profiles = expand_endpoint_task_tree(root)
 
     assignments: list[AgentAssignment] = []
 
@@ -78,6 +80,7 @@ def create_orchestration_plan(target_name: str, endpoints: list[str]) -> Orchest
 
     notes = [
         "This is a planning artifact only.",
+        f"Expanded endpoint investigation profiles: {len(investigation_profiles)}.",
         "All active testing must pass through Scope Guard.",
         "Network execution requires explicit human approval.",
         "Findings require manual validation before reporting.",
