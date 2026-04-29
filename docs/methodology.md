@@ -77,7 +77,7 @@ Planner output should be treated as a manual review guide, not as a confirmed vu
 
 ## Playwright Preview Workflow
 
-The Playwright preview workflow is part of the v0.5.0 path toward live browser execution:
+The Playwright preview workflow is part of the v0.6.0 path toward live browser execution:
 
     bugintel preview-playwright examples/target.example.yaml https://demo.example.com/dashboard --browser chromium --json-output reports/playwright-preview.json
 

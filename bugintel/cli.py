@@ -65,7 +65,7 @@ console = Console()
 @app.command()
 def version():
     """Show BugIntel version."""
-    console.print("[bold green]BugIntel AI Workbench[/bold green] version 0.5.0")
+    console.print("[bold green]BugIntel AI Workbench[/bold green] version 0.6.0")
 
 
 @app.command("scope-check")
