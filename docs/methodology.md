@@ -57,6 +57,24 @@ The browser evidence workflow can be exercised with the safe example capture res
 
 The example capture result represents the output shape expected from a future Playwright/browser execution adapter. It should be treated as a handoff file, not as proof that live browser automation has executed.
 
+## Deterministic Research Planner
+
+The research planner converts existing browser evidence into structured research hypotheses and recommendations:
+
+    bugintel plan-research browser-evidence.json --json-output research-plan.json
+
+The planner is intentionally offline and deterministic. It does not call an LLM, execute shell commands, launch a browser, or send network requests.
+
+Current hypothesis categories include:
+
+1. API authorization review.
+2. Object-level authorization review.
+3. Sensitive-surface review.
+4. Error-handling review.
+5. Browser artifact review.
+
+Planner output should be treated as a manual review guide, not as a confirmed vulnerability. Each recommendation must still be validated using authorized test accounts, Scope Guard, and read-only checks before any report is prepared.
+
 ## Playwright Preview Workflow
 
 The Playwright preview workflow is part of the v0.5.0 path toward live browser execution:

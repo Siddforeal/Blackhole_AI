@@ -71,6 +71,26 @@ Do not use this project for unauthorized scanning, exploitation, credential atta
 
 MIT License.
 
+## Research Planner Workflow
+
+BugIntel includes a deterministic research planner that turns existing browser evidence into structured hypotheses and recommendations.
+
+Example:
+
+    bugintel plan-research /tmp/browser-evidence-sample.json --json-output /tmp/research-plan.json
+
+The planner does not call an LLM, does not execute commands, and does not make network requests. It only analyzes existing evidence.
+
+Example output categories include:
+
+    api-authorization
+    object-authorization
+    sensitive-surface-review
+    error-handling
+    browser-evidence-review
+
+Use the output as a manual research guide. Confirm every hypothesis with authorized, in-scope testing before treating it as a finding.
+
 ## Browser Evidence Workflow
 
 BugIntel v0.5.0 includes a safe browser automation foundation.
