@@ -92,6 +92,24 @@ The prompt package includes:
 
 The package is a bridge for future optional provider integration. It should be reviewed before any model receives it.
 
+### LLM Prompt Safety Audit
+
+Prompt packages should be audited locally before any future provider receives them:
+
+    bugintel audit-llm-prompt llm-prompt.json --json-output llm-prompt-audit.json --markdown-output llm-prompt-audit.md
+
+The audit does not call an LLM provider, read API keys, send network requests, or execute commands. It inspects the prompt package text and produces a local safety report.
+
+Audit statuses:
+
+1. `pass`: no local findings detected.
+2. `review`: medium-severity findings detected.
+3. `blocked`: high-severity findings detected.
+
+Current checks include sensitive values such as emails, JWT-like tokens, bearer tokens, API-key-like assignments, passwords, secrets, generic tokens, and AWS access key IDs. It also flags risky prompt instructions such as prompt-injection language, safety-bypass requests, credential theft instructions, and destructive-action instructions.
+
+A clean audit is only a helper signal. It should not be treated as a formal data-loss guarantee.
+
 ### Disabled LLM Provider Stub
 
 The disabled provider stub can consume a prompt package and return a structured disabled result:

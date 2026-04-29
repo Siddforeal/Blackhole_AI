@@ -101,6 +101,26 @@ This command does not call an LLM provider, does not read API keys, does not mak
 
 Use this package as an optional bridge to a future LLM provider. Treat any future LLM output as suggestions only, not confirmed findings.
 
+### LLM Prompt Safety Audit
+
+BugIntel can audit a prompt package locally before provider use:
+
+    bugintel audit-llm-prompt /tmp/llm-prompt.json --json-output /tmp/llm-prompt-audit.json --markdown-output /tmp/llm-prompt-audit.md
+
+The audit is fully local. It scans for common sensitive values and risky prompt instructions, then returns `pass`, `review`, or `blocked`.
+
+Current checks include:
+
+    emails
+    JWT-like tokens
+    bearer tokens
+    API-key-like assignments
+    passwords/secrets/tokens
+    AWS access key IDs
+    prompt-injection style instructions
+    safety-bypass instructions
+    credential theft or destructive-action instructions
+
 ### Disabled LLM Provider Stub
 
 BugIntel includes a disabled-by-default provider stub:
