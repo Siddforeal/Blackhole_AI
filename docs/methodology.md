@@ -94,7 +94,7 @@ The package is a bridge for future optional provider integration. It should be r
 
 ## Playwright Preview Workflow
 
-The Playwright preview workflow is part of the v0.6.0 path toward live browser execution:
+The Playwright preview workflow is part of the v0.7.0 path toward live browser execution:
 
     bugintel preview-playwright examples/target.example.yaml https://demo.example.com/dashboard --browser chromium --json-output reports/playwright-preview.json
 
