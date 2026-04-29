@@ -169,10 +169,58 @@ def _is_sensitive_surface_url(url: str) -> bool:
     return any(term in path for term in sensitive_terms)
 
 
+def _has_browser_evidence_shape(value: dict[str, Any]) -> bool:
+    return any(
+        key in value
+        for key in (
+            "network_events",
+            "screenshots",
+            "html_snapshots",
+            "execution_output",
+        )
+    )
+
+
+def normalize_browser_evidence(value: dict[str, Any]) -> dict[str, Any]:
+    """
+    Normalize raw capture-result JSON or saved evidence-store JSON.
+
+    Supported inputs include:
+    - Raw browser capture result JSON.
+    - Saved evidence JSON where browser fields are top-level.
+    - Saved evidence JSON where browser fields are nested under payload/data/evidence.
+    """
+    if _has_browser_evidence_shape(value):
+        return value
+
+    for key in ("payload", "data", "evidence", "browser_capture", "capture_result"):
+        nested = value.get(key)
+
+        if isinstance(nested, dict) and _has_browser_evidence_shape(nested):
+            normalized = dict(nested)
+
+            for metadata_key in (
+                "target_name",
+                "task_name",
+                "evidence_type",
+                "browser",
+                "start_url",
+                "captured_at",
+            ):
+                if metadata_key not in normalized and metadata_key in value:
+                    normalized[metadata_key] = value[metadata_key]
+
+            return normalized
+
+    return value
+
+
 def build_research_plan_from_browser_evidence(
     evidence: dict[str, Any],
 ) -> ResearchPlan:
     """Build a deterministic research plan from browser evidence JSON."""
+    evidence = normalize_browser_evidence(evidence)
+
     target_name = str(evidence.get("target_name") or "unknown-target")
     evidence_type = str(evidence.get("evidence_type") or "browser")
     task_name = str(evidence.get("task_name") or "browser evidence")

@@ -1239,3 +1239,49 @@ def test_plan_research_command_blocks_invalid_json():
 
         assert result.exit_code == 2
         assert "Invalid JSON evidence file" in result.output
+
+
+def test_plan_research_command_accepts_saved_evidence_wrapper():
+    evidence = {
+        "target_name": "saved-lab",
+        "task_name": "saved browser evidence",
+        "evidence_type": "browser",
+        "payload": {
+            "network_events": [
+                {
+                    "method": "GET",
+                    "url": "https://demo.example.com/api/accounts/123/users",
+                    "status_code": 200,
+                    "resource_type": "fetch",
+                }
+            ],
+            "screenshots": [],
+            "html_snapshots": [],
+        },
+    }
+
+    with runner.isolated_filesystem():
+        evidence_path = Path("saved-evidence.json")
+        output_path = Path("research-plan.json")
+
+        evidence_path.write_text(json.dumps(evidence), encoding="utf-8")
+
+        result = runner.invoke(
+            app,
+            [
+                "plan-research",
+                str(evidence_path),
+                "--json-output",
+                str(output_path),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert "Research Plan" in result.output
+        assert output_path.exists()
+
+        data = json.loads(output_path.read_text(encoding="utf-8"))
+
+        assert data["target_name"] == "saved-lab"
+        assert data["source_evidence_type"] == "browser"
+        assert len(data["hypotheses"]) >= 2

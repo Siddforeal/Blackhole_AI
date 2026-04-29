@@ -156,3 +156,69 @@ def test_build_research_plan_from_low_signal_evidence_recommends_more_collection
     assert plan.hypotheses == ()
     assert plan.recommendations[0].priority == 1
     assert "Collect more evidence" in plan.recommendations[0].title
+
+
+def test_normalize_browser_evidence_accepts_saved_payload_wrapper():
+    from bugintel.core.research_planner import normalize_browser_evidence
+
+    saved_evidence = {
+        "target_name": "saved-lab",
+        "task_name": "saved browser evidence",
+        "evidence_type": "browser",
+        "payload": {
+            "network_events": [
+                {
+                    "method": "GET",
+                    "url": "https://demo.example.com/api/accounts/123/users",
+                    "status_code": 200,
+                }
+            ],
+            "screenshots": [],
+            "html_snapshots": [],
+        },
+    }
+
+    normalized = normalize_browser_evidence(saved_evidence)
+
+    assert normalized["target_name"] == "saved-lab"
+    assert normalized["task_name"] == "saved browser evidence"
+    assert normalized["evidence_type"] == "browser"
+    assert normalized["network_events"][0]["url"].endswith("/api/accounts/123/users")
+
+
+def test_build_research_plan_accepts_saved_data_wrapper():
+    saved_evidence = {
+        "target_name": "saved-data-lab",
+        "task_name": "saved data browser evidence",
+        "evidence_type": "browser",
+        "data": {
+            "network_events": [
+                {
+                    "method": "GET",
+                    "url": "https://demo.example.com/api/projects/987/export",
+                    "status_code": 200,
+                    "resource_type": "fetch",
+                }
+            ],
+            "screenshots": [
+                {
+                    "path": "artifacts/browser/saved/screenshot.png",
+                    "sha256": "a" * 64,
+                }
+            ],
+            "html_snapshots": [],
+        },
+    }
+
+    plan = build_research_plan_from_browser_evidence(saved_evidence)
+    categories = {
+        hypothesis.category
+        for hypothesis in plan.hypotheses
+    }
+
+    assert plan.target_name == "saved-data-lab"
+    assert plan.source_evidence_type == "browser"
+    assert "api-authorization" in categories
+    assert "object-authorization" in categories
+    assert "sensitive-surface-review" in categories
+    assert "browser-evidence-review" in categories
