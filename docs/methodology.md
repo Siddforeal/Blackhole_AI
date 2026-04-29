@@ -61,7 +61,7 @@ The example capture result represents the output shape expected from a future Pl
 
 The research planner converts existing browser evidence into structured research hypotheses and recommendations:
 
-    bugintel plan-research browser-evidence.json --json-output research-plan.json
+    bugintel plan-research browser-evidence.json --json-output research-plan.json --markdown-output research-plan.md
 
 The planner is intentionally offline and deterministic. It does not call an LLM, execute shell commands, launch a browser, or send network requests.
 

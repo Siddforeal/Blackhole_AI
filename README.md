@@ -77,7 +77,7 @@ BugIntel includes a deterministic research planner that turns existing browser e
 
 Example:
 
-    bugintel plan-research /tmp/browser-evidence-sample.json --json-output /tmp/research-plan.json
+    bugintel plan-research /tmp/browser-evidence-sample.json --json-output /tmp/research-plan.json --markdown-output /tmp/research-plan.md
 
 The planner does not call an LLM, does not execute commands, and does not make network requests. It only analyzes existing evidence.
 
