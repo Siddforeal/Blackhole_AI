@@ -91,6 +91,16 @@ Example output categories include:
 
 Use the output as a manual research guide. Confirm every hypothesis with authorized, in-scope testing before treating it as a finding.
 
+### Safe LLM Prompt Package
+
+BugIntel can convert a deterministic research plan into a reviewable LLM prompt package:
+
+    bugintel build-llm-prompt /tmp/research-plan.json --json-output /tmp/llm-prompt.json --markdown-output /tmp/llm-prompt.md
+
+This command does not call an LLM provider, does not read API keys, does not make network requests, and does not execute commands. It only creates a redacted system/user prompt package for human review.
+
+Use this package as an optional bridge to a future LLM provider. Treat any future LLM output as suggestions only, not confirmed findings.
+
 ## Browser Evidence Workflow
 
 BugIntel v0.6.0 includes a safe browser automation foundation.

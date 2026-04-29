@@ -75,6 +75,23 @@ Current hypothesis categories include:
 
 Planner output should be treated as a manual review guide, not as a confirmed vulnerability. Each recommendation must still be validated using authorized test accounts, Scope Guard, and read-only checks before any report is prepared.
 
+### Safe LLM Prompt Packaging
+
+A deterministic research plan can be converted into a reviewable prompt package:
+
+    bugintel build-llm-prompt research-plan.json --json-output llm-prompt.json --markdown-output llm-prompt.md
+
+This packaging step is intentionally offline. It does not call OpenAI, Anthropic, local models, or any other LLM provider. It does not read API keys, send network requests, execute shell commands, or run browser actions.
+
+The prompt package includes:
+
+1. A system prompt with authorization and safety rules.
+2. A user prompt containing the deterministic research plan.
+3. Safety notes for human review.
+4. Basic redaction for common sensitive patterns such as emails, JWTs, API-key-like values, passwords, and AWS access key IDs.
+
+The package is a bridge for future optional provider integration. It should be reviewed before any model receives it.
+
 ## Playwright Preview Workflow
 
 The Playwright preview workflow is part of the v0.6.0 path toward live browser execution:
