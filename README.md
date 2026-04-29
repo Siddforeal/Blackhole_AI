@@ -101,6 +101,22 @@ This command does not call an LLM provider, does not read API keys, does not mak
 
 Use this package as an optional bridge to a future LLM provider. Treat any future LLM output as suggestions only, not confirmed findings.
 
+### Disabled LLM Provider Stub
+
+BugIntel includes a disabled-by-default provider stub:
+
+    bugintel run-llm-provider /tmp/llm-prompt.json --json-output /tmp/llm-provider-result.json
+
+The current provider does not call OpenAI, Anthropic, local models, or any network API. It returns a structured disabled result so future provider integration can be added behind explicit opt-in gates.
+
+### UFO Startup Intro
+
+BugIntel includes an optional terminal UFO startup screen:
+
+    bugintel intro
+
+Running `bugintel` with no command also shows the UFO loading screen. Normal commands remain separate and should be used for scripted workflows.
+
 ## Browser Evidence Workflow
 
 BugIntel v0.7.0 includes a safe browser automation foundation.

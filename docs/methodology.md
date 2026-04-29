@@ -92,6 +92,22 @@ The prompt package includes:
 
 The package is a bridge for future optional provider integration. It should be reviewed before any model receives it.
 
+### Disabled LLM Provider Stub
+
+The disabled provider stub can consume a prompt package and return a structured disabled result:
+
+    bugintel run-llm-provider llm-prompt.json --json-output llm-provider-result.json
+
+This command is intentionally non-operational as a model runner. It does not call any provider, read API keys, send prompts over the network, or execute generated actions. It exists to validate result shape and future integration boundaries.
+
+### UFO Startup Intro
+
+The terminal intro can be shown with:
+
+    bugintel intro
+
+Running `bugintel` with no command shows the UFO startup screen. This is a human-facing UX layer only and should not be used as part of machine-readable workflows.
+
 ## Playwright Preview Workflow
 
 The Playwright preview workflow is part of the v0.7.0 path toward live browser execution:
