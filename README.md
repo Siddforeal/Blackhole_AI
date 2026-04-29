@@ -121,6 +121,27 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Endpoint Investigation Profiles
+
+Blackhole can expand a single endpoint into a planning-only investigation profile:
+
+    blackhole endpoint-investigation "/api/accounts/123/users/{id}/permissions" --json-output /tmp/endpoint-profile.json
+
+The command classifies the endpoint and creates a reviewable task plan for specialist agents.
+
+Example task categories include:
+
+- baseline and method policy review
+- parameter and schema review
+- authorization boundary planning
+- tenant isolation review
+- object reference mutation planning
+- file surface safety review
+- auth-flow review
+- evidence and report checklist
+
+This command does not send requests, execute shell commands, launch browsers, call LLM providers, mutate targets, or bypass authorization.
+
 ### Disabled LLM Provider Stub
 
 Blackhole includes a disabled-by-default provider stub:

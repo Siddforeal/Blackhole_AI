@@ -282,3 +282,29 @@ Current behavior:
 6. Produces no network events, screenshots, HTML snapshots, or traces.
 
 This lets Blackhole test the future adapter-to-evidence handoff before real browser execution is added.
+
+## Endpoint Investigation Profiles
+
+Blackhole can turn one discovered endpoint into a planning-only investigation profile.
+
+Example:
+
+    blackhole endpoint-investigation "/api/accounts/123/users/{id}/permissions" --json-output /tmp/endpoint-profile.json
+
+The profile is designed to help the future orchestrator and specialist agents decide what to inspect next.
+
+The generated plan may include:
+
+- method policy review
+- parameter and schema review
+- error and oracle review
+- authorization boundary planning
+- tenant isolation review
+- object reference mutation planning
+- identifier source mapping
+- file surface safety review
+- session/auth-flow review
+- evidence and report checklist
+
+The output is a reviewable plan only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
+
