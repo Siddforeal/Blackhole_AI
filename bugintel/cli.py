@@ -34,6 +34,7 @@ from bugintel.analyzers.response_diff import compare_responses, summarize_respon
 from bugintel.core.evidence_store import EvidenceStore
 from bugintel.core.scope_guard import load_scope_from_dict
 from bugintel.core.orchestrator import create_orchestration_plan
+from bugintel.core.endpoint_investigation import build_endpoint_investigation_profile
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -231,6 +232,63 @@ def build_tree_command(
         output_file.write_text(rendered, encoding="utf-8")
         console.print()
         console.print(f"[bold green]Saved tree to:[/bold green] {output_file}")
+
+
+
+@app.command("endpoint-investigation")
+def endpoint_investigation_command(
+    endpoint: str = typer.Argument(..., help="Endpoint path or URL to classify and expand into investigation tasks."),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        "--output",
+        help="Optional path to save endpoint investigation profile JSON.",
+    ),
+):
+    """Build a planning-only endpoint investigation profile."""
+    profile = build_endpoint_investigation_profile(endpoint)
+    data = profile.to_dict()
+
+    summary = Table(title="Endpoint Investigation Profile")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Endpoint", profile.endpoint)
+    summary.add_row("Normalized path", profile.normalized_path)
+    summary.add_row("Categories", ", ".join(profile.categories))
+    summary.add_row("Planned tasks", str(len(profile.tasks)))
+    summary.add_row("Execution", "planning-only; no curl, browser, network, or LLM provider execution")
+    console.print(summary)
+
+    console.print("[bold]Task types:[/bold] " + ", ".join(task.task_type for task in profile.tasks))
+
+    task_table = Table(title="Planned Investigation Tasks")
+    task_table.add_column("#", justify="right")
+    task_table.add_column("Task")
+    task_table.add_column("Type")
+    task_table.add_column("Priority")
+    task_table.add_column("Agent")
+    task_table.add_column("Human Approval")
+
+    for index, task in enumerate(profile.tasks, start=1):
+        task_table.add_row(
+            str(index),
+            task.title,
+            task.task_type,
+            task.priority,
+            task.agent_hint,
+            "YES" if task.requires_human_approval else "NO",
+        )
+
+    console.print(task_table)
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only creates a reviewable plan. "
+        "It does not send requests, execute shell commands, launch browsers, or call LLM providers."
+    )
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved endpoint investigation JSON:[/bold green] {json_output}")
 
 
 @app.command("plan-curl")
