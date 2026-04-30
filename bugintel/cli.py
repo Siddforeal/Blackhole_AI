@@ -71,6 +71,49 @@ console = Console()
 
 
 
+def _endpoint_values_from_text(text: str) -> list[str]:
+    """Extract endpoints from mined text plus plain endpoint-list lines."""
+    mined = [endpoint.value for endpoint in mine_endpoints(text)]
+    line_candidates = []
+
+    for line in text.splitlines():
+        value = line.strip()
+
+        if not value or value.startswith("#"):
+            continue
+
+        if value.startswith("/") or value.startswith("http://") or value.startswith("https://"):
+            line_candidates.append(value)
+
+    return sorted(set(mined + line_candidates))
+
+def _print_endpoint_priority_table(priorities, title: str = "Endpoint Priorities") -> None:
+    """Print endpoint priority scores when an orchestration plan includes them."""
+    if not priorities:
+        return
+
+    table = Table(title=title)
+    table.add_column("#", justify="right")
+    table.add_column("Score", justify="right")
+    table.add_column("Band")
+    table.add_column("Endpoint")
+    table.add_column("Top Signals")
+
+    for index, item in enumerate(priorities, start=1):
+        top_signals = ", ".join(signal.name for signal in item.signals[:3])
+        table.add_row(
+            str(index),
+            str(item.score),
+            item.band,
+            item.endpoint,
+            top_signals or "none",
+        )
+
+    console.print(table)
+
+
+
+
 @app.callback(invoke_without_command=True)
 def main_callback(ctx: typer.Context):
     """Blackhole AI Workbench."""
@@ -218,8 +261,7 @@ def build_tree_command(
         raise typer.Exit(code=1)
 
     text = input_file.read_text(encoding="utf-8", errors="replace")
-    endpoints = mine_endpoints(text)
-    endpoint_values = [endpoint.value for endpoint in endpoints]
+    endpoint_values = _endpoint_values_from_text(text)
 
     root = build_endpoint_task_tree(target_name=target_name, endpoints=endpoint_values)
     rendered = render_tree(root)
@@ -987,8 +1029,7 @@ def orchestrate_command(
         raise typer.Exit(code=1)
 
     text = input_file.read_text(encoding="utf-8", errors="replace")
-    endpoints = mine_endpoints(text)
-    endpoint_values = [endpoint.value for endpoint in endpoints]
+    endpoint_values = _endpoint_values_from_text(text)
 
     plan = create_orchestration_plan(
         target_name=target_name,
@@ -1021,6 +1062,8 @@ def orchestrate_command(
 
     console.print()
     console.print(table)
+
+    _print_endpoint_priority_table(plan.endpoint_priorities)
 
     if json_output:
         json_output.parent.mkdir(parents=True, exist_ok=True)
@@ -1332,6 +1375,8 @@ def web_recon_command(
 
         console.print(assignment_table)
 
+        _print_endpoint_priority_table(result.orchestration_plan.endpoint_priorities)
+
         if json_output:
             json_output.parent.mkdir(parents=True, exist_ok=True)
             json_output.write_text(json.dumps(result.orchestration_plan.to_dict(), indent=2), encoding="utf-8")
@@ -1408,6 +1453,8 @@ def import_har_command(
             )
 
         console.print(assignment_table)
+
+        _print_endpoint_priority_table(plan.endpoint_priorities, title="Endpoint Priorities from HAR")
 
         if json_output:
             json_output.parent.mkdir(parents=True, exist_ok=True)
