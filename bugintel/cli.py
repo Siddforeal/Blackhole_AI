@@ -74,6 +74,33 @@ console = Console()
 
 
 
+
+def _print_evidence_requirements_table(evidence_requirement_plan, title: str = "Evidence Requirements") -> None:
+    """Print evidence requirement counts when an orchestration plan includes them."""
+    if evidence_requirement_plan is None or not evidence_requirement_plan.endpoint_plans:
+        return
+
+    table = Table(title=title)
+    table.add_column("#", justify="right")
+    table.add_column("Endpoint")
+    table.add_column("Requirements", justify="right")
+    table.add_column("Redaction", justify="right")
+    table.add_column("Approval", justify="right")
+
+    for index, endpoint_plan in enumerate(evidence_requirement_plan.endpoint_plans, start=1):
+        redaction_count = sum(1 for requirement in endpoint_plan.requirements if requirement.redaction_required)
+        approval_count = sum(1 for requirement in endpoint_plan.requirements if requirement.human_approval_required)
+
+        table.add_row(
+            str(index),
+            endpoint_plan.endpoint,
+            str(len(endpoint_plan.requirements)),
+            str(redaction_count),
+            str(approval_count),
+        )
+
+    console.print(table)
+
 def _print_attack_surface_table(attack_surface_map, title: str = "Attack Surface Groups") -> None:
     """Print attack-surface groups when an orchestration plan includes them."""
     if attack_surface_map is None or not attack_surface_map.groups:
@@ -1237,6 +1264,7 @@ def orchestrate_command(
 
     _print_endpoint_priority_table(plan.endpoint_priorities)
     _print_attack_surface_table(plan.attack_surface_map)
+    _print_evidence_requirements_table(plan.evidence_requirement_plan)
 
     if json_output:
         json_output.parent.mkdir(parents=True, exist_ok=True)
@@ -1550,6 +1578,7 @@ def web_recon_command(
 
         _print_endpoint_priority_table(result.orchestration_plan.endpoint_priorities)
         _print_attack_surface_table(result.orchestration_plan.attack_surface_map)
+        _print_evidence_requirements_table(result.orchestration_plan.evidence_requirement_plan)
 
         if json_output:
             json_output.parent.mkdir(parents=True, exist_ok=True)
@@ -1630,6 +1659,7 @@ def import_har_command(
 
         _print_endpoint_priority_table(plan.endpoint_priorities, title="Endpoint Priorities from HAR")
         _print_attack_surface_table(plan.attack_surface_map, title="Attack Surface Groups from HAR")
+        _print_evidence_requirements_table(plan.evidence_requirement_plan, title="Evidence Requirements from HAR")
 
         if json_output:
             json_output.parent.mkdir(parents=True, exist_ok=True)

@@ -17,6 +17,7 @@ from bugintel.core.task_tree import TaskNode, build_endpoint_task_tree
 from bugintel.core.endpoint_investigation import expand_endpoint_task_tree
 from bugintel.core.endpoint_priority import EndpointPriorityResult, prioritize_endpoints
 from bugintel.core.attack_surface import AttackSurfaceMap, build_attack_surface_map
+from bugintel.core.evidence_requirements import EvidenceRequirementPlan, build_evidence_requirement_plan
 
 
 @dataclass
@@ -38,6 +39,7 @@ class OrchestrationPlan:
     assignments: list[AgentAssignment] = field(default_factory=list)
     endpoint_priorities: list[EndpointPriorityResult] = field(default_factory=list)
     attack_surface_map: AttackSurfaceMap | None = None
+    evidence_requirement_plan: EvidenceRequirementPlan | None = None
     notes: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -65,6 +67,11 @@ class OrchestrationPlan:
                 if self.attack_surface_map is not None
                 else None
             ),
+            "evidence_requirement_plan": (
+                self.evidence_requirement_plan.to_dict()
+                if self.evidence_requirement_plan is not None
+                else None
+            ),
             "notes": self.notes,
             "task_tree": self.root.to_dict(),
         }
@@ -82,8 +89,10 @@ def create_orchestration_plan(target_name: str, endpoints: list[str]) -> Orchest
     investigation_profiles = expand_endpoint_task_tree(root)
     endpoint_priorities = prioritize_endpoints(clean_endpoints)
     attack_surface_map = build_attack_surface_map(clean_endpoints)
+    evidence_requirement_plan = build_evidence_requirement_plan(clean_endpoints)
     _attach_priority_metadata(root, endpoint_priorities)
     _attach_attack_surface_metadata(root, attack_surface_map)
+    _attach_evidence_requirement_metadata(root, evidence_requirement_plan)
 
     assignments: list[AgentAssignment] = []
 
@@ -100,6 +109,7 @@ def create_orchestration_plan(target_name: str, endpoints: list[str]) -> Orchest
         f"Expanded endpoint investigation profiles: {len(investigation_profiles)}.",
         f"Scored endpoint priorities: {len(endpoint_priorities)}.",
         f"Grouped attack surfaces: {len(attack_surface_map.groups)}.",
+        f"Planned evidence requirements for endpoints: {len(evidence_requirement_plan.endpoint_plans)}.",
         "All active testing must pass through Scope Guard.",
         "Network execution requires explicit human approval.",
         "Findings require manual validation before reporting.",
@@ -112,6 +122,7 @@ def create_orchestration_plan(target_name: str, endpoints: list[str]) -> Orchest
         assignments=assignments,
         endpoint_priorities=endpoint_priorities,
         attack_surface_map=attack_surface_map,
+        evidence_requirement_plan=evidence_requirement_plan,
         notes=notes,
     )
 
@@ -221,6 +232,43 @@ def _attach_attack_surface_metadata(root: TaskNode, attack_surface_map: AttackSu
 
         endpoint_node.metadata["attack_surface_groups"] = {
             "groups": groups_by_endpoint.get(endpoint, []),
+            "planning_only": True,
+            "execution_state": "not_executed",
+        }
+
+
+def _attach_evidence_requirement_metadata(root: TaskNode, evidence_requirement_plan: EvidenceRequirementPlan) -> None:
+    """Attach evidence requirement metadata to endpoint nodes."""
+    requirements_by_endpoint = {
+        plan.endpoint: plan
+        for plan in evidence_requirement_plan.endpoint_plans
+    }
+
+    api_node = _find_first_node_by_type(root, "api")
+
+    if api_node is None:
+        return
+
+    for endpoint_node in api_node.children:
+        endpoint = endpoint_node.metadata.get("endpoint")
+
+        if not endpoint:
+            continue
+
+        plan = requirements_by_endpoint.get(endpoint)
+
+        if plan is None:
+            continue
+
+        endpoint_node.metadata["evidence_requirements"] = {
+            "requirements": [
+                requirement.to_dict()
+                for requirement in plan.requirements
+            ],
+            "recommended_collection_order": [
+                requirement.name
+                for requirement in plan.requirements
+            ],
             "planning_only": True,
             "execution_state": "not_executed",
         }
