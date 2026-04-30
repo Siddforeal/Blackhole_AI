@@ -36,6 +36,7 @@ from bugintel.core.scope_guard import load_scope_from_dict
 from bugintel.core.orchestrator import create_orchestration_plan
 from bugintel.core.endpoint_investigation import build_endpoint_investigation_profile
 from bugintel.core.endpoint_priority import prioritize_endpoints, score_endpoint
+from bugintel.core.attack_surface import build_attack_surface_map
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -333,6 +334,84 @@ def endpoint_investigation_command(
         json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         console.print(f"[bold green]Saved endpoint investigation JSON:[/bold green] {json_output}")
 
+
+
+
+@app.command("attack-surface")
+def attack_surface_command(
+    input_file: Path = typer.Argument(..., help="Text file containing endpoint paths, URLs, logs, JS, HTML, or HAR-like text."),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        "--output",
+        help="Optional path to save attack surface grouping JSON.",
+    ),
+):
+    """Group endpoints into planning-only attack-surface buckets."""
+    if not input_file.exists():
+        console.print(f"[bold red]Input file not found:[/bold red] {input_file}")
+        raise typer.Exit(code=1)
+
+    text = input_file.read_text(encoding="utf-8", errors="replace")
+    endpoint_values = _endpoint_values_from_text(text)
+    surface = build_attack_surface_map(endpoint_values)
+    data = surface.to_dict()
+
+    summary = Table(title="Attack Surface Summary")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Input file", str(input_file))
+    summary.add_row("Endpoints", str(surface.endpoint_count))
+    summary.add_row("Groups", str(len(surface.groups)))
+    summary.add_row("Execution", "planning-only; no curl, browser, network, or LLM provider execution")
+    console.print(summary)
+
+    group_table = Table(title="Attack Surface Groups")
+    group_table.add_column("#", justify="right")
+    group_table.add_column("Group")
+    group_table.add_column("Count", justify="right")
+    group_table.add_column("Max Score", justify="right")
+    group_table.add_column("Avg Score", justify="right")
+    group_table.add_column("Priority Hint")
+
+    for index, group in enumerate(surface.groups, start=1):
+        group_table.add_row(
+            str(index),
+            group.spec.name,
+            str(group.count),
+            str(group.max_score),
+            str(group.average_score),
+            group.spec.priority_hint,
+        )
+
+    console.print(group_table)
+
+    for group in surface.groups:
+        endpoint_table = Table(title=f"{group.spec.title} ({group.spec.name})")
+        endpoint_table.add_column("#", justify="right")
+        endpoint_table.add_column("Score", justify="right")
+        endpoint_table.add_column("Band")
+        endpoint_table.add_column("Endpoint")
+
+        for index, endpoint in enumerate(group.endpoints, start=1):
+            endpoint_table.add_row(
+                str(index),
+                str(endpoint.score),
+                endpoint.band,
+                endpoint.endpoint,
+            )
+
+        console.print(endpoint_table)
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only groups endpoint strings. "
+        "It does not send requests, execute shell commands, launch browsers, or call LLM providers."
+    )
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved attack surface JSON:[/bold green] {json_output}")
 
 
 @app.command("endpoint-priority")
