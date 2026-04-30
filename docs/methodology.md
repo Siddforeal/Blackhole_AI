@@ -308,3 +308,30 @@ The generated plan may include:
 
 The output is a reviewable plan only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
 
+## Endpoint Priority Scoring
+
+Blackhole can score and rank endpoints before active testing.
+
+Single endpoint example:
+
+    blackhole endpoint-priority "/api/accounts/123/users/{id}/permissions" --json-output /tmp/endpoint-priority.json
+
+Endpoint inventory example:
+
+    blackhole prioritize-endpoints endpoints.txt --json-output /tmp/prioritized-endpoints.json
+
+The scoring layer is designed to help the future orchestrator decide which endpoint branches should be investigated first.
+
+Priority signals include:
+
+- authorization-sensitive resources
+- object identifiers and object-reference patterns
+- file upload/download surfaces
+- authentication/session/OAuth/SSO/MFA flows
+- billing, invoice, payment, and subscription routes
+- integrations, webhooks, OAuth callbacks, and API keys
+- write-like workflow names such as create, update, delete, assign, invite, migrate, transfer, grant, and revoke
+- low-signal deprioritization for health, status, ping, static, asset, public, robots, and sitemap routes
+
+The output is a reviewable plan only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
+

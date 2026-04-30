@@ -121,6 +121,31 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Endpoint Priority Scoring
+
+Blackhole can score a single endpoint using planning-only security heuristics:
+
+    blackhole endpoint-priority "/api/accounts/123/users/{id}/permissions" --json-output /tmp/endpoint-priority.json
+
+Blackhole can also rank endpoint inventories from a text file:
+
+    blackhole prioritize-endpoints endpoints.txt --json-output /tmp/prioritized-endpoints.json
+
+Priority scoring helps focus manual research on endpoints that look more security-sensitive.
+
+Signals include:
+
+- authorization-sensitive routes
+- object references
+- file upload/download surfaces
+- authentication/session flows
+- billing/payment/invoice routes
+- integrations/webhooks/OAuth callbacks
+- token/key/secret routes
+- low-signal public/static/status routes
+
+This command is planning-only. It does not send requests, execute shell commands, launch browsers, call LLM providers, mutate targets, or bypass authorization.
+
 ### Endpoint Investigation Profiles
 
 Blackhole can expand a single endpoint into a planning-only investigation profile:
