@@ -37,6 +37,7 @@ from bugintel.core.orchestrator import create_orchestration_plan
 from bugintel.core.endpoint_investigation import build_endpoint_investigation_profile
 from bugintel.core.endpoint_priority import prioritize_endpoints, score_endpoint
 from bugintel.core.attack_surface import build_attack_surface_map
+from bugintel.core.evidence_requirements import build_evidence_requirement_plan
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -359,6 +360,74 @@ def endpoint_investigation_command(
         console.print(f"[bold green]Saved endpoint investigation JSON:[/bold green] {json_output}")
 
 
+
+
+
+@app.command("evidence-requirements")
+def evidence_requirements_command(
+    input_file: Path = typer.Argument(..., help="Text file containing endpoint paths, URLs, logs, JS, HTML, or HAR-like text."),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        "--output",
+        help="Optional path to save evidence requirements JSON.",
+    ),
+):
+    """Build planning-only evidence requirements for endpoints."""
+    if not input_file.exists():
+        console.print(f"[bold red]Input file not found:[/bold red] {input_file}")
+        raise typer.Exit(code=1)
+
+    text = input_file.read_text(encoding="utf-8", errors="replace")
+    endpoint_values = _endpoint_values_from_text(text)
+    plan = build_evidence_requirement_plan(endpoint_values)
+    data = plan.to_dict()
+
+    summary = Table(title="Evidence Requirements Summary")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Input file", str(input_file))
+    summary.add_row("Endpoints", str(plan.endpoint_count))
+    summary.add_row("Execution", "planning-only; no curl, browser, network, or LLM provider execution")
+    console.print(summary)
+
+    requirement_names = sorted({
+        requirement.name
+        for endpoint_plan in plan.endpoint_plans
+        for requirement in endpoint_plan.requirements
+    })
+    console.print("[bold]Requirement names:[/bold] " + ", ".join(requirement_names))
+
+    for endpoint_plan in plan.endpoint_plans:
+        endpoint_table = Table(title=f"Evidence Requirements: {endpoint_plan.endpoint}")
+        endpoint_table.add_column("#", justify="right")
+        endpoint_table.add_column("Requirement")
+        endpoint_table.add_column("Artifact")
+        endpoint_table.add_column("Sensitivity")
+        endpoint_table.add_column("Redact")
+        endpoint_table.add_column("Approval")
+
+        for index, requirement in enumerate(endpoint_plan.requirements, start=1):
+            endpoint_table.add_row(
+                str(index),
+                requirement.name,
+                requirement.artifact_type,
+                requirement.sensitivity,
+                "YES" if requirement.redaction_required else "NO",
+                "YES" if requirement.human_approval_required else "NO",
+            )
+
+        console.print(endpoint_table)
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only plans evidence collection. "
+        "It does not send requests, execute shell commands, launch browsers, or call LLM providers."
+    )
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved evidence requirements JSON:[/bold green] {json_output}")
 
 
 @app.command("attack-surface")
