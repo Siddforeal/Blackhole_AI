@@ -121,6 +121,37 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Evidence Requirements Planning
+
+Blackhole can plan what evidence is needed to validate and report findings safely:
+
+    blackhole evidence-requirements endpoints.txt --json-output /tmp/evidence-requirements.json
+
+Evidence requirements help the researcher understand what proof artifacts are needed before active testing.
+
+Example requirements include:
+
+- scope-and-authorization-proof
+- baseline-request-response-sample
+- redaction-checklist
+- controlled-account-role-matrix
+- authorization-decision-diff
+- identifier-source-map
+- owned-foreign-random-response-matrix
+- safe-test-file-manifest
+- file-access-control-evidence
+- integration-secret-redaction-proof
+- integration-boundary-evidence
+- low-signal-deprioritization-note
+
+Blackhole orchestration also includes evidence requirements in JSON and terminal output:
+
+    blackhole orchestrate endpoints.txt --target demo --json-output /tmp/orchestration.json
+
+This helps prioritize not only what to inspect first, but also what proof is needed for safe validation and report writing.
+
+This command is planning-only. It does not send requests, execute shell commands, launch browsers, call LLM providers, mutate targets, or bypass authorization.
+
 ### Attack Surface Grouping
 
 Blackhole can group endpoint inventories into planning-only attack-surface buckets:

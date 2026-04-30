@@ -383,3 +383,32 @@ When Blackhole creates an orchestration plan, attack-surface groups are attached
 
 This remains planning-only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
 
+## Evidence Requirements Planning
+
+Blackhole can plan report-quality evidence requirements for endpoints before active testing.
+
+Example:
+
+    blackhole evidence-requirements endpoints.txt --json-output /tmp/evidence-requirements.json
+
+The evidence planner translates endpoint priority and attack-surface groups into safe proof requirements.
+
+Typical evidence requirements include:
+
+- scope-and-authorization-proof: record program scope, authorization, target, account ownership, and constraints
+- baseline-request-response-sample: collect redacted baseline request/response shape for an owned or allowed path
+- redaction-checklist: confirm tokens, cookies, emails, user data, secrets, and identifiers are redacted
+- controlled-account-role-matrix: document controlled test identities, roles, membership, and expected boundaries
+- authorization-decision-diff: capture allowed vs denied behavior without exposing real user data
+- identifier-source-map: map where object identifiers came from, such as UI, JS, HAR, API, or mobile config
+- owned-foreign-random-response-matrix: compare owned, foreign controlled, random, and malformed object references
+- safe-test-file-manifest: document safe synthetic files and avoid real customer data
+- file-access-control-evidence: capture owned vs unauthorized file access behavior safely
+- integration-secret-redaction-proof: confirm integration tokens, webhook URLs, OAuth codes, and secrets are redacted
+- integration-boundary-evidence: capture integration visibility or boundary behavior without invoking third-party webhooks
+- low-signal-deprioritization-note: record why a route is low priority unless later evidence changes that
+
+When Blackhole creates an orchestration plan, evidence requirements are attached to endpoint metadata, exported in JSON, and displayed in CLI output.
+
+This remains planning-only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
+
