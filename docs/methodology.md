@@ -335,3 +335,23 @@ Priority signals include:
 
 The output is a reviewable plan only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
 
+## Priority-Aware Orchestration
+
+When Blackhole creates an orchestration plan, it now attaches endpoint priority scoring to the plan and displays endpoint priorities in CLI output.
+
+Example:
+
+    blackhole orchestrate endpoints.txt --target demo --json-output /tmp/orchestration.json
+
+The output helps the researcher decide which endpoint branches deserve attention first.
+
+A typical priority table ranks endpoints such as:
+
+- critical: account, user, permission, token, secret, billing, or object-reference routes
+- high: file download/upload, project boundary, integration, webhook, export, or auth-flow routes
+- info: status, health, ping, public, static, or asset routes
+
+The orchestration JSON includes endpoint priority metadata so future specialist agents can consume it without re-scoring.
+
+This remains a planning artifact only. Active testing still requires Scope Guard, explicit approval, and controlled authorized targets.
+

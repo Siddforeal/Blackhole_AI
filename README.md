@@ -121,6 +121,26 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Priority-Aware Orchestration
+
+Blackhole orchestration now includes endpoint priority scoring in the generated plan and terminal output.
+
+Example:
+
+    blackhole orchestrate endpoints.txt --target demo --json-output /tmp/orchestration.json
+
+The orchestration output includes:
+
+- task tree expansion
+- specialist agent assignments
+- endpoint priority scores
+- score bands such as critical, high, medium, low, and info
+- top scoring signals for each endpoint
+
+This helps prioritize high-value endpoints before any active testing.
+
+Priority-aware orchestration is still planning-only. It does not send requests, execute shell commands, launch browsers, call LLM providers, mutate targets, or bypass authorization.
+
 ### Endpoint Priority Scoring
 
 Blackhole can score a single endpoint using planning-only security heuristics:
