@@ -72,6 +72,30 @@ console = Console()
 
 
 
+
+def _print_attack_surface_table(attack_surface_map, title: str = "Attack Surface Groups") -> None:
+    """Print attack-surface groups when an orchestration plan includes them."""
+    if attack_surface_map is None or not attack_surface_map.groups:
+        return
+
+    table = Table(title=title)
+    table.add_column("#", justify="right")
+    table.add_column("Group")
+    table.add_column("Count", justify="right")
+    table.add_column("Max Score", justify="right")
+    table.add_column("Priority Hint")
+
+    for index, group in enumerate(attack_surface_map.groups, start=1):
+        table.add_row(
+            str(index),
+            group.spec.name,
+            str(group.count),
+            str(group.max_score),
+            group.spec.priority_hint,
+        )
+
+    console.print(table)
+
 def _endpoint_values_from_text(text: str) -> list[str]:
     """Extract endpoints from mined text plus plain endpoint-list lines."""
     mined = [endpoint.value for endpoint in mine_endpoints(text)]
@@ -1143,6 +1167,7 @@ def orchestrate_command(
     console.print(table)
 
     _print_endpoint_priority_table(plan.endpoint_priorities)
+    _print_attack_surface_table(plan.attack_surface_map)
 
     if json_output:
         json_output.parent.mkdir(parents=True, exist_ok=True)
@@ -1455,6 +1480,7 @@ def web_recon_command(
         console.print(assignment_table)
 
         _print_endpoint_priority_table(result.orchestration_plan.endpoint_priorities)
+        _print_attack_surface_table(result.orchestration_plan.attack_surface_map)
 
         if json_output:
             json_output.parent.mkdir(parents=True, exist_ok=True)
@@ -1534,6 +1560,7 @@ def import_har_command(
         console.print(assignment_table)
 
         _print_endpoint_priority_table(plan.endpoint_priorities, title="Endpoint Priorities from HAR")
+        _print_attack_surface_table(plan.attack_surface_map, title="Attack Surface Groups from HAR")
 
         if json_output:
             json_output.parent.mkdir(parents=True, exist_ok=True)

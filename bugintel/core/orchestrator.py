@@ -16,6 +16,7 @@ from bugintel.core.agent_registry import AgentSpec, suggest_agents_for_endpoint
 from bugintel.core.task_tree import TaskNode, build_endpoint_task_tree
 from bugintel.core.endpoint_investigation import expand_endpoint_task_tree
 from bugintel.core.endpoint_priority import EndpointPriorityResult, prioritize_endpoints
+from bugintel.core.attack_surface import AttackSurfaceMap, build_attack_surface_map
 
 
 @dataclass
@@ -36,6 +37,7 @@ class OrchestrationPlan:
     root: TaskNode
     assignments: list[AgentAssignment] = field(default_factory=list)
     endpoint_priorities: list[EndpointPriorityResult] = field(default_factory=list)
+    attack_surface_map: AttackSurfaceMap | None = None
     notes: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -58,6 +60,11 @@ class OrchestrationPlan:
                 item.to_dict()
                 for item in self.endpoint_priorities
             ],
+            "attack_surface_map": (
+                self.attack_surface_map.to_dict()
+                if self.attack_surface_map is not None
+                else None
+            ),
             "notes": self.notes,
             "task_tree": self.root.to_dict(),
         }
@@ -74,7 +81,9 @@ def create_orchestration_plan(target_name: str, endpoints: list[str]) -> Orchest
     root = build_endpoint_task_tree(target_name=target_name, endpoints=clean_endpoints)
     investigation_profiles = expand_endpoint_task_tree(root)
     endpoint_priorities = prioritize_endpoints(clean_endpoints)
+    attack_surface_map = build_attack_surface_map(clean_endpoints)
     _attach_priority_metadata(root, endpoint_priorities)
+    _attach_attack_surface_metadata(root, attack_surface_map)
 
     assignments: list[AgentAssignment] = []
 
@@ -90,6 +99,7 @@ def create_orchestration_plan(target_name: str, endpoints: list[str]) -> Orchest
         "This is a planning artifact only.",
         f"Expanded endpoint investigation profiles: {len(investigation_profiles)}.",
         f"Scored endpoint priorities: {len(endpoint_priorities)}.",
+        f"Grouped attack surfaces: {len(attack_surface_map.groups)}.",
         "All active testing must pass through Scope Guard.",
         "Network execution requires explicit human approval.",
         "Findings require manual validation before reporting.",
@@ -101,6 +111,7 @@ def create_orchestration_plan(target_name: str, endpoints: list[str]) -> Orchest
         root=root,
         assignments=assignments,
         endpoint_priorities=endpoint_priorities,
+        attack_surface_map=attack_surface_map,
         notes=notes,
     )
 
@@ -184,6 +195,32 @@ def _attach_priority_metadata(root: TaskNode, priorities: list[EndpointPriorityR
             "band": priority.band,
             "signals": [signal.to_dict() for signal in priority.signals],
             "recommended_next_steps": list(priority.recommended_next_steps),
+            "planning_only": True,
+            "execution_state": "not_executed",
+        }
+
+
+def _attach_attack_surface_metadata(root: TaskNode, attack_surface_map: AttackSurfaceMap) -> None:
+    """Attach attack-surface group names to endpoint nodes."""
+    groups_by_endpoint: dict[str, list[str]] = {}
+
+    for group in attack_surface_map.groups:
+        for endpoint in group.endpoints:
+            groups_by_endpoint.setdefault(endpoint.endpoint, []).append(group.spec.name)
+
+    api_node = _find_first_node_by_type(root, "api")
+
+    if api_node is None:
+        return
+
+    for endpoint_node in api_node.children:
+        endpoint = endpoint_node.metadata.get("endpoint")
+
+        if not endpoint:
+            continue
+
+        endpoint_node.metadata["attack_surface_groups"] = {
+            "groups": groups_by_endpoint.get(endpoint, []),
             "planning_only": True,
             "execution_state": "not_executed",
         }
