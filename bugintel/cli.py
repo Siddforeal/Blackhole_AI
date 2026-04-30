@@ -35,6 +35,7 @@ from bugintel.core.evidence_store import EvidenceStore
 from bugintel.core.scope_guard import load_scope_from_dict
 from bugintel.core.orchestrator import create_orchestration_plan
 from bugintel.core.endpoint_investigation import build_endpoint_investigation_profile
+from bugintel.core.endpoint_priority import prioritize_endpoints, score_endpoint
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -289,6 +290,130 @@ def endpoint_investigation_command(
         json_output.parent.mkdir(parents=True, exist_ok=True)
         json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         console.print(f"[bold green]Saved endpoint investigation JSON:[/bold green] {json_output}")
+
+
+
+@app.command("endpoint-priority")
+def endpoint_priority_command(
+    endpoint: str = typer.Argument(..., help="Endpoint path or URL to score."),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        "--output",
+        help="Optional path to save endpoint priority JSON.",
+    ),
+):
+    """Score one endpoint using planning-only priority heuristics."""
+    result = score_endpoint(endpoint)
+    data = result.to_dict()
+
+    summary = Table(title="Endpoint Priority Score")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Endpoint", result.endpoint)
+    summary.add_row("Normalized path", result.normalized_path)
+    summary.add_row("Score", str(result.score))
+    summary.add_row("Band", result.band)
+    summary.add_row("Categories", ", ".join(result.categories))
+    summary.add_row("Execution", "planning-only; no curl, browser, network, or LLM provider execution")
+    console.print(summary)
+
+    console.print("[bold]Signal names:[/bold] " + ", ".join(signal.name for signal in result.signals))
+
+    signal_table = Table(title="Priority Signals")
+    signal_table.add_column("#", justify="right")
+    signal_table.add_column("Signal")
+    signal_table.add_column("Points", justify="right")
+    signal_table.add_column("Reason")
+
+    for index, signal in enumerate(result.signals, start=1):
+        signal_table.add_row(
+            str(index),
+            signal.name,
+            str(signal.points),
+            signal.reason,
+        )
+
+    console.print(signal_table)
+
+    if result.recommended_next_steps:
+        console.print("[bold]Recommended next steps:[/bold]")
+        for step in result.recommended_next_steps:
+            console.print(f"- {step}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only scores and explains priority. "
+        "It does not send requests, execute shell commands, launch browsers, or call LLM providers."
+    )
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved endpoint priority JSON:[/bold green] {json_output}")
+
+
+@app.command("prioritize-endpoints")
+def prioritize_endpoints_command(
+    input_file: Path = typer.Argument(..., help="Text file containing endpoint paths, URLs, logs, JS, HTML, or HAR-like text."),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        "--output",
+        help="Optional path to save prioritized endpoint JSON.",
+    ),
+):
+    """Score and sort endpoints from highest to lowest priority."""
+    if not input_file.exists():
+        console.print(f"[bold red]Input file not found:[/bold red] {input_file}")
+        raise typer.Exit(code=1)
+
+    text = input_file.read_text(encoding="utf-8", errors="replace")
+    mined = [endpoint.value for endpoint in mine_endpoints(text)]
+    line_candidates = [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+
+    endpoint_values = sorted(set(mined + line_candidates))
+    results = prioritize_endpoints(endpoint_values)
+    data = {
+        "input_file": str(input_file),
+        "endpoint_count": len(results),
+        "planning_only": True,
+        "execution_state": "not_executed",
+        "results": [result.to_dict() for result in results],
+    }
+
+    summary = Table(title="Prioritized Endpoints")
+    summary.add_column("#", justify="right")
+    summary.add_column("Score", justify="right")
+    summary.add_column("Band")
+    summary.add_column("Endpoint")
+
+    for index, result in enumerate(results, start=1):
+        summary.add_row(
+            str(index),
+            str(result.score),
+            result.band,
+            result.endpoint,
+        )
+
+    console.print(summary)
+
+    console.print("[bold]Priority order:[/bold]")
+    for index, result in enumerate(results, start=1):
+        console.print(f"{index}. [{result.band}] {result.score} - {result.endpoint}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only ranks endpoint strings. "
+        "It does not send requests, execute shell commands, launch browsers, or call LLM providers."
+    )
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved prioritized endpoint JSON:[/bold green] {json_output}")
 
 
 @app.command("plan-curl")
