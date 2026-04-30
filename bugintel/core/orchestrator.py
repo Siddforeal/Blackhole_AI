@@ -15,6 +15,7 @@ from typing import Any
 from bugintel.core.agent_registry import AgentSpec, suggest_agents_for_endpoint
 from bugintel.core.task_tree import TaskNode, build_endpoint_task_tree
 from bugintel.core.endpoint_investigation import expand_endpoint_task_tree
+from bugintel.core.endpoint_priority import EndpointPriorityResult, prioritize_endpoints
 
 
 @dataclass
@@ -34,6 +35,7 @@ class OrchestrationPlan:
     endpoints: list[str]
     root: TaskNode
     assignments: list[AgentAssignment] = field(default_factory=list)
+    endpoint_priorities: list[EndpointPriorityResult] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -52,6 +54,10 @@ class OrchestrationPlan:
                 }
                 for item in self.assignments
             ],
+            "endpoint_priorities": [
+                item.to_dict()
+                for item in self.endpoint_priorities
+            ],
             "notes": self.notes,
             "task_tree": self.root.to_dict(),
         }
@@ -67,6 +73,8 @@ def create_orchestration_plan(target_name: str, endpoints: list[str]) -> Orchest
     clean_endpoints = sorted(set(endpoints))
     root = build_endpoint_task_tree(target_name=target_name, endpoints=clean_endpoints)
     investigation_profiles = expand_endpoint_task_tree(root)
+    endpoint_priorities = prioritize_endpoints(clean_endpoints)
+    _attach_priority_metadata(root, endpoint_priorities)
 
     assignments: list[AgentAssignment] = []
 
@@ -81,6 +89,7 @@ def create_orchestration_plan(target_name: str, endpoints: list[str]) -> Orchest
     notes = [
         "This is a planning artifact only.",
         f"Expanded endpoint investigation profiles: {len(investigation_profiles)}.",
+        f"Scored endpoint priorities: {len(endpoint_priorities)}.",
         "All active testing must pass through Scope Guard.",
         "Network execution requires explicit human approval.",
         "Findings require manual validation before reporting.",
@@ -91,6 +100,7 @@ def create_orchestration_plan(target_name: str, endpoints: list[str]) -> Orchest
         endpoints=clean_endpoints,
         root=root,
         assignments=assignments,
+        endpoint_priorities=endpoint_priorities,
         notes=notes,
     )
 
@@ -148,6 +158,35 @@ def _attach_agent_tasks(root: TaskNode, assignments: list[AgentAssignment]) -> N
                 },
             )
 
+
+
+def _attach_priority_metadata(root: TaskNode, priorities: list[EndpointPriorityResult]) -> None:
+    """Attach endpoint priority metadata to endpoint nodes."""
+    priority_by_endpoint = {item.endpoint: item for item in priorities}
+    api_node = _find_first_node_by_type(root, "api")
+
+    if api_node is None:
+        return
+
+    for endpoint_node in api_node.children:
+        endpoint = endpoint_node.metadata.get("endpoint")
+
+        if not endpoint:
+            continue
+
+        priority = priority_by_endpoint.get(endpoint)
+
+        if priority is None:
+            continue
+
+        endpoint_node.metadata["priority"] = {
+            "score": priority.score,
+            "band": priority.band,
+            "signals": [signal.to_dict() for signal in priority.signals],
+            "recommended_next_steps": list(priority.recommended_next_steps),
+            "planning_only": True,
+            "execution_state": "not_executed",
+        }
 
 def _find_first_node_by_type(node: TaskNode, task_type: str) -> TaskNode | None:
     if node.task_type == task_type:
