@@ -355,3 +355,31 @@ The orchestration JSON includes endpoint priority metadata so future specialist 
 
 This remains a planning artifact only. Active testing still requires Scope Guard, explicit approval, and controlled authorized targets.
 
+## Attack Surface Grouping
+
+Blackhole can group endpoints into attack-surface buckets before active testing.
+
+Example:
+
+    blackhole attack-surface endpoints.txt --json-output /tmp/attack-surface.json
+
+The grouping layer is designed to help the future orchestrator and specialist agents reason about related endpoints together.
+
+Groups include:
+
+- identity-access: accounts, users, members, teams, roles, permissions, and access-management surfaces
+- tenant-project-boundary: projects, tenants, organizations, workspaces, and cross-boundary object references
+- file-surface: upload, download, attachments, avatars, images, media, and document endpoints
+- auth-flow: login, logout, session, SSO, OAuth, MFA, password reset, and callback routes
+- billing-money: billing, invoice, payment, subscription, checkout, and plan-management routes
+- integration-webhook: third-party integrations, webhooks, callbacks, and connected-app routes
+- secret-token-key: token, secret, key, API-key, and credential-management routes
+- object-reference: identifiers, UUIDs, numeric IDs, and IDOR/BAC candidates
+- parameter-heavy: search, query, filter, sort, page, and limit behavior
+- low-signal: health, status, ping, public, static, asset, robots, and sitemap routes
+- general-api: endpoints that do not match a more specific group
+
+When Blackhole creates an orchestration plan, attack-surface groups are attached to the orchestration JSON and printed in terminal output.
+
+This remains planning-only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
+

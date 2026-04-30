@@ -121,6 +121,36 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Attack Surface Grouping
+
+Blackhole can group endpoint inventories into planning-only attack-surface buckets:
+
+    blackhole attack-surface endpoints.txt --json-output /tmp/attack-surface.json
+
+Attack-surface groups help organize research around meaningful security areas.
+
+Example groups include:
+
+- identity-access
+- tenant-project-boundary
+- file-surface
+- auth-flow
+- billing-money
+- integration-webhook
+- secret-token-key
+- object-reference
+- parameter-heavy
+- low-signal
+- general-api
+
+Blackhole orchestration also includes attack-surface groups in JSON and terminal output:
+
+    blackhole orchestrate endpoints.txt --target demo --json-output /tmp/orchestration.json
+
+This helps the researcher see which endpoint clusters deserve focused review.
+
+This command is planning-only. It does not send requests, execute shell commands, launch browsers, call LLM providers, mutate targets, or bypass authorization.
+
 ### Priority-Aware Orchestration
 
 Blackhole orchestration now includes endpoint priority scoring in the generated plan and terminal output.
