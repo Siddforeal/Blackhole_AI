@@ -46,6 +46,7 @@ from bugintel.core.ai_brain import build_ai_brain_plan, render_ai_brain_plan_mar
 from bugintel.core.brain_prompt import build_brain_prompt_package, render_brain_prompt_package_markdown
 from bugintel.core.brain_review import build_brain_review, render_brain_review_markdown
 from bugintel.core.brain_decision import build_brain_decision_gate, render_brain_decision_gate_markdown
+from bugintel.core.brain_approval import build_brain_approval_packet, render_brain_approval_packet_markdown
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -404,6 +405,91 @@ def endpoint_investigation_command(
 
 
 
+
+
+
+@app.command("brain-approval")
+def brain_approval_command(
+    brain_decision_json: Path = typer.Argument(..., help="Path to brain-decision JSON."),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown file to write the human approval packet.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON file to write the structured human approval packet.",
+    ),
+):
+    """Build a planning-only human approval packet from brain-decision JSON."""
+    if not brain_decision_json.exists():
+        console.print(f"[bold red]Brain decision JSON not found:[/bold red] {brain_decision_json}")
+        raise typer.Exit(code=1)
+
+    try:
+        data = json.loads(brain_decision_json.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid brain decision JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print("[bold red]Brain decision JSON must be an object.[/bold red]")
+        raise typer.Exit(code=2)
+
+    packet = build_brain_approval_packet(data)
+    markdown = render_brain_approval_packet_markdown(packet)
+    packet_data = packet.to_dict()
+
+    summary = Table(title="Human Approval Packet")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Target", packet.target_name)
+    summary.add_row("Focus endpoint", packet.focus_endpoint or "none")
+    summary.add_row("Source decision", packet.source_decision)
+    summary.add_row("Approval status", packet.approval_status)
+    summary.add_row("Approval required", str(packet.approval_required))
+    summary.add_row("Reportable", str(packet.reportable))
+    summary.add_row("Provider execution", "disabled")
+    summary.add_row("Execution", "planning-only; no LLM provider, curl, browser, network, Kali, or shell execution")
+    console.print(summary)
+
+    items_table = Table(title="Approval Items")
+    items_table.add_column("#", justify="right")
+    items_table.add_column("Category")
+    items_table.add_column("Item")
+    items_table.add_column("Required")
+    items_table.add_column("Source")
+
+    for index, item in enumerate(packet.approval_items, start=1):
+        items_table.add_row(
+            str(index),
+            item.category,
+            item.name,
+            str(item.required),
+            item.source_blocker or "manual",
+        )
+
+    console.print(items_table)
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved brain approval Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(packet_data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved brain approval JSON:[/bold green] {json_output}")
+
+    if not output_file and not json_output:
+        console.print(markdown)
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only creates a planning-only human approval packet. "
+        "It does not confirm vulnerabilities, call LLM providers, send requests, execute shell commands, launch browsers, or use Kali tools."
+    )
 
 
 @app.command("brain-decision")
