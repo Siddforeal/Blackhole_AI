@@ -38,6 +38,7 @@ from bugintel.core.endpoint_investigation import build_endpoint_investigation_pr
 from bugintel.core.endpoint_priority import prioritize_endpoints, score_endpoint
 from bugintel.core.attack_surface import build_attack_surface_map
 from bugintel.core.evidence_requirements import build_evidence_requirement_plan
+from bugintel.core.evidence_workspace import build_evidence_workspace_manifest, materialize_evidence_workspace
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -388,6 +389,79 @@ def endpoint_investigation_command(
 
 
 
+
+
+
+@app.command("evidence-workspace")
+def evidence_workspace_command(
+    orchestration_json: Path = typer.Argument(..., help="Path to orchestration JSON containing evidence requirements."),
+    output_dir: Path = typer.Option(
+        ...,
+        "--output-dir",
+        "--out",
+        help="Directory where the local evidence workspace should be created.",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Preview the workspace manifest without creating files.",
+    ),
+):
+    """Create a local evidence workspace from orchestration JSON."""
+    if not orchestration_json.exists():
+        console.print(f"[bold red]Orchestration JSON not found:[/bold red] {orchestration_json}")
+        raise typer.Exit(code=1)
+
+    try:
+        data = json.loads(orchestration_json.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid orchestration JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print("[bold red]Orchestration JSON must be an object.[/bold red]")
+        raise typer.Exit(code=2)
+
+    manifest = build_evidence_workspace_manifest(data, output_dir)
+    manifest_data = manifest.to_dict()
+
+    summary = Table(title="Evidence Workspace")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Target", manifest.target_name)
+    summary.add_row("Output dir", manifest.workspace_root)
+    summary.add_row("Endpoints", str(manifest.endpoint_count))
+    summary.add_row("Mode", "dry-run" if dry_run else "write-files")
+    summary.add_row("Execution", "local-only; no curl, browser, network, or LLM provider execution")
+    console.print(summary)
+
+    files_table = Table(title="Workspace Files")
+    files_table.add_column("#", justify="right")
+    files_table.add_column("Path")
+    files_table.add_column("Purpose")
+
+    all_files = list(manifest.files)
+    for endpoint in manifest.endpoints:
+        all_files.extend(endpoint.files)
+
+    for index, file in enumerate(all_files, start=1):
+        files_table.add_row(str(index), file.path, file.purpose)
+
+    console.print(files_table)
+
+    if dry_run:
+        console.print("[bold yellow]Dry run:[/bold yellow] no files were created.")
+    else:
+        materialize_evidence_workspace(manifest)
+        console.print(f"[bold green]Evidence workspace created:[/bold green] {output_dir}")
+
+    manifest_path = output_dir / "manifest.json"
+    console.print(f"[bold]Manifest path:[/bold] {manifest_path}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only creates local planning files. "
+        "It does not send requests, execute shell commands against targets, launch browsers, or call LLM providers."
+    )
 
 
 @app.command("evidence-requirements")
