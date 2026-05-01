@@ -45,6 +45,7 @@ from bugintel.core.research_state import build_research_state_from_orchestration
 from bugintel.core.ai_brain import build_ai_brain_plan, render_ai_brain_plan_markdown
 from bugintel.core.brain_prompt import build_brain_prompt_package, render_brain_prompt_package_markdown
 from bugintel.core.brain_review import build_brain_review, render_brain_review_markdown
+from bugintel.core.brain_decision import build_brain_decision_gate, render_brain_decision_gate_markdown
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -402,6 +403,83 @@ def endpoint_investigation_command(
 
 
 
+
+
+
+@app.command("brain-decision")
+def brain_decision_command(
+    brain_review_json: Path = typer.Argument(..., help="Path to brain-review JSON."),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown file to write the brain decision gate.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON file to write the structured brain decision gate.",
+    ),
+):
+    """Build a planning-only decision gate from brain-review JSON."""
+    if not brain_review_json.exists():
+        console.print(f"[bold red]Brain review JSON not found:[/bold red] {brain_review_json}")
+        raise typer.Exit(code=1)
+
+    try:
+        data = json.loads(brain_review_json.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid brain review JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print("[bold red]Brain review JSON must be an object.[/bold red]")
+        raise typer.Exit(code=2)
+
+    gate = build_brain_decision_gate(data)
+    markdown = render_brain_decision_gate_markdown(gate)
+    gate_data = gate.to_dict()
+
+    summary = Table(title="Brain Decision Gate")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Target", gate.target_name)
+    summary.add_row("Focus endpoint", gate.focus_endpoint or "none")
+    summary.add_row("Decision", gate.decision)
+    summary.add_row("Reportable", str(gate.reportable))
+    summary.add_row("Blockers", str(len(gate.blockers)))
+    summary.add_row("Provider execution", "disabled")
+    summary.add_row("Execution", "planning-only; no LLM provider, curl, browser, network, Kali, or shell execution")
+    console.print(summary)
+
+    blockers_table = Table(title="Decision Blockers")
+    blockers_table.add_column("#", justify="right")
+    blockers_table.add_column("Blocker")
+    blockers_table.add_column("Severity")
+    blockers_table.add_column("Reason")
+
+    for index, blocker in enumerate(gate.blockers, start=1):
+        blockers_table.add_row(str(index), blocker.name, blocker.severity, blocker.reason)
+
+    console.print(blockers_table)
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved brain decision Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(gate_data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved brain decision JSON:[/bold green] {json_output}")
+
+    if not output_file and not json_output:
+        console.print(markdown)
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only creates a planning-only decision gate. "
+        "It does not confirm vulnerabilities, call LLM providers, send requests, execute shell commands, launch browsers, or use Kali tools."
+    )
 
 
 @app.command("brain-review")
