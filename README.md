@@ -121,6 +121,40 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Research State / Case Memory
+
+Blackhole can create planning-only research state from orchestration JSON:
+
+    blackhole research-state /tmp/orchestration.json --output-file ./research-state.md
+
+It can also write structured JSON:
+
+    blackhole research-state /tmp/orchestration.json --output-file ./research-state.md --json-output ./research-state.json
+
+Research state is the base layer for the future Blackhole AI brain.
+
+It stores:
+
+- target name
+- endpoint memory
+- endpoint priority
+- attack-surface groups
+- triage state
+- hypotheses
+- planned evidence artifacts
+- redaction requirements
+- approval requirements
+- global decisions
+
+Example endpoint states include:
+
+- ready-for-manual-validation
+- queued
+- watchlist
+- deprioritized
+
+This command is planning-only. It does not send requests, execute shell commands, launch browsers, call LLM providers, mutate targets, or bypass authorization.
+
 ### Validation Runbook Builder
 
 Blackhole can create a safe manual validation runbook from orchestration JSON:

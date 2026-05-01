@@ -511,3 +511,44 @@ The generated runbook is not an exploit executor. It is a manual, human-in-the-l
 
 This remains planning-only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
 
+## Research State / Case Memory
+
+Blackhole can turn orchestration JSON into structured case memory.
+
+Example:
+
+    blackhole research-state /tmp/orchestration.json --output-file ./research-state.md
+
+The research state layer is the foundation for future AI reasoning. It gives the future AI brain a structured representation of the current case instead of forcing it to reason from raw logs.
+
+The research state stores:
+
+- target identity
+- endpoint priority
+- attack-surface groups
+- endpoint triage state
+- validation hypotheses
+- planned evidence artifacts
+- redaction requirements
+- human approval requirements
+- global decisions
+- planning-only execution state
+
+Endpoint triage states include:
+
+- ready-for-manual-validation: high-signal endpoint ready for human-reviewed validation
+- queued: medium-priority endpoint worth later review
+- watchlist: low-priority endpoint to keep in memory
+- deprioritized: low-signal endpoint unless later evidence changes its value
+
+This lets future reasoning modules ask:
+
+- what do we know?
+- what is still open?
+- what evidence is planned?
+- which endpoint should be reviewed first?
+- what requires approval?
+- where should the researcher stop?
+
+This remains planning-only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
+
