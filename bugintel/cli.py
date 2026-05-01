@@ -42,6 +42,7 @@ from bugintel.core.evidence_workspace import build_evidence_workspace_manifest, 
 from bugintel.core.report_draft import build_report_draft, render_report_draft_markdown
 from bugintel.core.validation_runbook import build_validation_runbook, render_validation_runbook_markdown
 from bugintel.core.research_state import build_research_state_from_orchestration, render_research_state_markdown
+from bugintel.core.ai_brain import build_ai_brain_plan, render_ai_brain_plan_markdown
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -396,6 +397,100 @@ def endpoint_investigation_command(
 
 
 
+
+
+
+@app.command("ai-brain")
+def ai_brain_command(
+    research_state_json: Path = typer.Argument(..., help="Path to research-state JSON."),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown file to write the AI brain plan.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON file to write the structured AI brain plan.",
+    ),
+):
+    """Build a planning-only AI brain plan from research-state JSON."""
+    if not research_state_json.exists():
+        console.print(f"[bold red]Research-state JSON not found:[/bold red] {research_state_json}")
+        raise typer.Exit(code=1)
+
+    try:
+        data = json.loads(research_state_json.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid research-state JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print("[bold red]Research-state JSON must be an object.[/bold red]")
+        raise typer.Exit(code=2)
+
+    plan = build_ai_brain_plan(data)
+    markdown = render_ai_brain_plan_markdown(plan)
+    plan_data = plan.to_dict()
+
+    summary = Table(title="AI Brain Plan")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Target", plan.target_name)
+    summary.add_row("Focus items", str(len(plan.focus_queue)))
+    summary.add_row("Global actions", str(len(plan.global_actions)))
+    summary.add_row("Safety gates", str(len(plan.safety_gates)))
+    summary.add_row("Provider execution", "disabled")
+    summary.add_row("Execution", "planning-only; no curl, browser, network, Kali, or LLM provider execution")
+    console.print(summary)
+
+    focus_table = Table(title="AI Brain Focus Queue")
+    focus_table.add_column("#", justify="right")
+    focus_table.add_column("Endpoint")
+    focus_table.add_column("Priority")
+    focus_table.add_column("Triage")
+    focus_table.add_column("Actions", justify="right")
+    focus_table.add_column("Reason")
+
+    for index, item in enumerate(plan.focus_queue, start=1):
+        focus_table.add_row(
+            str(index),
+            item.endpoint,
+            f"{item.priority_band}/{item.priority_score}",
+            item.triage_state,
+            str(len(item.next_actions)),
+            item.reason,
+        )
+
+    console.print(focus_table)
+
+    gates_table = Table(title="AI Brain Safety Gates")
+    gates_table.add_column("#", justify="right")
+    gates_table.add_column("Gate")
+
+    for index, gate in enumerate(plan.safety_gates, start=1):
+        gates_table.add_row(str(index), gate)
+
+    console.print(gates_table)
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved AI brain plan Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(plan_data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved AI brain plan JSON:[/bold green] {json_output}")
+
+    if not output_file and not json_output:
+        console.print(markdown)
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only creates a planning-only AI brain plan. "
+        "It does not call LLM providers, send requests, execute shell commands, launch browsers, or use Kali tools."
+    )
 
 
 @app.command("research-state")
