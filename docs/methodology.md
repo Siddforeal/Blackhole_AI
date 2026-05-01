@@ -443,3 +443,36 @@ The workspace is designed for safe evidence handling:
 
 This remains local-only and planning-only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
 
+## Report Draft Builder
+
+Blackhole can turn orchestration JSON into a safe vulnerability report draft skeleton.
+
+Example:
+
+    blackhole report-draft /tmp/orchestration.json --output-file ./report-draft.md
+
+The report draft builder uses orchestration data such as:
+
+- endpoint priority scoring
+- attack-surface groups
+- evidence requirements
+- endpoint inventory
+- planning-only safety metadata
+
+Generated sections include:
+
+- Summary
+- Scope and Authorization
+- Priority Triage
+- Attack Surface Grouping
+- Evidence Requirements
+- Validation Notes
+- Impact
+- Steps to Reproduce
+- Evidence References
+- Safety and Redaction Checklist
+
+The generated draft is not a final vulnerability report. It is a structured starting point for a human researcher to fill with validated observations, redacted evidence, impact, and reproduction steps.
+
+This remains planning-only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
+

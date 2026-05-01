@@ -121,6 +121,33 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Report Draft Builder
+
+Blackhole can create a safe report draft skeleton from orchestration JSON:
+
+    blackhole report-draft /tmp/orchestration.json --output-file ./report-draft.md
+
+It can also write structured JSON:
+
+    blackhole report-draft /tmp/orchestration.json --output-file ./report-draft.md --json-output ./report-draft.json
+
+The draft includes sections for:
+
+- Summary
+- Scope and Authorization
+- Priority Triage
+- Attack Surface Grouping
+- Evidence Requirements
+- Validation Notes
+- Impact
+- Steps to Reproduce
+- Evidence References
+- Safety and Redaction Checklist
+
+The report draft is a skeleton only. It must be filled with manually validated evidence before submission.
+
+This command is planning-only. It does not send requests, execute shell commands, launch browsers, call LLM providers, mutate targets, or bypass authorization.
+
 ### Evidence Workspace Builder
 
 Blackhole can create a local evidence workspace from orchestration JSON:
