@@ -598,3 +598,36 @@ This layer helps future reasoning modules answer:
 
 This remains planning-only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, use Kali tools, or bypass authorization.
 
+## LLM Brain Prompt Package
+
+Blackhole can turn AI brain JSON into a provider-ready prompt package without calling an LLM provider.
+
+Example:
+
+    blackhole brain-prompt /tmp/ai-brain-plan.json --output-file ./brain-prompt.md
+
+The prompt package builder creates four reviewable message blocks:
+
+- system: Blackhole security research planning brain identity and limits
+- developer: safety requirements and active safety gates
+- user: structured AI brain plan context, focus queue, hypotheses, artifacts, and global actions
+- assistant_task: required reasoning output format
+
+The prompt package includes:
+
+- target name
+- focus endpoint
+- focus queue
+- endpoint priority
+- triage state
+- open hypotheses
+- required artifacts
+- next actions
+- human approval blockers
+- active safety gates
+- provider execution status
+
+This is the safe bridge toward future LLM reasoning. It lets Blackhole prepare structured, auditable context for an LLM while keeping provider execution disabled.
+
+This remains planning-only. It does not call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, mutate targets, or bypass authorization.
+

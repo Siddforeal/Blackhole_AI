@@ -121,6 +121,39 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### LLM Brain Prompt Package
+
+Blackhole can create a provider-ready, planning-only prompt package from AI brain JSON:
+
+    blackhole brain-prompt /tmp/ai-brain-plan.json --output-file ./brain-prompt.md
+
+It can also write structured JSON:
+
+    blackhole brain-prompt /tmp/ai-brain-plan.json --output-file ./brain-prompt.md --json-output ./brain-prompt.json
+
+The LLM Brain Prompt Package is the bridge between deterministic AI brain planning and future provider-gated LLM reasoning.
+
+It packages:
+
+- system instructions
+- developer safety requirements
+- structured user context from the AI brain plan
+- assistant task instructions
+- focus endpoint
+- safety gates
+- provider execution status
+
+The generated prompt package is provider-ready, but Blackhole does not call an LLM provider yet.
+
+Current flow:
+
+    blackhole orchestrate endpoints.txt --target demo --json-output /tmp/orchestration.json
+    blackhole research-state /tmp/orchestration.json --json-output /tmp/research-state.json
+    blackhole ai-brain /tmp/research-state.json --json-output /tmp/ai-brain-plan.json
+    blackhole brain-prompt /tmp/ai-brain-plan.json --output-file ./brain-prompt.md --json-output ./brain-prompt.json
+
+This command is planning-only. It does not call LLM providers, send requests, execute shell commands, launch browsers, use Kali tools, mutate targets, or bypass authorization.
+
 ### AI Brain Interface
 
 Blackhole can create a planning-only AI brain plan from research-state JSON:
