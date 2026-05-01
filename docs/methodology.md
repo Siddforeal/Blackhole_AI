@@ -666,3 +666,33 @@ The generated review is not a vulnerability confirmation. It is a safe planning 
 
 This remains planning-only. It does not call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, mutate targets, or bypass authorization.
 
+## Brain Decision Gate
+
+Blackhole can turn brain-review JSON into a planning-only decision gate.
+
+Example:
+
+    blackhole brain-decision /tmp/brain-review.json --output-file ./brain-decision.md
+
+The Brain Decision Gate is a conservative safety layer after the reasoning draft.
+
+It answers:
+
+- is this ready for manual validation?
+- what blocks validation?
+- what requires approval?
+- what evidence is still missing?
+- is this reportable?
+
+The gate does not confirm vulnerabilities. It keeps findings unconfirmed until manually validated evidence exists.
+
+Decision states include:
+
+- blocked
+- blocked-pending-scope-and-controls
+- ready-for-human-approval
+- ready-for-manual-validation
+- needs-more-planning
+
+This remains planning-only. It does not call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, mutate targets, or bypass authorization.
+

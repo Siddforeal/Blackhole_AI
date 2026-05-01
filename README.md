@@ -121,6 +121,37 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Brain Decision Gate
+
+Blackhole can create a planning-only decision gate from brain-review JSON:
+
+    blackhole brain-decision /tmp/brain-review.json --output-file ./brain-decision.md
+
+It can also write structured JSON:
+
+    blackhole brain-decision /tmp/brain-review.json --output-file ./brain-decision.md --json-output ./brain-decision.json
+
+The Brain Decision Gate reads a brain review and decides the next safe state:
+
+- blocked
+- blocked-pending-scope-and-controls
+- ready-for-human-approval
+- ready-for-manual-validation
+- needs-more-planning
+
+It also records:
+
+- focus endpoint
+- decision rationale
+- blockers
+- required next steps
+- reportability status
+- provider execution status
+
+The gate is intentionally conservative. It never marks a vulnerability as confirmed or reportable without manually validated evidence.
+
+This command is planning-only. It does not call LLM providers, send requests, execute shell commands, launch browsers, use Kali tools, mutate targets, or bypass authorization.
+
 ### Brain Review / Reasoning Draft
 
 Blackhole can create a planning-only reasoning review from a brain-prompt JSON package:
