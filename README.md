@@ -121,6 +121,43 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Evidence Workspace Builder
+
+Blackhole can create a local evidence workspace from orchestration JSON:
+
+    blackhole evidence-workspace /tmp/orchestration.json --output-dir ./case-demo
+
+The workspace builder creates a local folder structure for safe, organized research evidence.
+
+Example output structure:
+
+    case-demo/
+    ├── README.md
+    ├── manifest.json
+    ├── redaction-checklist.md
+    ├── report-notes.md
+    └── endpoints/
+        └── 001-api-accounts-123-users-id-permissions/
+            ├── README.md
+            ├── checklist.md
+            ├── notes.md
+            ├── requests/
+            ├── responses/
+            └── screenshots/
+
+The generated files help organize:
+
+- endpoint evidence summaries
+- evidence checklists
+- researcher notes
+- redacted request samples
+- redacted response samples
+- approved screenshots
+- global redaction checklist
+- report notes
+
+This command is local-only and planning-only. It does not send requests, execute shell commands against targets, launch browsers, call LLM providers, mutate targets, or bypass authorization.
+
 ### Evidence Requirements Planning
 
 Blackhole can plan what evidence is needed to validate and report findings safely:

@@ -412,3 +412,34 @@ When Blackhole creates an orchestration plan, evidence requirements are attached
 
 This remains planning-only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
 
+## Evidence Workspace Builder
+
+Blackhole can turn orchestration JSON into a local evidence workspace.
+
+Example:
+
+    blackhole evidence-workspace /tmp/orchestration.json --output-dir ./case-demo
+
+The workspace builder creates a structured local case folder with:
+
+- manifest.json: machine-readable workspace manifest
+- README.md: target overview and safety notes
+- redaction-checklist.md: global redaction checklist
+- report-notes.md: draft report notes
+- endpoint README files
+- endpoint evidence checklists
+- endpoint researcher notes
+- request, response, and screenshot folders
+
+This helps move Blackhole from a planning engine toward a research operating system.
+
+The workspace is designed for safe evidence handling:
+
+- store only redacted request and response samples
+- avoid live secrets, cookies, tokens, API keys, and private customer data
+- use controlled accounts and authorized targets only
+- review screenshots before sharing
+- link evidence to a clear validation decision and impact statement
+
+This remains local-only and planning-only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
+
