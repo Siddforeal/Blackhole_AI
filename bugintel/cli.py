@@ -40,6 +40,7 @@ from bugintel.core.attack_surface import build_attack_surface_map
 from bugintel.core.evidence_requirements import build_evidence_requirement_plan
 from bugintel.core.evidence_workspace import build_evidence_workspace_manifest, materialize_evidence_workspace
 from bugintel.core.report_draft import build_report_draft, render_report_draft_markdown
+from bugintel.core.validation_runbook import build_validation_runbook, render_validation_runbook_markdown
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -392,6 +393,87 @@ def endpoint_investigation_command(
 
 
 
+
+
+
+@app.command("validation-runbook")
+def validation_runbook_command(
+    orchestration_json: Path = typer.Argument(..., help="Path to orchestration JSON."),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown file to write the validation runbook.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON file to write the structured validation runbook.",
+    ),
+):
+    """Build a planning-only validation runbook from orchestration JSON."""
+    if not orchestration_json.exists():
+        console.print(f"[bold red]Orchestration JSON not found:[/bold red] {orchestration_json}")
+        raise typer.Exit(code=1)
+
+    try:
+        data = json.loads(orchestration_json.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid orchestration JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print("[bold red]Orchestration JSON must be an object.[/bold red]")
+        raise typer.Exit(code=2)
+
+    runbook = build_validation_runbook(data)
+    markdown = render_validation_runbook_markdown(runbook)
+    runbook_data = runbook.to_dict()
+
+    summary = Table(title="Validation Runbook")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Target", runbook.target_name)
+    summary.add_row("Endpoint runbooks", str(runbook.endpoint_count))
+    summary.add_row("Execution", "planning-only; no curl, browser, network, or LLM provider execution")
+    console.print(summary)
+
+    endpoint_table = Table(title="Validation Runbook Endpoints")
+    endpoint_table.add_column("#", justify="right")
+    endpoint_table.add_column("Endpoint")
+    endpoint_table.add_column("Priority")
+    endpoint_table.add_column("Steps", justify="right")
+    endpoint_table.add_column("Approval Steps", justify="right")
+
+    for index, endpoint_runbook in enumerate(runbook.endpoint_runbooks, start=1):
+        approval_count = sum(1 for step in endpoint_runbook.steps if step.human_approval_required)
+        endpoint_table.add_row(
+            str(index),
+            endpoint_runbook.endpoint,
+            f"{endpoint_runbook.priority_band}/{endpoint_runbook.priority_score}",
+            str(len(endpoint_runbook.steps)),
+            str(approval_count),
+        )
+
+    console.print(endpoint_table)
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved validation runbook Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(runbook_data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved validation runbook JSON:[/bold green] {json_output}")
+
+    if not output_file and not json_output:
+        console.print(markdown)
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only creates a manual validation runbook. "
+        "It does not send requests, execute shell commands, launch browsers, or call LLM providers."
+    )
 
 
 @app.command("report-draft")
