@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.18.0
+Current version: 0.19.0
 
 ## Research Goal
 
@@ -467,7 +467,7 @@ Running `bugintel` with no command also shows the UFO loading screen. Normal com
 
 ## Browser Evidence Workflow
 
-Blackhole v0.18.0 includes a safe browser automation foundation.
+Blackhole v0.19.0 includes a safe browser automation foundation.
 
 Install optional Playwright support with:
 
@@ -501,7 +501,7 @@ Browser execution itself is still a future step. The current implementation prov
 
 ### Playwright Execution Preview
 
-The v0.18.0 foundation adds a safe Playwright execution preview command. It does not launch a browser. It validates scope, checks whether the optional Playwright package is available, and writes a JSON preview that can later feed execution/evidence workflows.
+The v0.19.0 foundation adds a safe Playwright execution preview command. It does not launch a browser. It validates scope, checks whether the optional Playwright package is available, and writes a JSON preview that can later feed execution/evidence workflows.
 
 Example:
 
