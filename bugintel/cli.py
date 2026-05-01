@@ -41,6 +41,7 @@ from bugintel.core.evidence_requirements import build_evidence_requirement_plan
 from bugintel.core.evidence_workspace import build_evidence_workspace_manifest, materialize_evidence_workspace
 from bugintel.core.report_draft import build_report_draft, render_report_draft_markdown
 from bugintel.core.validation_runbook import build_validation_runbook, render_validation_runbook_markdown
+from bugintel.core.research_state import build_research_state_from_orchestration, render_research_state_markdown
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -394,6 +395,105 @@ def endpoint_investigation_command(
 
 
 
+
+
+
+@app.command("research-state")
+def research_state_command(
+    orchestration_json: Path = typer.Argument(..., help="Path to orchestration JSON."),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown file to write the research state summary.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON file to write the structured research state.",
+    ),
+):
+    """Build planning-only research state / case memory from orchestration JSON."""
+    if not orchestration_json.exists():
+        console.print(f"[bold red]Orchestration JSON not found:[/bold red] {orchestration_json}")
+        raise typer.Exit(code=1)
+
+    try:
+        data = json.loads(orchestration_json.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid orchestration JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print("[bold red]Orchestration JSON must be an object.[/bold red]")
+        raise typer.Exit(code=2)
+
+    state = build_research_state_from_orchestration(data)
+    markdown = render_research_state_markdown(state)
+    state_data = state.to_dict()
+
+    summary = Table(title="Research State / Case Memory")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Target", state.target_name)
+    summary.add_row("Endpoints", str(state.endpoint_count))
+    summary.add_row("Decisions", str(len(state.decisions)))
+    summary.add_row("Execution", "planning-only; no curl, browser, network, or LLM provider execution")
+    console.print(summary)
+
+    endpoint_table = Table(title="Research State Endpoints")
+    endpoint_table.add_column("#", justify="right")
+    endpoint_table.add_column("Endpoint")
+    endpoint_table.add_column("Priority")
+    endpoint_table.add_column("Triage")
+    endpoint_table.add_column("Hypotheses", justify="right")
+    endpoint_table.add_column("Artifacts", justify="right")
+
+    for index, endpoint_state in enumerate(state.endpoints, start=1):
+        endpoint_table.add_row(
+            str(index),
+            endpoint_state.endpoint,
+            f"{endpoint_state.priority_band}/{endpoint_state.priority_score}",
+            endpoint_state.triage_state,
+            str(len(endpoint_state.hypotheses)),
+            str(len(endpoint_state.artifacts)),
+        )
+
+    console.print(endpoint_table)
+
+    decision_table = Table(title="Research State Decisions")
+    decision_table.add_column("#", justify="right")
+    decision_table.add_column("Decision")
+    decision_table.add_column("Status")
+    decision_table.add_column("Rationale")
+
+    for index, decision in enumerate(state.decisions, start=1):
+        decision_table.add_row(
+            str(index),
+            decision.name,
+            decision.status,
+            decision.rationale,
+        )
+
+    console.print(decision_table)
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved research state Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(state_data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved research state JSON:[/bold green] {json_output}")
+
+    if not output_file and not json_output:
+        console.print(markdown)
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only creates planning-only case memory. "
+        "It does not send requests, execute shell commands, launch browsers, or call LLM providers."
+    )
 
 
 @app.command("validation-runbook")
