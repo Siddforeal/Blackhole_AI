@@ -43,6 +43,7 @@ from bugintel.core.report_draft import build_report_draft, render_report_draft_m
 from bugintel.core.validation_runbook import build_validation_runbook, render_validation_runbook_markdown
 from bugintel.core.research_state import build_research_state_from_orchestration, render_research_state_markdown
 from bugintel.core.ai_brain import build_ai_brain_plan, render_ai_brain_plan_markdown
+from bugintel.core.brain_prompt import build_brain_prompt_package, render_brain_prompt_package_markdown
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -398,6 +399,81 @@ def endpoint_investigation_command(
 
 
 
+
+
+
+@app.command("brain-prompt")
+def brain_prompt_command(
+    ai_brain_json: Path = typer.Argument(..., help="Path to AI brain plan JSON."),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown file to write the prompt package.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON file to write the structured prompt package.",
+    ),
+):
+    """Build a planning-only LLM brain prompt package from AI brain JSON."""
+    if not ai_brain_json.exists():
+        console.print(f"[bold red]AI brain JSON not found:[/bold red] {ai_brain_json}")
+        raise typer.Exit(code=1)
+
+    try:
+        data = json.loads(ai_brain_json.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid AI brain JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print("[bold red]AI brain JSON must be an object.[/bold red]")
+        raise typer.Exit(code=2)
+
+    package = build_brain_prompt_package(data)
+    markdown = render_brain_prompt_package_markdown(package)
+    package_data = package.to_dict()
+
+    summary = Table(title="LLM Brain Prompt Package")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Target", package.target_name)
+    summary.add_row("Focus endpoint", package.focus_endpoint or "none")
+    summary.add_row("Messages", str(package.message_count))
+    summary.add_row("Safety gates", str(len(package.safety_gates)))
+    summary.add_row("Provider execution", "disabled")
+    summary.add_row("Execution", "planning-only; no LLM provider, curl, browser, network, Kali, or shell execution")
+    console.print(summary)
+
+    messages_table = Table(title="Prompt Messages")
+    messages_table.add_column("#", justify="right")
+    messages_table.add_column("Role")
+    messages_table.add_column("Characters", justify="right")
+
+    for index, message in enumerate(package.messages, start=1):
+        messages_table.add_row(str(index), message.role, str(len(message.content)))
+
+    console.print(messages_table)
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved brain prompt Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(package_data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved brain prompt JSON:[/bold green] {json_output}")
+
+    if not output_file and not json_output:
+        console.print(markdown)
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only creates a provider-ready prompt package. "
+        "It does not call LLM providers, send requests, execute shell commands, launch browsers, or use Kali tools."
+    )
 
 
 @app.command("ai-brain")
