@@ -719,3 +719,26 @@ The approval packet does not execute validation. It prepares a checklist for the
 
 This remains planning-only. It does not call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, mutate targets, or bypass authorization.
 
+## Tool Request Manifest
+
+Blackhole can turn brain-approval JSON into a planning-only tool request manifest.
+
+Example:
+
+    blackhole tool-request-manifest /tmp/brain-approval.json --output-file ./tool-request-manifest.md
+
+The Tool Request Manifest is the safety bridge before any future human-approved tool loop.
+
+It answers:
+
+- what tool/action would be requested later?
+- why is it needed?
+- what approval is required?
+- what safety gate blocks it?
+- what artifact should it produce?
+- is execution allowed?
+
+Execution is always disabled in this layer.
+
+This remains planning-only. It does not call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, mutate targets, or bypass authorization.
+

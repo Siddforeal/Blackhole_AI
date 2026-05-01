@@ -121,6 +121,34 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Tool Request Manifest
+
+Blackhole can create a planning-only tool request manifest from brain-approval JSON:
+
+    blackhole tool-request-manifest /tmp/brain-approval.json --output-file ./tool-request-manifest.md
+
+It can also write structured JSON:
+
+    blackhole tool-request-manifest /tmp/brain-approval.json --output-file ./tool-request-manifest.md --json-output ./tool-request-manifest.json
+
+The Tool Request Manifest converts approval requirements into reviewable future tool/action requests.
+
+It records:
+
+- target name
+- focus endpoint
+- source approval status
+- requested tool/action family
+- purpose
+- human approval requirement
+- blocked-by safety gates
+- expected artifact
+- execution allowed flag
+
+Execution remains disabled. This command does not execute tools.
+
+This command is planning-only. It does not call LLM providers, send requests, execute shell commands, launch browsers, use Kali tools, mutate targets, or bypass authorization.
+
 ### Human Approval Packet
 
 Blackhole can create a planning-only human approval packet from brain-decision JSON:
