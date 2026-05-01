@@ -47,6 +47,7 @@ from bugintel.core.brain_prompt import build_brain_prompt_package, render_brain_
 from bugintel.core.brain_review import build_brain_review, render_brain_review_markdown
 from bugintel.core.brain_decision import build_brain_decision_gate, render_brain_decision_gate_markdown
 from bugintel.core.brain_approval import build_brain_approval_packet, render_brain_approval_packet_markdown
+from bugintel.core.tool_request_manifest import build_tool_request_manifest, render_tool_request_manifest_markdown
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -406,6 +407,90 @@ def endpoint_investigation_command(
 
 
 
+
+
+
+@app.command("tool-request-manifest")
+def tool_request_manifest_command(
+    brain_approval_json: Path = typer.Argument(..., help="Path to brain-approval JSON."),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown file to write the tool request manifest.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON file to write the structured tool request manifest.",
+    ),
+):
+    """Build a planning-only tool request manifest from brain-approval JSON."""
+    if not brain_approval_json.exists():
+        console.print(f"[bold red]Brain approval JSON not found:[/bold red] {brain_approval_json}")
+        raise typer.Exit(code=1)
+
+    try:
+        data = json.loads(brain_approval_json.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid brain approval JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print("[bold red]Brain approval JSON must be an object.[/bold red]")
+        raise typer.Exit(code=2)
+
+    manifest = build_tool_request_manifest(data)
+    markdown = render_tool_request_manifest_markdown(manifest)
+    manifest_data = manifest.to_dict()
+
+    summary = Table(title="Tool Request Manifest")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Target", manifest.target_name)
+    summary.add_row("Focus endpoint", manifest.focus_endpoint or "none")
+    summary.add_row("Source approval status", manifest.source_approval_status)
+    summary.add_row("Tool requests", str(len(manifest.requests)))
+    summary.add_row("Execution allowed", str(manifest.execution_allowed))
+    summary.add_row("Provider execution", "disabled")
+    summary.add_row("Execution", "planning-only; no tool, curl, browser, network, Kali, shell, or LLM execution")
+    console.print(summary)
+
+    requests_table = Table(title="Tool Requests")
+    requests_table.add_column("#", justify="right")
+    requests_table.add_column("Family")
+    requests_table.add_column("Request")
+    requests_table.add_column("Approval")
+    requests_table.add_column("Execution")
+
+    for index, request in enumerate(manifest.requests, start=1):
+        requests_table.add_row(
+            str(index),
+            request.tool_family,
+            request.name,
+            "YES" if request.requires_human_approval else "NO",
+            "YES" if request.execution_allowed else "NO",
+        )
+
+    console.print(requests_table)
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved tool request manifest Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(manifest_data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved tool request manifest JSON:[/bold green] {json_output}")
+
+    if not output_file and not json_output:
+        console.print(markdown)
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only creates a planning-only tool request manifest. "
+        "It does not execute tools, send requests, run shell commands, launch browsers, call LLM providers, or use Kali tools."
+    )
 
 
 @app.command("brain-approval")
