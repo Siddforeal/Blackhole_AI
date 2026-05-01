@@ -121,6 +121,38 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Validation Runbook Builder
+
+Blackhole can create a safe manual validation runbook from orchestration JSON:
+
+    blackhole validation-runbook /tmp/orchestration.json --output-file ./validation-runbook.md
+
+It can also write structured JSON:
+
+    blackhole validation-runbook /tmp/orchestration.json --output-file ./validation-runbook.md --json-output ./validation-runbook.json
+
+The runbook helps answer:
+
+- what should be validated first
+- which endpoint requires approval
+- what evidence should be collected
+- what must be redacted
+- when the researcher should stop
+- how to make a reportability decision
+
+Generated runbooks include:
+
+- global safety rules
+- endpoint priority
+- attack-surface groups
+- validation phases
+- expected evidence artifacts
+- redaction requirements
+- human approval requirements
+- stop conditions
+
+This command is planning-only. It does not send requests, execute shell commands, launch browsers, call LLM providers, mutate targets, or bypass authorization.
+
 ### Report Draft Builder
 
 Blackhole can create a safe report draft skeleton from orchestration JSON:

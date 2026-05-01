@@ -476,3 +476,38 @@ The generated draft is not a final vulnerability report. It is a structured star
 
 This remains planning-only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
 
+## Validation Runbook Builder
+
+Blackhole can turn orchestration JSON into a manual validation runbook.
+
+Example:
+
+    blackhole validation-runbook /tmp/orchestration.json --output-file ./validation-runbook.md
+
+The validation runbook builder uses orchestration data such as:
+
+- endpoint priority scoring
+- attack-surface groups
+- evidence requirements
+- endpoint-specific safety metadata
+- redaction requirements
+- human approval requirements
+
+Generated runbooks help the researcher validate safely by defining:
+
+- preflight checks
+- baseline collection steps
+- authorization boundary checks
+- object-reference validation
+- file-surface validation
+- auth/session validation
+- integration/webhook validation
+- secret/token handling
+- low-signal deprioritization
+- reportability decision points
+- stop conditions
+
+The generated runbook is not an exploit executor. It is a manual, human-in-the-loop validation plan.
+
+This remains planning-only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
+
