@@ -552,3 +552,49 @@ This lets future reasoning modules ask:
 
 This remains planning-only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, or bypass authorization.
 
+## AI Brain Interface
+
+Blackhole can turn research-state JSON into a planning-only AI brain plan.
+
+Example:
+
+    blackhole ai-brain /tmp/research-state.json --output-file ./ai-brain-plan.md
+
+The AI Brain Interface is the bridge between structured case memory and the future LLM-powered reasoning brain.
+
+It reads:
+
+- target name
+- endpoint memory
+- endpoint priority
+- attack-surface groups
+- triage state
+- hypotheses
+- planned evidence artifacts
+- global decisions
+- safety metadata
+
+It produces:
+
+- focus queue
+- next best planning actions
+- approval-gated actions
+- safety blockers
+- artifact planning actions
+- state-update actions
+- global preflight actions
+
+The current brain is deterministic and provider execution is disabled. This is intentional: Blackhole should first reason safely from structured case memory before live LLM/tool execution is added.
+
+This layer helps future reasoning modules answer:
+
+- which endpoint should be reviewed first?
+- why is it high signal?
+- which hypothesis should be validated?
+- what evidence is required?
+- what requires human approval?
+- which safety gate blocks execution?
+- when should the researcher stop?
+
+This remains planning-only. It does not run curl, launch browsers, call LLM providers, make network requests, mutate targets, use Kali tools, or bypass authorization.
+

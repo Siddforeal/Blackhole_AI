@@ -121,6 +121,44 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### AI Brain Interface
+
+Blackhole can create a planning-only AI brain plan from research-state JSON:
+
+    blackhole ai-brain /tmp/research-state.json --output-file ./ai-brain-plan.md
+
+It can also write structured JSON:
+
+    blackhole ai-brain /tmp/research-state.json --output-file ./ai-brain-plan.md --json-output ./ai-brain-plan.json
+
+The AI Brain Interface is the first deterministic brain layer for Blackhole.
+
+It reads structured case memory and decides:
+
+- which endpoint to focus on first
+- why the endpoint matters
+- which hypotheses are open
+- which artifacts are required
+- which actions require human approval
+- which safety gates block execution
+- what the next planning action should be
+
+The current AI brain is deterministic and planning-only. It does not call LLM providers yet.
+
+Generated brain plans include:
+
+- focus queue
+- endpoint priority
+- triage state
+- hypotheses
+- required artifacts
+- next actions
+- global actions
+- safety gates
+- provider execution status
+
+This command is planning-only. It does not send requests, execute shell commands, launch browsers, call LLM providers, use Kali tools, mutate targets, or bypass authorization.
+
 ### Research State / Case Memory
 
 Blackhole can create planning-only research state from orchestration JSON:
