@@ -631,3 +631,38 @@ This is the safe bridge toward future LLM reasoning. It lets Blackhole prepare s
 
 This remains planning-only. It does not call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, mutate targets, or bypass authorization.
 
+## Brain Review / Reasoning Draft
+
+Blackhole can turn a brain-prompt JSON package into a planning-only reasoning review.
+
+Example:
+
+    blackhole brain-review /tmp/brain-prompt.json --output-file ./brain-review.md
+
+The Brain Review layer reads the provider-ready prompt package and creates a deterministic reasoning draft without calling any LLM provider.
+
+It extracts and summarizes:
+
+- recommended focus endpoint
+- endpoint priority and triage state
+- why the endpoint is high signal
+- open hypotheses
+- required evidence artifacts
+- human approval requirements
+- safety gates blocking execution
+- next manual validation step
+- stop conditions
+- research state updates after validation
+
+This is the first deterministic reasoning-output layer in the safe brain chain:
+
+    orchestrate
+    → research-state
+    → ai-brain
+    → brain-prompt
+    → brain-review
+
+The generated review is not a vulnerability confirmation. It is a safe planning artifact that helps the human researcher decide what to validate next.
+
+This remains planning-only. It does not call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, mutate targets, or bypass authorization.
+

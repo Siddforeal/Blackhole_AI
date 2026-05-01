@@ -121,6 +121,40 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Brain Review / Reasoning Draft
+
+Blackhole can create a planning-only reasoning review from a brain-prompt JSON package:
+
+    blackhole brain-review /tmp/brain-prompt.json --output-file ./brain-review.md
+
+It can also write structured JSON:
+
+    blackhole brain-review /tmp/brain-prompt.json --output-file ./brain-review.md --json-output ./brain-review.json
+
+The Brain Review layer is the first deterministic reasoning-output layer after the LLM Brain Prompt Package.
+
+Current safe brain flow:
+
+    blackhole orchestrate endpoints.txt --target demo --json-output /tmp/orchestration.json
+    blackhole research-state /tmp/orchestration.json --json-output /tmp/research-state.json
+    blackhole ai-brain /tmp/research-state.json --json-output /tmp/ai-brain-plan.json
+    blackhole brain-prompt /tmp/ai-brain-plan.json --json-output /tmp/brain-prompt.json
+    blackhole brain-review /tmp/brain-prompt.json --output-file ./brain-review.md --json-output ./brain-review.json
+
+Generated brain reviews include:
+
+- recommended focus endpoint
+- why the endpoint is high signal
+- open hypotheses to review
+- evidence artifacts needed
+- human approvals required
+- safety gates still blocking execution
+- next manual validation step
+- stop conditions
+- research state updates after validation
+
+This command is planning-only. It does not call LLM providers, send requests, execute shell commands, launch browsers, use Kali tools, mutate targets, or bypass authorization.
+
 ### LLM Brain Prompt Package
 
 Blackhole can create a provider-ready, planning-only prompt package from AI brain JSON:
