@@ -121,6 +121,33 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Human Approval Packet
+
+Blackhole can create a planning-only human approval packet from brain-decision JSON:
+
+    blackhole brain-approval /tmp/brain-decision.json --output-file ./brain-approval.md
+
+It can also write structured JSON:
+
+    blackhole brain-approval /tmp/brain-decision.json --output-file ./brain-approval.md --json-output ./brain-approval.json
+
+The Human Approval Packet turns a brain decision into a human-reviewable approval checklist before any future tool/browser/curl execution is allowed.
+
+It records:
+
+- source decision
+- approval status
+- approval-required flag
+- focus endpoint
+- approval items
+- human checklist
+- reportability status
+- provider execution status
+
+The packet is intentionally conservative. It keeps reportability false until manually validated evidence exists.
+
+This command is planning-only. It does not call LLM providers, send requests, execute shell commands, launch browsers, use Kali tools, mutate targets, or bypass authorization.
+
 ### Brain Decision Gate
 
 Blackhole can create a planning-only decision gate from brain-review JSON:

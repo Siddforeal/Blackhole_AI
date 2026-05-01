@@ -696,3 +696,26 @@ Decision states include:
 
 This remains planning-only. It does not call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, mutate targets, or bypass authorization.
 
+## Human Approval Packet
+
+Blackhole can turn brain-decision JSON into a planning-only human approval packet.
+
+Example:
+
+    blackhole brain-approval /tmp/brain-decision.json --output-file ./brain-approval.md
+
+The Human Approval Packet is the safety bridge before any future human-approved tool loop.
+
+It answers:
+
+- what needs approval?
+- what is still blocked?
+- what must be confirmed before validation?
+- what redaction is required?
+- is provider execution disabled?
+- is the finding still non-reportable?
+
+The approval packet does not execute validation. It prepares a checklist for the human researcher.
+
+This remains planning-only. It does not call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, mutate targets, or bypass authorization.
+
