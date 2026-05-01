@@ -39,6 +39,7 @@ from bugintel.core.endpoint_priority import prioritize_endpoints, score_endpoint
 from bugintel.core.attack_surface import build_attack_surface_map
 from bugintel.core.evidence_requirements import build_evidence_requirement_plan
 from bugintel.core.evidence_workspace import build_evidence_workspace_manifest, materialize_evidence_workspace
+from bugintel.core.report_draft import build_report_draft, render_report_draft_markdown
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -390,6 +391,79 @@ def endpoint_investigation_command(
 
 
 
+
+
+
+@app.command("report-draft")
+def report_draft_command(
+    orchestration_json: Path = typer.Argument(..., help="Path to orchestration JSON."),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown file to write the report draft.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON file to write the structured report draft.",
+    ),
+):
+    """Build a planning-only report draft from orchestration JSON."""
+    if not orchestration_json.exists():
+        console.print(f"[bold red]Orchestration JSON not found:[/bold red] {orchestration_json}")
+        raise typer.Exit(code=1)
+
+    try:
+        data = json.loads(orchestration_json.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid orchestration JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print("[bold red]Orchestration JSON must be an object.[/bold red]")
+        raise typer.Exit(code=2)
+
+    draft = build_report_draft(data)
+    markdown = render_report_draft_markdown(draft)
+    draft_data = draft.to_dict()
+
+    summary = Table(title="Report Draft")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Title", draft.title)
+    summary.add_row("Target", draft.target_name)
+    summary.add_row("Endpoints", str(draft.endpoint_count))
+    summary.add_row("Sections", str(len(draft.sections)))
+    summary.add_row("Execution", "planning-only; no curl, browser, network, or LLM provider execution")
+    console.print(summary)
+
+    section_table = Table(title="Report Draft Sections")
+    section_table.add_column("#", justify="right")
+    section_table.add_column("Section")
+
+    for index, section in enumerate(draft.sections, start=1):
+        section_table.add_row(str(index), section.title)
+
+    console.print(section_table)
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved report draft Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(draft_data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved report draft JSON:[/bold green] {json_output}")
+
+    if not output_file and not json_output:
+        console.print(markdown)
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only creates a report skeleton. "
+        "It does not send requests, execute shell commands, launch browsers, or call LLM providers."
+    )
 
 
 @app.command("evidence-workspace")
