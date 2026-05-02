@@ -121,6 +121,27 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Brain Chat Session Memory
+
+Blackhole can persist local brain-chat turns into a session JSON file:
+
+    blackhole brain-chat "hello" --state-dir /tmp/blackhole-safe-brain-demo --session /tmp/blackhole-chat-session.json
+    blackhole brain-chat "status" --state-dir /tmp/blackhole-safe-brain-demo --session /tmp/blackhole-chat-session.json
+
+The session file stores:
+
+- question
+- answer
+- target name
+- focus endpoint
+- decision state
+- approval status
+- execution gate
+- execution allowed flag
+- timestamp
+
+This is local, deterministic, and planning-only. It does not call LLM providers, send requests, execute shell commands, launch browsers, use Kali tools, mutate targets, bypass authorization, or execute tools.
+
 ### Deterministic Brain Chat
 
 Blackhole can answer simple local questions from saved brain-state artifacts:

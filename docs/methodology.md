@@ -790,3 +790,27 @@ This is the first local chat-style interface, but it is not an LLM. It only repl
 
 This remains planning-only. It does not call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, mutate targets, bypass authorization, or execute tools.
 
+## Brain Chat Session Memory
+
+Blackhole can append deterministic brain-chat replies to a local session JSON file.
+
+Example:
+
+    blackhole brain-chat "hello" --state-dir /tmp/blackhole-safe-brain-demo --session /tmp/blackhole-chat-session.json
+
+The session memory helps preserve a local conversation trail while staying planning-only.
+
+It records each turn with:
+
+- user question
+- Blackhole answer
+- target name
+- focus endpoint
+- decision state
+- approval status
+- execution gate
+- execution allowed flag
+- timestamp
+
+This remains local and deterministic. It does not call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, mutate targets, bypass authorization, or execute tools.
+
