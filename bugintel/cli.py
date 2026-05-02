@@ -49,6 +49,7 @@ from bugintel.core.brain_decision import build_brain_decision_gate, render_brain
 from bugintel.core.brain_approval import build_brain_approval_packet, render_brain_approval_packet_markdown
 from bugintel.core.tool_request_manifest import build_tool_request_manifest, render_tool_request_manifest_markdown
 from bugintel.core.tool_execution_gate import build_tool_execution_gate, render_tool_execution_gate_markdown
+from bugintel.core.brain_chat import build_brain_chat_reply
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -410,6 +411,39 @@ def endpoint_investigation_command(
 
 
 
+
+
+
+@app.command("brain-chat")
+def brain_chat_command(
+    question: str = typer.Argument(..., help="Question to ask the local deterministic brain."),
+    state_dir: Path = typer.Option(
+        Path("."),
+        "--state-dir",
+        help="Directory containing generated Blackhole brain artifacts.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON file to write the structured brain-chat reply.",
+    ),
+):
+    """Ask the local planning-only brain state a deterministic question."""
+    reply = build_brain_chat_reply(question, state_dir)
+    data = reply.to_dict()
+
+    console.print("[bold green]Blackhole:[/bold green]")
+    console.print(reply.answer)
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved brain chat JSON:[/bold green] {json_output}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] brain-chat is local and planning-only. "
+        "It does not call LLM providers, send requests, execute shell commands, launch browsers, or use Kali tools."
+    )
 
 
 @app.command("tool-execution-gate")

@@ -1,0 +1,59 @@
+import json
+
+from typer.testing import CliRunner
+
+from bugintel.cli import app
+
+
+runner = CliRunner()
+
+
+def _write_state(tmp_path):
+    (tmp_path / "03-ai-brain.json").write_text(json.dumps({
+        "target_name": "demo",
+        "focus_queue": [
+            {
+                "endpoint": "/api/accounts/123/users/{id}/permissions",
+                "priority_band": "critical",
+                "priority_score": 80,
+                "reason": "High-signal endpoint with open hypotheses.",
+            }
+        ],
+    }))
+    (tmp_path / "06-brain-decision.json").write_text(json.dumps({
+        "decision": "blocked-pending-scope-and-controls",
+    }))
+    (tmp_path / "07-brain-approval.json").write_text(json.dumps({
+        "approval_status": "blocked-pending-approval",
+    }))
+    (tmp_path / "09-tool-execution-gate.json").write_text(json.dumps({
+        "gate_decision": "blocked-manifest-execution-disabled",
+        "execution_allowed": False,
+    }))
+
+
+def test_brain_chat_cli_prints_reply(tmp_path):
+    _write_state(tmp_path)
+
+    result = runner.invoke(app, ["brain-chat", "hello", "--state-dir", str(tmp_path)])
+
+    assert result.exit_code == 0
+    assert "Blackhole:" in result.output
+    assert "Hello Sidd" in result.output
+    assert "blocked-manifest-execution-disabled" in result.output
+
+
+def test_brain_chat_cli_writes_json(tmp_path):
+    _write_state(tmp_path)
+    output = tmp_path / "reply.json"
+
+    result = runner.invoke(
+        app,
+        ["brain-chat", "status", "--state-dir", str(tmp_path), "--json-output", str(output)],
+    )
+
+    assert result.exit_code == 0
+    data = json.loads(output.read_text())
+    assert data["target_name"] == "demo"
+    assert data["planning_only"] is True
+    assert "Current focus endpoint" in data["answer"]
