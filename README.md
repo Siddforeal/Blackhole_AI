@@ -121,6 +121,35 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Deterministic Brain Chat
+
+Blackhole can answer simple local questions from saved brain-state artifacts:
+
+    blackhole brain-chat "hello" --state-dir /tmp/blackhole-safe-brain-demo
+
+It can also write structured JSON:
+
+    blackhole brain-chat "status" --state-dir /tmp/blackhole-safe-brain-demo --json-output ./brain-chat.json
+
+The brain-chat command reads existing planning artifacts such as:
+
+- AI brain plan
+- brain decision gate
+- human approval packet
+- tool execution gate
+
+It can answer planning-only questions like:
+
+- hello
+- status
+- what should we do next?
+- why this endpoint?
+- can we execute?
+
+The current implementation is deterministic and local. It does not call an LLM provider.
+
+This command is planning-only. It does not call LLM providers, send requests, execute shell commands, launch browsers, use Kali tools, mutate targets, bypass authorization, or execute tools.
+
 ### Tool Execution Gate
 
 Blackhole can create a planning-only execution gate from tool-request-manifest JSON:
