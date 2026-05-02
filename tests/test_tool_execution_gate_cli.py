@@ -16,7 +16,7 @@ from bugintel.core.tool_request_manifest import build_tool_request_manifest
 runner = CliRunner()
 
 
-def _write_tool_request_manifest(tmp_path, endpoints):
+def _write_manifest(tmp_path, endpoints):
     orchestration = create_orchestration_plan(target_name="demo", endpoints=endpoints)
     research_state = build_research_state_from_orchestration(orchestration.to_dict())
     ai_brain = build_ai_brain_plan(research_state.to_dict())
@@ -32,10 +32,7 @@ def _write_tool_request_manifest(tmp_path, endpoints):
 
 
 def test_tool_execution_gate_cli_writes_markdown_and_json(tmp_path):
-    manifest_file = _write_tool_request_manifest(
-        tmp_path,
-        ["/api/accounts/123/users/{id}/permissions"],
-    )
+    manifest_file = _write_manifest(tmp_path, ["/api/accounts/123/users/{id}/permissions"])
     output_file = tmp_path / "tool-execution-gate.md"
     json_output = tmp_path / "tool-execution-gate.json"
 
@@ -68,10 +65,7 @@ def test_tool_execution_gate_cli_writes_markdown_and_json(tmp_path):
 
 
 def test_tool_execution_gate_cli_prints_markdown_without_outputs(tmp_path):
-    manifest_file = _write_tool_request_manifest(
-        tmp_path,
-        ["/api/files/{id}/download"],
-    )
+    manifest_file = _write_manifest(tmp_path, ["/api/files/{id}/download"])
 
     result = runner.invoke(app, ["tool-execution-gate", str(manifest_file)])
 
@@ -81,9 +75,7 @@ def test_tool_execution_gate_cli_prints_markdown_without_outputs(tmp_path):
 
 
 def test_tool_execution_gate_cli_missing_file_exits_nonzero(tmp_path):
-    missing = tmp_path / "missing.json"
-
-    result = runner.invoke(app, ["tool-execution-gate", str(missing)])
+    result = runner.invoke(app, ["tool-execution-gate", str(tmp_path / "missing.json")])
 
     assert result.exit_code == 1
     assert "Tool request manifest JSON not found" in result.output
