@@ -48,6 +48,7 @@ from bugintel.core.brain_review import build_brain_review, render_brain_review_m
 from bugintel.core.brain_decision import build_brain_decision_gate, render_brain_decision_gate_markdown
 from bugintel.core.brain_approval import build_brain_approval_packet, render_brain_approval_packet_markdown
 from bugintel.core.tool_request_manifest import build_tool_request_manifest, render_tool_request_manifest_markdown
+from bugintel.core.tool_execution_gate import build_tool_execution_gate, render_tool_execution_gate_markdown
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -408,6 +409,88 @@ def endpoint_investigation_command(
 
 
 
+
+
+
+@app.command("tool-execution-gate")
+def tool_execution_gate_command(
+    tool_request_manifest_json: Path = typer.Argument(..., help="Path to tool-request-manifest JSON."),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown file to write the tool execution gate.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON file to write the structured tool execution gate.",
+    ),
+):
+    """Build a planning-only tool execution gate from tool-request-manifest JSON."""
+    if not tool_request_manifest_json.exists():
+        console.print(f"[bold red]Tool request manifest JSON not found:[/bold red] {tool_request_manifest_json}")
+        raise typer.Exit(code=1)
+
+    try:
+        data = json.loads(tool_request_manifest_json.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid tool request manifest JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print("[bold red]Tool request manifest JSON must be an object.[/bold red]")
+        raise typer.Exit(code=2)
+
+    gate = build_tool_execution_gate(data)
+    markdown = render_tool_execution_gate_markdown(gate)
+    gate_data = gate.to_dict()
+
+    summary = Table(title="Tool Execution Gate")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Target", gate.target_name)
+    summary.add_row("Focus endpoint", gate.focus_endpoint or "none")
+    summary.add_row("Gate decision", gate.gate_decision)
+    summary.add_row("Execution allowed", str(gate.execution_allowed))
+    summary.add_row("Gate items", str(len(gate.gate_items)))
+    summary.add_row("Provider execution", "disabled")
+    summary.add_row("Execution", "planning-only; no tool, curl, browser, network, Kali, shell, or LLM execution")
+    console.print(summary)
+
+    items_table = Table(title="Execution Gate Items")
+    items_table.add_column("#", justify="right")
+    items_table.add_column("Family")
+    items_table.add_column("Request")
+    items_table.add_column("Gate Status")
+
+    for index, item in enumerate(gate.gate_items, start=1):
+        items_table.add_row(
+            str(index),
+            item.tool_family,
+            item.request_name,
+            item.gate_status,
+        )
+
+    console.print(items_table)
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved tool execution gate Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(gate_data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved tool execution gate JSON:[/bold green] {json_output}")
+
+    if not output_file and not json_output:
+        console.print(markdown)
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only creates a planning-only execution gate. "
+        "It does not execute tools, send requests, run shell commands, launch browsers, call LLM providers, or use Kali tools."
+    )
 
 
 @app.command("tool-request-manifest")
