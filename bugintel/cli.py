@@ -50,6 +50,7 @@ from bugintel.core.brain_approval import build_brain_approval_packet, render_bra
 from bugintel.core.tool_request_manifest import build_tool_request_manifest, render_tool_request_manifest_markdown
 from bugintel.core.tool_execution_gate import build_tool_execution_gate, render_tool_execution_gate_markdown
 from bugintel.core.brain_chat import build_brain_chat_reply
+from bugintel.core.brain_chat_session import append_brain_chat_turn, load_brain_chat_session, save_brain_chat_session
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -422,6 +423,11 @@ def brain_chat_command(
         "--state-dir",
         help="Directory containing generated Blackhole brain artifacts.",
     ),
+    session: Path | None = typer.Option(
+        None,
+        "--session",
+        help="Optional session JSON file to append this brain-chat turn.",
+    ),
     json_output: Path | None = typer.Option(
         None,
         "--json-output",
@@ -434,6 +440,15 @@ def brain_chat_command(
 
     console.print("[bold green]Blackhole:[/bold green]")
     console.print(reply.answer)
+
+    if session:
+        current_session = load_brain_chat_session(session)
+        updated_session = append_brain_chat_turn(current_session, reply)
+        save_brain_chat_session(updated_session, session)
+        console.print(
+            f"[bold green]Saved brain chat session:[/bold green] {session} "
+            f"({len(updated_session.turns)} turn(s))"
+        )
 
     if json_output:
         json_output.parent.mkdir(parents=True, exist_ok=True)

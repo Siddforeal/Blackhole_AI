@@ -57,3 +57,27 @@ def test_brain_chat_cli_writes_json(tmp_path):
     assert data["target_name"] == "demo"
     assert data["planning_only"] is True
     assert "Current focus endpoint" in data["answer"]
+
+
+def test_brain_chat_cli_appends_session(tmp_path):
+    _write_state(tmp_path)
+    session_file = tmp_path / "session.json"
+
+    first = runner.invoke(
+        app,
+        ["brain-chat", "hello", "--state-dir", str(tmp_path), "--session", str(session_file)],
+    )
+    second = runner.invoke(
+        app,
+        ["brain-chat", "status", "--state-dir", str(tmp_path), "--session", str(session_file)],
+    )
+
+    assert first.exit_code == 0
+    assert second.exit_code == 0
+    assert "Saved brain chat session" in second.output
+
+    data = json.loads(session_file.read_text())
+    assert data["turn_count"] == 2
+    assert data["planning_only"] is True
+    assert data["turns"][0]["question"] == "hello"
+    assert data["turns"][1]["question"] == "status"
