@@ -742,3 +742,26 @@ Execution is always disabled in this layer.
 
 This remains planning-only. It does not call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, mutate targets, or bypass authorization.
 
+## Tool Execution Gate
+
+Blackhole can turn tool-request-manifest JSON into a planning-only execution gate.
+
+Example:
+
+    blackhole tool-execution-gate /tmp/tool-request-manifest.json --output-file ./tool-execution-gate.md
+
+The Tool Execution Gate is the final safety checkpoint before any future human-approved execution layer.
+
+It answers:
+
+- is execution allowed?
+- why is execution blocked?
+- what confirmations are required?
+- which tool requests are blocked?
+- is provider execution disabled?
+- is the workflow still planning-only?
+
+The gate fails closed by default. It keeps execution disabled until a future explicit human-approved execution layer exists.
+
+This remains planning-only. It does not call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, mutate targets, bypass authorization, or execute tools.
+

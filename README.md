@@ -121,6 +121,33 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Tool Execution Gate
+
+Blackhole can create a planning-only execution gate from tool-request-manifest JSON:
+
+    blackhole tool-execution-gate /tmp/tool-request-manifest.json --output-file ./tool-execution-gate.md
+
+It can also write structured JSON:
+
+    blackhole tool-execution-gate /tmp/tool-request-manifest.json --output-file ./tool-execution-gate.md --json-output ./tool-execution-gate.json
+
+The Tool Execution Gate is the final safety checkpoint before any future human-approved execution layer.
+
+It records:
+
+- target name
+- focus endpoint
+- gate decision
+- execution allowed flag
+- gate items
+- required confirmations
+- provider execution status
+- execution state
+
+The gate fails closed by default. Execution remains disabled until a future explicit human-approved execution layer exists.
+
+This command is planning-only. It does not call LLM providers, send requests, execute shell commands, launch browsers, use Kali tools, mutate targets, bypass authorization, or execute tools.
+
 ### Tool Request Manifest
 
 Blackhole can create a planning-only tool request manifest from brain-approval JSON:
