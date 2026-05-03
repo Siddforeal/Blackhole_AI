@@ -20,6 +20,7 @@ import typer
 import yaml
 from rich.console import Console
 from rich.table import Table
+from rich.markup import escape
 from bugintel.ui.intro import IntroConfig, show_intro
 
 from bugintel.agents.report_agent import save_evidence_report
@@ -42,6 +43,7 @@ from bugintel.core.evidence_workspace import build_evidence_workspace_manifest, 
 from bugintel.core.report_draft import build_report_draft, render_report_draft_markdown
 from bugintel.core.validation_runbook import build_validation_runbook, render_validation_runbook_markdown
 from bugintel.core.research_state import build_research_state_from_orchestration, render_research_state_markdown
+from bugintel.core.research_state_update import build_research_state_update_plan, render_research_state_update_plan_markdown
 from bugintel.core.ai_brain import build_ai_brain_plan, render_ai_brain_plan_markdown
 from bugintel.core.brain_prompt import build_brain_prompt_package, render_brain_prompt_package_markdown
 from bugintel.core.brain_review import build_brain_review, render_brain_review_markdown
@@ -1022,6 +1024,106 @@ def ai_brain_command(
     console.print(
         "[bold yellow]Safety:[/bold yellow] This command only creates a planning-only AI brain plan. "
         "It does not call LLM providers, send requests, execute shell commands, launch browsers, or use Kali tools."
+    )
+
+
+
+@app.command("research-state-update")
+def research_state_update_command(
+    research_state_json: Path = typer.Argument(..., help="Path to research-state JSON."),
+    endpoint: str = typer.Option(..., "--endpoint", help="Endpoint to update in the research state."),
+    validation_result: str = typer.Option(
+        ...,
+        "--validation-result",
+        help="Manual validation result: supported, rejected, needs-more-evidence, or deprioritize.",
+    ),
+    note: str = typer.Option("", "--note", help="Optional human validation note."),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown file to write the update plan.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON file to write the structured update plan.",
+    ),
+):
+    """Build a planning-only research-state update plan."""
+    if not research_state_json.exists():
+        console.print(f"[bold red]Research-state JSON not found:[/bold red] {research_state_json}")
+        raise typer.Exit(code=1)
+
+    try:
+        data = json.loads(research_state_json.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid research-state JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    if not isinstance(data, dict):
+        console.print("[bold red]Research-state JSON must be an object.[/bold red]")
+        raise typer.Exit(code=2)
+
+    try:
+        plan = build_research_state_update_plan(
+            data,
+            endpoint=endpoint,
+            validation_result=validation_result,
+            note=note,
+        )
+    except ValueError as exc:
+        console.print(f"[bold red]Invalid validation result:[/bold red] {exc}")
+        raise typer.Exit(code=2)
+
+    markdown = render_research_state_update_plan_markdown(plan)
+    plan_data = plan.to_dict()
+
+    summary = Table(title="Research State Update Plan")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Target", plan.target_name)
+    summary.add_row("Endpoint", plan.endpoint)
+    summary.add_row("Validation result", plan.validation_result)
+    summary.add_row("Actions", str(len(plan.actions)))
+    summary.add_row("Human review required", str(plan.required_human_review))
+    summary.add_row("Execution", "planning-only; no state mutation, tool execution, network, browser, Kali, shell, or LLM execution")
+    console.print(summary)
+
+    actions_table = Table(title="Proposed State Updates")
+    actions_table.add_column("#", justify="right")
+    actions_table.add_column("Path")
+    actions_table.add_column("Old")
+    actions_table.add_column("New")
+    actions_table.add_column("Reason")
+
+    for index, action in enumerate(plan.actions, start=1):
+        actions_table.add_row(
+            str(index),
+            escape(action.path),
+            escape(str(action.old_value)),
+            escape(str(action.new_value)),
+            escape(action.reason),
+        )
+
+    console.print(actions_table)
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved research-state update Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(plan_data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved research-state update JSON:[/bold green] {json_output}")
+
+    if not output_file and not json_output:
+        console.print(markdown)
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only proposes research-state updates. "
+        "It does not mutate files automatically or execute tools."
     )
 
 
