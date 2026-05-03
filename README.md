@@ -121,6 +121,32 @@ Current checks include:
     safety-bypass instructions
     credential theft or destructive-action instructions
 
+### Research State Update Planner
+
+Blackhole can create a planning-only update plan for research-state JSON after manual validation:
+
+    blackhole research-state-update /tmp/research-state.json --endpoint "/api/accounts/123/users/{id}/permissions" --validation-result supported --note "Validated with controlled accounts." --output-file ./research-state-update.md
+
+It can also write structured JSON:
+
+    blackhole research-state-update /tmp/research-state.json --endpoint "/api/accounts/123/users/{id}/permissions" --validation-result needs-more-evidence --json-output ./research-state-update.json
+
+Supported validation results:
+
+- supported
+- rejected
+- needs-more-evidence
+- deprioritize
+
+The update planner proposes changes for:
+
+- endpoint triage state
+- hypothesis status
+- artifact status
+- validation notes
+
+The command is planning-only. It does not mutate research-state files automatically, call LLM providers, send requests, execute shell commands, launch browsers, use Kali tools, or bypass authorization.
+
 ### Brain Chat Session Memory
 
 Blackhole can persist local brain-chat turns into a session JSON file:

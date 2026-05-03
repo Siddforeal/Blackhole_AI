@@ -814,3 +814,22 @@ It records each turn with:
 
 This remains local and deterministic. It does not call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, mutate targets, bypass authorization, or execute tools.
 
+## Research State Update Planner
+
+Blackhole can plan safe research-state updates after a manual validation result.
+
+Example:
+
+    blackhole research-state-update /tmp/research-state.json --endpoint "/api/accounts/123/users/{id}/permissions" --validation-result supported --note "Validated with controlled accounts." --output-file ./research-state-update.md
+
+The update planner does not apply changes automatically. It produces a reviewable plan that a human can inspect first.
+
+Validation results include:
+
+- supported: move the endpoint toward report-candidate and mark hypotheses supported
+- rejected: deprioritize the endpoint and mark hypotheses/artifacts rejected
+- needs-more-evidence: keep the endpoint open and plan additional evidence
+- deprioritize: explicitly move the endpoint out of the active validation queue
+
+This remains planning-only. It does not mutate files, call LLM providers, run curl, launch browsers, make network requests, execute shell commands, use Kali tools, or bypass authorization.
+
