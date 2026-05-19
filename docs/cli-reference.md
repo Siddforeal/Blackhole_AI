@@ -1272,3 +1272,43 @@ Safety properties:
 - no network interaction
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-case-dashboard
+
+Show a local case dashboard from a brain-chat session.
+
+Examples:
+
+    blackhole brain-chat-case-dashboard /tmp/case/brain-chat-session.json
+
+From inside a case directory:
+
+    cd /tmp/case
+    blackhole brain-chat-case-dashboard
+
+The dashboard includes:
+
+- target
+- focus endpoint
+- turn count
+- latest question
+- decision
+- approval status
+- execution gate
+- execution allowed flag
+- reportable flag
+- recommendation
+- next question
+- next evidence list
+- repeated questions
+
+Safety properties:
+
+- local session dashboard only
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no report submission
+- no automatic vulnerability confirmation

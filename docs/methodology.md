@@ -1734,3 +1734,9 @@ This helps track what was asked, what the latest focus endpoint is, which gates 
 After summarizing a brain-chat session, Blackhole can build a small planning packet for what to ask or review next.
 
 The plan keeps the workflow local and safe by listing evidence needs, blockers, and actions not to take yet.
+
+## Brain Chat Case Dashboards
+
+After a brain-chat session exists, Blackhole can show a compact local dashboard for the case.
+
+The dashboard combines session state, blocker state, next evidence, next suggested question, and safety metadata into one view.
