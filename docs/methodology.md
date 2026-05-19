@@ -1728,3 +1728,9 @@ This keeps local case chat history available without requiring a manual `--sessi
 After brain-chat turns are saved, Blackhole can summarize the session into a compact local review.
 
 This helps track what was asked, what the latest focus endpoint is, which gates are still blocking validation, and what question to ask next.
+
+## Brain Chat Session Next-Step Plans
+
+After summarizing a brain-chat session, Blackhole can build a small planning packet for what to ask or review next.
+
+The plan keeps the workflow local and safe by listing evidence needs, blockers, and actions not to take yet.

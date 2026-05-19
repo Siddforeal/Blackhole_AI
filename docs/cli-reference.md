@@ -1239,3 +1239,36 @@ Safety properties:
 - no network interaction
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-session-next-step
+
+Build a planning-only next-step packet from a local brain-chat session.
+
+Examples:
+
+    blackhole brain-chat-session-next-step /tmp/case/brain-chat-session.json
+
+From inside a case directory:
+
+    cd /tmp/case
+    blackhole brain-chat-session-next-step
+
+The next-step plan includes:
+
+- next safe question to ask
+- current focus endpoint
+- current blocker
+- next evidence to collect
+- what not to do yet
+- safety metadata
+
+Safety properties:
+
+- local session planning only
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no report submission
+- no automatic vulnerability confirmation

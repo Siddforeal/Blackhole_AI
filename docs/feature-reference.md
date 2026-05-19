@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.76.0
+Current version: 0.77.0
 
 ## Research Goal
 
@@ -1278,5 +1278,22 @@ or, from inside a case directory:
     ./brain-chat-session.json
 
 The summary reports total turns, latest question, latest focus endpoint, latest decision, approval status, execution gate, repeated questions, and a suggested next question.
+
+This feature remains deterministic and local-only. It does not add provider calls, execution, network interaction, report generation, or vulnerability confirmation.
+
+## v0.77.0 - Brain Chat Session Next-Step Planner
+
+The brain-chat session next-step planner turns saved local chat history into an actionable planning packet.
+
+It reads a brain-chat session and produces:
+
+    next safe question
+    current focus endpoint
+    current blocker
+    next evidence list
+    do-not-do-yet list
+    safety metadata
+
+This makes saved chat history actionable instead of only descriptive.
 
 This feature remains deterministic and local-only. It does not add provider calls, execution, network interaction, report generation, or vulnerability confirmation.
