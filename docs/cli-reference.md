@@ -1312,3 +1312,28 @@ Safety properties:
 - no network interaction
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-case-dashboard-review-packet
+
+Build a planning-only review packet from a brain-chat case dashboard.
+
+The review packet blocks reportability from dashboard state alone and separates:
+
+- current focus endpoint
+- execution/reportability status
+- blockers
+- required evidence
+- safe next action
+- rejected actions
+- safety metadata
+
+Safety properties:
+
+- local dashboard review only
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no report submission
+- no automatic vulnerability confirmation

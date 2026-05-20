@@ -1740,3 +1740,9 @@ The plan keeps the workflow local and safe by listing evidence needs, blockers, 
 After a brain-chat session exists, Blackhole can show a compact local dashboard for the case.
 
 The dashboard combines session state, blocker state, next evidence, next suggested question, and safety metadata into one view.
+
+## Brain Chat Case Dashboard Review Packets
+
+After a brain-chat case dashboard is available, Blackhole can build a review packet that blocks overclaiming.
+
+The packet keeps dashboard state as planning context only and requires local evidence, human approval, and safe validation before report writing.
