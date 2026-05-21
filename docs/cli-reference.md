@@ -1337,3 +1337,32 @@ Safety properties:
 - no network interaction
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat smart next-question rotation
+
+Brain-chat session summaries now rotate suggested next questions to avoid repeating the same prompt.
+
+When questions have already been repeated, Blackhole rotates through safer next questions such as:
+
+    What approvals are missing?
+    What is blocking validation?
+    What evidence do we need?
+    Can we execute?
+    Is this reportable?
+    What should I not do yet?
+
+This improves:
+
+- brain-chat-session-summary
+- brain-chat-session-next-step
+- brain-chat-case-dashboard
+
+Safety properties remain unchanged:
+
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no report submission
+- no automatic vulnerability confirmation

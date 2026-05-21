@@ -1746,3 +1746,9 @@ The dashboard combines session state, blocker state, next evidence, next suggest
 After a brain-chat case dashboard is available, Blackhole can build a review packet that blocks overclaiming.
 
 The packet keeps dashboard state as planning context only and requires local evidence, human approval, and safe validation before report writing.
+
+## Brain Chat Smart Next Question Rotation
+
+Blackhole rotates suggested next questions when a user repeatedly asks the same planning prompts.
+
+This keeps the local assistant loop more useful while preserving deterministic, local-only behavior.

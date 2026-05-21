@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.79.0
+Current version: 0.80.0
 
 ## Research Goal
 
@@ -1337,5 +1337,24 @@ The packet includes:
     safe next action
     rejected actions
     safety metadata
+
+This feature remains deterministic and local-only. It does not add provider calls, execution, network interaction, report generation, or vulnerability confirmation.
+
+## v0.80.0 - Brain Chat Smart Next Question Rotation
+
+Brain-chat summaries and dashboards now suggest less repetitive next questions.
+
+Before this release, repeated questions could cause the suggested next question to stay stuck on:
+
+    What is blocking validation?
+
+The new deterministic rotation prefers useful unasked or less-repeated questions:
+
+    What approvals are missing?
+    What is blocking validation?
+    What evidence do we need?
+    Can we execute?
+    Is this reportable?
+    What should I not do yet?
 
 This feature remains deterministic and local-only. It does not add provider calls, execution, network interaction, report generation, or vulnerability confirmation.
