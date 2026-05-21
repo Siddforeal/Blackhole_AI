@@ -89,7 +89,7 @@ def test_summarize_brain_chat_session_reports_latest_and_repeated_questions():
     assert data["latest_execution_gate"] == "blocked-manifest-execution-disabled"
     assert data["latest_execution_allowed"] is False
     assert data["repeated_questions"] == ["What should I test first?"]
-    assert data["suggested_next_question"] == "What is blocking validation?"
+    assert data["suggested_next_question"] == "What approvals are missing?"
 
 
 def test_render_brain_chat_session_summary_includes_summary_section():
@@ -102,3 +102,24 @@ def test_render_brain_chat_session_summary_includes_summary_section():
     assert "Latest question: `What evidence do we need?`" in summary
     assert "Suggested next question:" in summary
     assert "## Repeated Questions" in summary
+
+
+def test_summarize_brain_chat_session_rotates_past_repeated_questions():
+    from bugintel.core.brain_chat_session import summarize_brain_chat_session
+
+    session = load_brain_chat_session.__globals__["BrainChatSession"]()
+    for question in (
+        "What should I test first?",
+        "What should I test first?",
+        "What approvals are missing?",
+        "What approvals are missing?",
+        "What is blocking validation?",
+        "What is blocking validation?",
+        "What evidence do we need?",
+        "What evidence do we need?",
+    ):
+        session = append_brain_chat_turn(session, _reply(question))
+
+    summary = summarize_brain_chat_session(session)
+
+    assert summary.suggested_next_question == "Can we execute?"

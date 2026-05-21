@@ -165,13 +165,41 @@ def _suggest_next_question(latest: BrainChatTurn | None, repeated_questions: lis
     if latest.execution_allowed:
         return "What evidence should I collect next?"
 
+    repeated_normalized = {_normalize_question(question) for question in repeated_questions}
+
     if latest.decision != "blocked-pending-scope-and-controls":
-        return "What evidence do we need?"
+        return _first_unrepeated_question(
+            repeated_normalized,
+            [
+                "What evidence do we need?",
+                "Is this reportable?",
+                "What should I not do yet?",
+            ],
+        )
 
-    if repeated_questions:
-        return "What is blocking validation?"
+    return _first_unrepeated_question(
+        repeated_normalized,
+        [
+            "What approvals are missing?",
+            "What is blocking validation?",
+            "What evidence do we need?",
+            "Can we execute?",
+            "Is this reportable?",
+            "What should I not do yet?",
+        ],
+    )
 
-    return "What approvals are missing?"
+
+def _first_unrepeated_question(repeated_normalized: set[str], candidates: list[str]) -> str:
+    for candidate in candidates:
+        if _normalize_question(candidate) not in repeated_normalized:
+            return candidate
+
+    return candidates[-1]
+
+
+def _normalize_question(question: str) -> str:
+    return " ".join(question.lower().replace("?", "").split())
 
 
 def render_brain_chat_session_summary(session: BrainChatSession) -> str:
