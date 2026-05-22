@@ -203,34 +203,11 @@ call providers, execute tools, or confirm a vulnerability.
 
 ---
 
-## Latest Release Line
+## Release History
 
-| Version | Focus |
-|---|---|
-| `v0.80.0` | Brain Chat Smart Next Question Rotation |
-| `v0.79.0` | Brain Chat Case Dashboard Review Packet |
-| `v0.78.0` | Brain Chat Case Dashboard |
-| `v0.77.0` | Brain Chat Session Next-Step Planner |
-| `v0.76.0` | Brain Chat Session Summary Command |
-| `v0.75.0` | Brain Chat Case Session Auto-Save |
-| `v0.74.0` | Brain Chat Case Directory Discovery |
-| `v0.73.0` | Brain Chat Demo Flow |
-| `v0.72.0` | Brain State Export Builder |
-| `v0.71.0` | Brain Chat Question Router |
-| `v0.70.0` | Human Report Skeleton Review Gate |
-| `v0.69.0` | Human Report Skeleton Packet |
-| `v0.68.0` | Finding Draft Packet Review Gate |
-| `v0.67.0` | Report Readiness Finding Draft Packet |
-| `v0.66.0` | Export Bundle Report Readiness Review |
-| `v0.65.0` | Export Bundle Review Gate |
-| `v0.64.0` | Reviewed Apply Packet Export Bundle |
-| `v0.63.0` | Case Chat Reviewed Apply Packet |
-| `v0.62.0` | Case Chat Apply Preview Reviewer |
-| `v0.61.0` | Case Chat Action Plan Apply Preview |
-| `v0.60.0` | Case Chat Suggestion Action Plan |
-| `v0.59.0` | Provider Suggestion Review Bridge |
+The current release is `v0.80.0`.
 
----
+Full release notes and historical versions are available on the [GitHub releases page](https://github.com/Siddforeal/Blackhole_AI/releases).
 
 ## Ethical Use
 
