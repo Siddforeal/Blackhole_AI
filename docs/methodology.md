@@ -1758,3 +1758,9 @@ This keeps the local assistant loop more useful while preserving deterministic, 
 After a brain-chat case dashboard exists, Blackhole can build a local review packet directly from the command line.
 
 This keeps the dashboard review workflow practical while preserving local-only planning and reportability guardrails.
+
+## Brain Chat Evidence Checklists
+
+After a dashboard review packet identifies required evidence, Blackhole can turn those requirements into a local checklist.
+
+This helps track which evidence is missing, collected, blocked, or still needs review before validation or report readiness.

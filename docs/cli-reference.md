@@ -1366,3 +1366,47 @@ Safety properties remain unchanged:
 - no network interaction
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-evidence-checklist
+
+Build a local evidence checklist from a brain-chat dashboard review packet.
+
+Examples:
+
+    blackhole brain-chat-evidence-checklist /tmp/case/brain-chat-session.json
+
+From inside a case directory:
+
+    cd /tmp/case
+    blackhole brain-chat-evidence-checklist
+
+The checklist turns required evidence into tracked checklist items with statuses:
+
+    missing
+    collected
+    review-needed
+    blocked
+
+The checklist includes:
+
+- target
+- focus endpoint
+- review status
+- reportable flag
+- execution allowed flag
+- evidence item counts
+- checklist items
+- blockers
+- safety metadata
+
+Safety properties:
+
+- local checklist only
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation

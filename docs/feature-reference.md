@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.81.0
+Current version: 0.82.0
 
 ## Research Goal
 
@@ -1376,3 +1376,18 @@ The command can read a local brain-chat session and produce:
 This closes the workflow gap between the dashboard and the review packet.
 
 This feature remains deterministic and local-only. It does not add provider calls, execution, network interaction, report generation, or vulnerability confirmation.
+
+## v0.82.0 - Brain Chat Evidence Checklist Tracker
+
+The brain-chat evidence checklist tracker turns review-packet required evidence into a local checklist.
+
+It tracks evidence items with deterministic statuses:
+
+    missing
+    collected
+    review-needed
+    blocked
+
+The checklist reports total, missing, collected, review-needed, and blocked evidence counts.
+
+This feature remains deterministic and local-only. It does not collect evidence, call providers, execute tools, send requests, generate reports, or confirm vulnerabilities.
