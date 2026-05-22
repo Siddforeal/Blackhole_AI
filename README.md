@@ -4,14 +4,11 @@
 [![Latest release](https://img.shields.io/github/v/release/Siddforeal/Blackhole_AI?label=release)](https://github.com/Siddforeal/Blackhole_AI/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Blackhole AI Workbench** is a human-in-the-loop security research workbench for authorized
-vulnerability research, bug bounty workflows, endpoint intelligence, evidence planning, and
-report preparation.
+**Blackhole AI Workbench** is a local-first, human-in-the-loop security research workbench for authorized vulnerability research, bug bounty investigation, endpoint intelligence, evidence planning, and report-readiness review.
 
-It is **not a scanner** and it is **not an auto-exploitation tool**.
+It helps researchers turn fragmented notes, endpoints, hypotheses, evidence, and review decisions into a structured local case workflow.
 
-Blackhole is built around safe planning, local evidence, explicit human approval, and
-conservative report-readiness gates.
+> Blackhole is **not** a scanner, auto-exploitation framework, or autonomous hacking agent.
 
 **Current release:** `v0.80.0`
 
@@ -19,27 +16,41 @@ conservative report-readiness gates.
 
 ---
 
-## Why Blackhole Exists
+## What Blackhole Does
 
-Security research produces fragmented material: endpoints, HAR files, screenshots, API
-responses, notes, hypotheses, validation steps, evidence bundles, and report-readiness
-decisions.
-
-Blackhole turns that material into a structured workflow:
+Blackhole organizes security research into safe, reviewable local artifacts:
 
 ```text
-inputs
-→ endpoint intelligence
-→ research state / case memory
+endpoints / notes / evidence
+→ local research state
 → deterministic planning
-→ provider-gated review
-→ evidence/action review gates
-→ report-readiness review
-→ human-written report support
+→ case chat
+→ session memory
+→ dashboard
+→ review packet
+→ report-readiness support
 ```
 
-The goal is to help a researcher think clearly, prioritize high-signal paths, preserve evidence,
-avoid overclaims, and produce stronger human-reviewed reports.
+It helps answer practical workflow questions:
+
+- Which endpoint should I focus on first?
+- What is blocking validation?
+- What evidence is missing?
+- Is this reportable yet?
+- What should I not do yet?
+
+---
+
+## Core Capabilities
+
+| Area | What Blackhole Provides |
+|---|---|
+| Endpoint intelligence | Endpoint grouping, prioritization, investigation profiles, and validation planning |
+| Case memory | Local research state, saved chat sessions, summaries, dashboards, and review packets |
+| Brain chat | Deterministic local answers about focus, blockers, approvals, evidence, safety, and reportability |
+| Evidence planning | Required evidence lists, redaction needs, controlled-object matrices, and blocker tracking |
+| Review gates | Provider review, apply-preview review, export-bundle review, dashboard review, and report-readiness checks |
+| Report support | Human-reviewed skeletons, finding draft packets, and report-readiness packets |
 
 ---
 
