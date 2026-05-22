@@ -96,6 +96,7 @@ from bugintel.core.brain_chat_session import append_brain_chat_turn, load_brain_
 from bugintel.core.brain_chat_session_next_step import build_brain_chat_session_next_step_plan
 from bugintel.core.brain_chat_case_dashboard import build_brain_chat_case_dashboard
 from bugintel.core.brain_chat_case_dashboard_review_packet import build_brain_chat_case_dashboard_review_packet
+from bugintel.core.brain_chat_evidence_checklist import build_brain_chat_evidence_checklist
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -620,6 +621,70 @@ def _resolve_brain_chat_session_path(
         return cwd / "brain-chat-session.json"
 
     return None
+
+
+@app.command("brain-chat-evidence-checklist")
+def brain_chat_evidence_checklist_command(
+    session_file: Path | None = typer.Argument(None, help="Path to brain-chat-session JSON. Defaults to ./brain-chat-session.json."),
+    output_file: Path | None = typer.Option(None, "--output-file", "--output", help="Optional Markdown output path."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional JSON output path."),
+):
+    """Build a local evidence checklist from a brain-chat dashboard review packet."""
+    resolved_session_file = session_file or Path("brain-chat-session.json")
+
+    if not resolved_session_file.exists():
+        console.print(f"[bold red]Brain chat session JSON not found:[/bold red] {resolved_session_file}")
+        raise typer.Exit(code=1)
+
+    session = load_brain_chat_session(resolved_session_file)
+    checklist = build_brain_chat_evidence_checklist(session)
+    markdown = checklist.to_markdown()
+    data = checklist.to_dict()
+
+    table = Table(title="Brain Chat Evidence Checklist")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Session", str(resolved_session_file))
+    table.add_row("Target", checklist.target_name)
+    table.add_row("Focus endpoint", checklist.focus_endpoint or "none")
+    table.add_row("Review status", checklist.review_status)
+    table.add_row("Reportable", str(checklist.reportable))
+    table.add_row("Execution allowed", str(checklist.execution_allowed))
+    table.add_row("Complete", str(checklist.complete))
+    table.add_row("Total items", str(len(checklist.items)))
+    table.add_row("Missing", str(checklist.missing_count))
+    table.add_row("Collected", str(checklist.collected_count))
+    table.add_row("Review needed", str(checklist.review_needed_count))
+    table.add_row("Blocked", str(checklist.blocked_count))
+    table.add_row("Tool execution", "false")
+    table.add_row("Evidence collection", "false")
+    table.add_row("Vulnerability confirmation", "false")
+    console.print(table)
+
+    if checklist.items:
+        console.print("[bold yellow]Evidence checklist:[/bold yellow]")
+        for index, item in enumerate(checklist.items, start=1):
+            console.print(f"{index}. \\[{item.status}] {item.label}")
+
+    if checklist.blockers:
+        console.print("[bold yellow]Blockers:[/bold yellow]")
+        for item in checklist.blockers:
+            console.print(f"- {item}")
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved brain chat evidence checklist Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved brain chat evidence checklist JSON:[/bold green] {json_output}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only builds a local evidence checklist. "
+        "It does not collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities."
+    )
 
 
 @app.command("brain-chat-case-dashboard-review-packet")
