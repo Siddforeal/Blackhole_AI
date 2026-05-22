@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.80.0
+Current version: 0.81.0
 
 ## Research Goal
 
@@ -1356,5 +1356,23 @@ The new deterministic rotation prefers useful unasked or less-repeated questions
     Can we execute?
     Is this reportable?
     What should I not do yet?
+
+This feature remains deterministic and local-only. It does not add provider calls, execution, network interaction, report generation, or vulnerability confirmation.
+
+## v0.81.0 - Brain Chat Case Dashboard Review Packet CLI
+
+The brain-chat case dashboard review packet CLI exposes the v0.79 review-packet core feature as a user-facing command.
+
+The command can read a local brain-chat session and produce:
+
+    blockers
+    required evidence
+    safe next action
+    rejected actions
+    Markdown output
+    JSON output
+    safety metadata
+
+This closes the workflow gap between the dashboard and the review packet.
 
 This feature remains deterministic and local-only. It does not add provider calls, execution, network interaction, report generation, or vulnerability confirmation.

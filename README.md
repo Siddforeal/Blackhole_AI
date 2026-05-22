@@ -10,7 +10,7 @@ It helps researchers turn fragmented notes, endpoints, hypotheses, evidence, and
 
 > Blackhole is **not** a scanner, auto-exploitation framework, or autonomous hacking agent.
 
-**Current release:** `v0.80.0`
+**Current release:** `v0.81.0`
 
 **Project status:** active research prototype
 
@@ -205,7 +205,7 @@ call providers, execute tools, or confirm a vulnerability.
 
 ## Release History
 
-The current release is `v0.80.0`.
+The current release is `v0.81.0`.
 
 Full release notes and historical versions are available on the [GitHub releases page](https://github.com/Siddforeal/Blackhole_AI/releases).
 

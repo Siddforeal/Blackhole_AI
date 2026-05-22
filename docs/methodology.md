@@ -1752,3 +1752,9 @@ The packet keeps dashboard state as planning context only and requires local evi
 Blackhole rotates suggested next questions when a user repeatedly asks the same planning prompts.
 
 This keeps the local assistant loop more useful while preserving deterministic, local-only behavior.
+
+## Brain Chat Dashboard Review Packet CLI
+
+After a brain-chat case dashboard exists, Blackhole can build a local review packet directly from the command line.
+
+This keeps the dashboard review workflow practical while preserving local-only planning and reportability guardrails.
