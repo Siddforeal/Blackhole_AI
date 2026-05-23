@@ -1782,3 +1782,9 @@ The gate separates missing evidence, blocked evidence, evidence needing review, 
 Blackhole can turn a ready evidence checklist review gate into a local human approval-request packet.
 
 The packet helps separate readiness for approval from actual approval. It never grants approval or executes validation steps.
+
+## Evidence Approval Decision Imports
+
+Blackhole can import a local reviewer decision for an approval request packet.
+
+The decision import records approval metadata only. It does not execute validation steps and does not turn a blocked request into an effective approval.

@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.85.0
+Current version: 0.86.0
 
 ## Research Goal
 
@@ -1437,3 +1437,17 @@ It becomes ready only when the gate is:
 The approval request reports blockers, required human checks, allowed actions after approval, rejected actions without approval, and safety metadata.
 
 This feature remains deterministic and local-only. It does not grant approval, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v0.86.0 - Evidence Approval Decision Importer
+
+The evidence approval decision importer records a local human reviewer decision for an approval request packet.
+
+Supported decisions:
+
+    approved
+    rejected
+    changes-requested
+
+An approved decision becomes effective only when the approval request is ready for human approval and the underlying review gate is ready for validation approval.
+
+This feature remains deterministic and local-only. It does not grant side-effectful approval, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.

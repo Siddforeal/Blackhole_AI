@@ -1554,3 +1554,53 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-evidence-approval-decision-import
+
+Import a local human reviewer decision for an evidence approval request.
+
+Examples:
+
+    blackhole brain-chat-evidence-approval-decision-import /tmp/case/approval-decision.json
+
+With a local checklist status file:
+
+    blackhole brain-chat-evidence-approval-decision-import /tmp/case/approval-decision.json \
+      --status-file /tmp/case/evidence-status.json
+
+With an explicit session:
+
+    blackhole brain-chat-evidence-approval-decision-import /tmp/case/approval-decision.json \
+      --status-file /tmp/case/evidence-status.json \
+      --session-file /tmp/case/brain-chat-session.json
+
+Decision statuses:
+
+    approved
+    rejected
+    changes-requested
+
+The decision import reports:
+
+- decision
+- reviewer
+- reason
+- approval request status
+- gate status
+- effective approval granted
+- allowed next steps
+- rejected next steps
+- safety metadata
+
+Safety properties:
+
+- local decision import only
+- no side-effectful approval is granted
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation
