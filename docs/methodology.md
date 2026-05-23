@@ -1764,3 +1764,9 @@ This keeps the dashboard review workflow practical while preserving local-only p
 After a dashboard review packet identifies required evidence, Blackhole can turn those requirements into a local checklist.
 
 This helps track which evidence is missing, collected, blocked, or still needs review before validation or report readiness.
+
+## Evidence Checklist Status Imports
+
+Blackhole can import local checklist status metadata from a JSON file.
+
+This lets a researcher update checklist state without editing generated checklist output directly.

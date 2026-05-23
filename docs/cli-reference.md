@@ -1410,3 +1410,51 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-evidence-checklist-import-status
+
+Import local evidence checklist status metadata from a JSON file.
+
+Examples:
+
+    blackhole brain-chat-evidence-checklist-import-status /tmp/case/evidence-status.json
+
+With an explicit session:
+
+    blackhole brain-chat-evidence-checklist-import-status /tmp/case/evidence-status.json \
+      --session-file /tmp/case/brain-chat-session.json
+
+Example status JSON:
+
+    {
+      "items": [
+        {
+          "label": "Authorization decision diff",
+          "status": "review-needed",
+          "notes": "Needs reviewer confirmation."
+        },
+        {
+          "label": "Baseline request/response sample",
+          "status": "collected"
+        }
+      ]
+    }
+
+Supported statuses:
+
+    missing
+    collected
+    review-needed
+    blocked
+
+Safety properties:
+
+- local status import only
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation
