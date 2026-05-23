@@ -98,6 +98,7 @@ from bugintel.core.brain_chat_case_dashboard import build_brain_chat_case_dashbo
 from bugintel.core.brain_chat_case_dashboard_review_packet import build_brain_chat_case_dashboard_review_packet
 from bugintel.core.brain_chat_evidence_checklist import build_brain_chat_evidence_checklist
 from bugintel.core.brain_chat_evidence_checklist_status_importer import import_evidence_checklist_status_file
+from bugintel.core.brain_chat_evidence_checklist_review_gate import build_evidence_checklist_review_gate
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -622,6 +623,93 @@ def _resolve_brain_chat_session_path(
         return cwd / "brain-chat-session.json"
 
     return None
+
+
+@app.command("brain-chat-evidence-checklist-review-gate")
+def brain_chat_evidence_checklist_review_gate_command(
+    status_file: Path | None = typer.Argument(None, help="Optional local JSON file containing evidence checklist statuses."),
+    session_file: Path | None = typer.Option(None, "--session-file", "--session", help="Path to brain-chat-session JSON. Defaults to ./brain-chat-session.json."),
+    output_file: Path | None = typer.Option(None, "--output-file", "--output", help="Optional Markdown output path."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional JSON output path."),
+):
+    """Review a local evidence checklist and decide validation-approval readiness."""
+    resolved_session_file = session_file or Path("brain-chat-session.json")
+
+    if not resolved_session_file.exists():
+        console.print(f"[bold red]Brain chat session JSON not found:[/bold red] {resolved_session_file}")
+        raise typer.Exit(code=1)
+
+    session = load_brain_chat_session(resolved_session_file)
+
+    try:
+        if status_file is not None:
+            if not status_file.exists():
+                console.print(f"[bold red]Evidence checklist status JSON not found:[/bold red] {status_file}")
+                raise typer.Exit(code=1)
+            import_result = import_evidence_checklist_status_file(session, status_file)
+            checklist = import_result.checklist
+        else:
+            checklist = build_brain_chat_evidence_checklist(session)
+
+        gate = build_evidence_checklist_review_gate(checklist)
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=1) from exc
+
+    markdown = gate.to_markdown()
+    data = gate.to_dict()
+
+    table = Table(title="Brain Chat Evidence Checklist Review Gate")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Session", str(resolved_session_file))
+    table.add_row("Status file", str(status_file) if status_file else "none")
+    table.add_row("Target", gate.target_name)
+    table.add_row("Focus endpoint", gate.focus_endpoint or "none")
+    table.add_row("Gate status", gate.gate_status)
+    table.add_row("Recommendation", gate.recommendation)
+    table.add_row("Checklist complete", str(gate.checklist_complete))
+    table.add_row("Validation approval ready", str(gate.validation_approval_ready))
+    table.add_row("Total items", str(gate.total_items))
+    table.add_row("Missing", str(gate.missing_count))
+    table.add_row("Collected", str(gate.collected_count))
+    table.add_row("Review needed", str(gate.review_needed_count))
+    table.add_row("Blocked", str(gate.blocked_count))
+    table.add_row("Tool execution", "false")
+    table.add_row("Evidence collection", "false")
+    table.add_row("Report submission", "false")
+    table.add_row("Vulnerability confirmation", "false")
+    console.print(table)
+
+    if gate.blocking_reasons:
+        console.print("[bold yellow]Blocking reasons:[/bold yellow]")
+        for item in gate.blocking_reasons:
+            console.print(f"- {item}")
+
+    if gate.review_reasons:
+        console.print("[bold yellow]Review reasons:[/bold yellow]")
+        for item in gate.review_reasons:
+            console.print(f"- {item}")
+
+    if gate.approval_requirements:
+        console.print("[bold yellow]Approval requirements:[/bold yellow]")
+        for item in gate.approval_requirements:
+            console.print(f"- {item}")
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved evidence checklist review gate Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved evidence checklist review gate JSON:[/bold green] {json_output}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only reviews local checklist readiness. "
+        "It does not collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities."
+    )
 
 
 @app.command("brain-chat-evidence-checklist-import-status")
