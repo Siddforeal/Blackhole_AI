@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.84.0
+Current version: 0.85.0
 
 ## Research Goal
 
@@ -1420,3 +1420,20 @@ It can decide whether the checklist is:
 The review gate reports blockers, review reasons, approval requirements, evidence counts, and safety metadata.
 
 This feature remains deterministic and local-only. It does not collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v0.85.0 - Evidence Checklist Approval Request Packet
+
+The evidence checklist approval request packet turns review-gate state into a local human approval request.
+
+It stays blocked when the checklist review gate is:
+
+    blocked
+    needs-review
+
+It becomes ready only when the gate is:
+
+    ready-for-validation-approval
+
+The approval request reports blockers, required human checks, allowed actions after approval, rejected actions without approval, and safety metadata.
+
+This feature remains deterministic and local-only. It does not grant approval, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.

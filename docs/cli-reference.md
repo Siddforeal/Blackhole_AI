@@ -1507,3 +1507,50 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-evidence-approval-request
+
+Build a local human approval-request packet from an evidence checklist review gate.
+
+Examples:
+
+    blackhole brain-chat-evidence-approval-request
+
+With a local status file:
+
+    blackhole brain-chat-evidence-approval-request /tmp/case/evidence-status.json
+
+With an explicit session:
+
+    blackhole brain-chat-evidence-approval-request /tmp/case/evidence-status.json \
+      --session-file /tmp/case/brain-chat-session.json
+
+Approval statuses:
+
+    blocked-pending-review-gate
+    ready-for-human-approval
+
+The approval request reports:
+
+- approval status
+- gate status
+- validation approval readiness
+- requested action
+- blockers
+- required human checks
+- allowed actions after approval
+- rejected actions without approval
+- safety metadata
+
+Safety properties:
+
+- local approval request only
+- no approval is granted
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation

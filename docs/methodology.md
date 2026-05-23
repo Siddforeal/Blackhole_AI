@@ -1776,3 +1776,9 @@ This lets a researcher update checklist state without editing generated checklis
 Blackhole can review local checklist readiness before any validation step.
 
 The gate separates missing evidence, blocked evidence, evidence needing review, and checklist states that are ready for human validation approval.
+
+## Evidence Checklist Approval Requests
+
+Blackhole can turn a ready evidence checklist review gate into a local human approval-request packet.
+
+The packet helps separate readiness for approval from actual approval. It never grants approval or executes validation steps.
