@@ -1458,3 +1458,52 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-evidence-checklist-review-gate
+
+Review a local evidence checklist and decide validation-approval readiness.
+
+Examples:
+
+    blackhole brain-chat-evidence-checklist-review-gate
+
+With a local status file:
+
+    blackhole brain-chat-evidence-checklist-review-gate /tmp/case/evidence-status.json
+
+With an explicit session:
+
+    blackhole brain-chat-evidence-checklist-review-gate /tmp/case/evidence-status.json \
+      --session-file /tmp/case/brain-chat-session.json
+
+Gate statuses:
+
+    blocked
+    needs-review
+    ready-for-validation-approval
+
+The review gate reports:
+
+- checklist completeness
+- validation approval readiness
+- total evidence items
+- missing count
+- collected count
+- review-needed count
+- blocked count
+- blocking reasons
+- review reasons
+- approval requirements
+- safety metadata
+
+Safety properties:
+
+- local checklist review only
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation

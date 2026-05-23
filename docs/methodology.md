@@ -1770,3 +1770,9 @@ This helps track which evidence is missing, collected, blocked, or still needs r
 Blackhole can import local checklist status metadata from a JSON file.
 
 This lets a researcher update checklist state without editing generated checklist output directly.
+
+## Evidence Checklist Review Gates
+
+Blackhole can review local checklist readiness before any validation step.
+
+The gate separates missing evidence, blocked evidence, evidence needing review, and checklist states that are ready for human validation approval.

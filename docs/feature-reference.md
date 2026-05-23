@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.83.0
+Current version: 0.84.0
 
 ## Research Goal
 
@@ -1406,3 +1406,17 @@ It supports deterministic evidence statuses:
 The importer can update statuses and notes, report unmatched labels, and produce an updated local checklist.
 
 This feature remains deterministic and local-only. It does not collect evidence, call providers, execute tools, send requests, generate reports, or confirm vulnerabilities.
+
+## v0.84.0 - Evidence Checklist Review Gate
+
+The evidence checklist review gate reviews local checklist readiness and returns a deterministic gate status.
+
+It can decide whether the checklist is:
+
+    blocked
+    needs-review
+    ready-for-validation-approval
+
+The review gate reports blockers, review reasons, approval requirements, evidence counts, and safety metadata.
+
+This feature remains deterministic and local-only. It does not collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.
