@@ -1604,3 +1604,51 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-evidence-approved-validation-plan
+
+Build a local validation-plan packet from an effective approval decision.
+
+Examples:
+
+    blackhole brain-chat-evidence-approved-validation-plan /tmp/case/approval-decision.json
+
+With a local checklist status file:
+
+    blackhole brain-chat-evidence-approved-validation-plan /tmp/case/approval-decision.json \
+      --status-file /tmp/case/evidence-status.json
+
+With an explicit session:
+
+    blackhole brain-chat-evidence-approved-validation-plan /tmp/case/approval-decision.json \
+      --status-file /tmp/case/evidence-status.json \
+      --session-file /tmp/case/brain-chat-session.json
+
+Plan statuses:
+
+    blocked-pending-effective-approval
+    ready-for-manual-validation-planning
+
+The validation plan reports:
+
+- plan status
+- decision
+- effective approval status
+- validation allowed flag
+- planned validation steps
+- required runtime guards
+- rejected actions
+- safety metadata
+
+Safety properties:
+
+- local validation planning only
+- no validation execution
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation

@@ -1788,3 +1788,9 @@ The packet helps separate readiness for approval from actual approval. It never 
 Blackhole can import a local reviewer decision for an approval request packet.
 
 The decision import records approval metadata only. It does not execute validation steps and does not turn a blocked request into an effective approval.
+
+## Evidence Approved Validation Plans
+
+Blackhole can turn an effective approval decision into a local validation-plan packet.
+
+The plan remains planning-only. It is not an execution gate and does not collect evidence or interact with targets.

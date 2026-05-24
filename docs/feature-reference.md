@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.86.0
+Current version: 0.87.0
 
 ## Research Goal
 
@@ -1451,3 +1451,19 @@ Supported decisions:
 An approved decision becomes effective only when the approval request is ready for human approval and the underlying review gate is ready for validation approval.
 
 This feature remains deterministic and local-only. It does not grant side-effectful approval, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v0.87.0 - Evidence Approved Validation Plan Builder
+
+The evidence approved validation plan builder creates a local validation-plan packet from an approval decision.
+
+A plan is ready only when effective approval is granted.
+
+If approval is blocked or premature, the plan remains:
+
+    blocked-pending-effective-approval
+
+If effective approval is granted, the plan becomes:
+
+    ready-for-manual-validation-planning
+
+This feature remains deterministic and local-only. It does not execute validation, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.
