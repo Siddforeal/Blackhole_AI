@@ -102,6 +102,7 @@ from bugintel.core.brain_chat_evidence_checklist_review_gate import build_eviden
 from bugintel.core.brain_chat_evidence_approval_request import build_evidence_approval_request
 from bugintel.core.brain_chat_evidence_approval_decision_importer import import_evidence_approval_decision_file
 from bugintel.core.brain_chat_evidence_approved_validation_plan import build_evidence_approved_validation_plan
+from bugintel.core.brain_chat_validation_plan_step_review_gate import build_validation_plan_step_review_gate
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -626,6 +627,104 @@ def _resolve_brain_chat_session_path(
         return cwd / "brain-chat-session.json"
 
     return None
+
+
+@app.command("brain-chat-validation-plan-step-review-gate")
+def brain_chat_validation_plan_step_review_gate_command(
+    decision_file: Path = typer.Argument(..., help="Local JSON file containing the reviewer approval decision."),
+    status_file: Path | None = typer.Option(None, "--status-file", "--status", help="Optional local JSON file containing evidence checklist statuses."),
+    session_file: Path | None = typer.Option(None, "--session-file", "--session", help="Path to brain-chat-session JSON. Defaults to ./brain-chat-session.json."),
+    output_file: Path | None = typer.Option(None, "--output-file", "--output", help="Optional Markdown output path."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional JSON output path."),
+):
+    """Review local validation-plan steps before any execution layer exists."""
+    resolved_session_file = session_file or Path("brain-chat-session.json")
+
+    if not resolved_session_file.exists():
+        console.print(f"[bold red]Brain chat session JSON not found:[/bold red] {resolved_session_file}")
+        raise typer.Exit(code=1)
+
+    if not decision_file.exists():
+        console.print(f"[bold red]Evidence approval decision JSON not found:[/bold red] {decision_file}")
+        raise typer.Exit(code=1)
+
+    session = load_brain_chat_session(resolved_session_file)
+
+    try:
+        if status_file is not None:
+            if not status_file.exists():
+                console.print(f"[bold red]Evidence checklist status JSON not found:[/bold red] {status_file}")
+                raise typer.Exit(code=1)
+            import_result = import_evidence_checklist_status_file(session, status_file)
+            checklist = import_result.checklist
+        else:
+            checklist = build_brain_chat_evidence_checklist(session)
+
+        gate = build_evidence_checklist_review_gate(checklist)
+        approval_request = build_evidence_approval_request(gate)
+        decision = import_evidence_approval_decision_file(approval_request, decision_file)
+        plan = build_evidence_approved_validation_plan(decision)
+        step_gate = build_validation_plan_step_review_gate(plan)
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=1) from exc
+
+    markdown = step_gate.to_markdown()
+    data = step_gate.to_dict()
+
+    table = Table(title="Brain Chat Validation Plan Step Review Gate")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Session", str(resolved_session_file))
+    table.add_row("Status file", str(status_file) if status_file else "none")
+    table.add_row("Decision file", str(decision_file))
+    table.add_row("Target", step_gate.target_name)
+    table.add_row("Focus endpoint", step_gate.focus_endpoint or "none")
+    table.add_row("Gate status", step_gate.gate_status)
+    table.add_row("Plan status", step_gate.plan_status)
+    table.add_row("Validation allowed", str(step_gate.validation_allowed))
+    table.add_row("Step review ready", str(step_gate.step_review_ready))
+    table.add_row("Total steps", str(step_gate.total_steps))
+    table.add_row("Allowed for manual review", str(step_gate.allowed_count))
+    table.add_row("Needs scope check", str(step_gate.needs_scope_check_count))
+    table.add_row("Rejected unsafe", str(step_gate.rejected_unsafe_count))
+    table.add_row("Tool execution", "false")
+    table.add_row("Evidence collection", "false")
+    table.add_row("Validation execution", "false")
+    table.add_row("Report submission", "false")
+    table.add_row("Vulnerability confirmation", "false")
+    console.print(table)
+
+    if step_gate.reviewed_steps:
+        console.print("[bold yellow]Reviewed steps:[/bold yellow]")
+        for index, item in enumerate(step_gate.reviewed_steps, start=1):
+            console.print(f"{index}. \\[{item.status}] {item.step}")
+            console.print(f"   Reason: {item.reason}")
+
+    if step_gate.blocking_reasons:
+        console.print("[bold yellow]Blocking reasons:[/bold yellow]")
+        for item in step_gate.blocking_reasons:
+            console.print(f"- {item}")
+
+    if step_gate.rejected_actions:
+        console.print("[bold yellow]Rejected actions:[/bold yellow]")
+        for item in step_gate.rejected_actions:
+            console.print(f"- {item}")
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved validation plan step review gate Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved validation plan step review gate JSON:[/bold green] {json_output}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only reviews local validation-plan steps. "
+        "It does not execute validation, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities."
+    )
 
 
 @app.command("brain-chat-evidence-approved-validation-plan")
