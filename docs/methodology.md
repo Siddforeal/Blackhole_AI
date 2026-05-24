@@ -1794,3 +1794,9 @@ The decision import records approval metadata only. It does not execute validati
 Blackhole can turn an effective approval decision into a local validation-plan packet.
 
 The plan remains planning-only. It is not an execution gate and does not collect evidence or interact with targets.
+
+## Validation Plan Step Review Gates
+
+Blackhole can review local validation-plan steps before any runtime validation layer exists.
+
+The gate classifies steps for human review and keeps execution disabled. It separates manual planning, scope-sensitive steps, and rejected unsafe actions.

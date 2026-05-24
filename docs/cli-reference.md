@@ -1652,3 +1652,55 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-validation-plan-step-review-gate
+
+Review local validation-plan steps before any execution layer exists.
+
+Examples:
+
+    blackhole brain-chat-validation-plan-step-review-gate /tmp/case/approval-decision.json
+
+With a local checklist status file:
+
+    blackhole brain-chat-validation-plan-step-review-gate /tmp/case/approval-decision.json \
+      --status-file /tmp/case/evidence-status.json
+
+With an explicit session:
+
+    blackhole brain-chat-validation-plan-step-review-gate /tmp/case/approval-decision.json \
+      --status-file /tmp/case/evidence-status.json \
+      --session-file /tmp/case/brain-chat-session.json
+
+Step statuses:
+
+    allowed-for-manual-review
+    needs-scope-check
+    rejected-unsafe
+
+The step review gate reports:
+
+- gate status
+- plan status
+- validation allowed flag
+- step review ready flag
+- reviewed validation steps
+- allowed-for-manual-review count
+- needs-scope-check count
+- rejected-unsafe count
+- blocking reasons
+- rejected actions
+- safety metadata
+
+Safety properties:
+
+- local step review only
+- no validation execution
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation
