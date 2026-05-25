@@ -1800,3 +1800,9 @@ The plan remains planning-only. It is not an execution gate and does not collect
 Blackhole can review local validation-plan steps before any runtime validation layer exists.
 
 The gate classifies steps for human review and keeps execution disabled. It separates manual planning, scope-sensitive steps, and rejected unsafe actions.
+
+## Validation Step Approval Requests
+
+Blackhole can turn a ready validation step review gate into a local human approval-request packet.
+
+The packet separates step-review readiness from actual approval. It never grants approval and never executes validation steps.

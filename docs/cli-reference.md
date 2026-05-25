@@ -1704,3 +1704,54 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-validation-step-approval-request
+
+Build a local human approval-request packet for reviewed validation steps.
+
+Examples:
+
+    blackhole brain-chat-validation-step-approval-request /tmp/case/approval-decision.json
+
+With a local checklist status file:
+
+    blackhole brain-chat-validation-step-approval-request /tmp/case/approval-decision.json \
+      --status-file /tmp/case/evidence-status.json
+
+With an explicit session:
+
+    blackhole brain-chat-validation-step-approval-request /tmp/case/approval-decision.json \
+      --status-file /tmp/case/evidence-status.json \
+      --session-file /tmp/case/brain-chat-session.json
+
+Request statuses:
+
+    blocked-pending-step-review-gate
+    ready-for-human-step-approval
+
+The step approval request reports:
+
+- request status
+- gate status
+- step review readiness
+- validation allowed flag
+- reviewed step count
+- blockers
+- steps for human approval
+- required human checks
+- rejected actions without approval
+- safety metadata
+
+Safety properties:
+
+- local step approval request only
+- no step approval is granted
+- no validation execution
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation

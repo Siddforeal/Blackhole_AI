@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.88.0
+Current version: 0.89.0
 
 ## Research Goal
 
@@ -1481,3 +1481,17 @@ It classifies planned steps as:
 The gate can remain blocked when effective approval is missing, require scope review for sensitive steps, or reject unsafe validation language.
 
 This feature remains deterministic and local-only. It does not execute validation, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v0.89.0 - Validation Step Approval Request Packet
+
+The validation step approval request packet turns a ready validation step review gate into a local human approval request.
+
+It stays blocked when the step review gate is:
+
+    blocked-pending-approved-validation-plan
+    needs-scope-check
+    blocked-unsafe-validation-step
+
+It becomes ready only when the step review gate is ready for manual step review.
+
+This feature remains deterministic and local-only. It does not grant approval, execute validation, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.
