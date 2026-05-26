@@ -1812,3 +1812,56 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-validation-step-execution-gate-proposal
+
+Build a local proposal for what a future validation-step execution gate would require.
+
+Examples:
+
+    blackhole brain-chat-validation-step-execution-gate-proposal /tmp/case/validation-step-decision.json \
+      --approval-decision-file /tmp/case/approval-decision.json
+
+With a local checklist status file:
+
+    blackhole brain-chat-validation-step-execution-gate-proposal /tmp/case/validation-step-decision.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --status-file /tmp/case/evidence-status.json
+
+With an explicit session:
+
+    blackhole brain-chat-validation-step-execution-gate-proposal /tmp/case/validation-step-decision.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --status-file /tmp/case/evidence-status.json \
+      --session-file /tmp/case/brain-chat-session.json
+
+Proposal statuses:
+
+    blocked-pending-effective-step-approval
+    ready-for-human-execution-gate-design
+
+The proposal reports:
+
+- proposal status
+- effective step approval state
+- execution gate proposal readiness
+- approved steps
+- proposed execution gate requirements
+- proposed runtime guards
+- rejected actions
+- safety metadata
+
+Safety properties:
+
+- proposal only
+- no execution gate is created
+- no runtime execution is allowed
+- no validation execution
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation

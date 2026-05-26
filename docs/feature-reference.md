@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.90.0
+Current version: 0.91.0
 
 ## Research Goal
 
@@ -1509,3 +1509,11 @@ Supported decisions:
 An approved decision becomes effective only when the validation step approval request is ready, step review is ready, validation is allowed, and reviewed steps exist for approval.
 
 This feature remains deterministic and local-only. It does not grant side-effectful approval, execute validation, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v0.91.0 - Validation Step Execution Gate Proposal
+
+The validation step execution gate proposal builds a local proposal for what a future execution gate would require.
+
+It stays blocked unless effective validation-step approval exists.
+
+Even when ready, it only describes required safeguards for a future gate. It does not create an execution gate, execute validation, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.

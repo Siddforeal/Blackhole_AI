@@ -1812,3 +1812,9 @@ The packet separates step-review readiness from actual approval. It never grants
 Blackhole can import a local reviewer decision for validation-step approval.
 
 The decision import records approval metadata only. It does not execute validation steps and does not turn a blocked step approval request into an effective approval.
+
+## Validation Step Execution Gate Proposals
+
+Blackhole can turn effective validation-step approval into a local proposal for future execution-gate design.
+
+The proposal is not an execution gate. Runtime execution remains disabled and no target interaction occurs.
