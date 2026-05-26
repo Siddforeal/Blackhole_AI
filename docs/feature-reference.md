@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.91.0
+Current version: 0.92.0
 
 ## Research Goal
 
@@ -1517,3 +1517,17 @@ The validation step execution gate proposal builds a local proposal for what a f
 It stays blocked unless effective validation-step approval exists.
 
 Even when ready, it only describes required safeguards for a future gate. It does not create an execution gate, execute validation, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v0.92.0 - Execution Gate Proposal Review Packet
+
+The execution gate proposal review packet reviews a local execution-gate proposal before any future execution-gate design.
+
+Review statuses:
+
+    blocked-pending-effective-step-approval
+    needs-human-review
+    ready-for-execution-gate-design-review
+
+The packet reviews effective step approval, proposal readiness, proposed requirements, runtime guards, blockers, and human-review items.
+
+This feature remains deterministic and local-only. It does not create an execution gate, execute validation, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.

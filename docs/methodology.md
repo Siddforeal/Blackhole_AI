@@ -1818,3 +1818,9 @@ The decision import records approval metadata only. It does not execute validati
 Blackhole can turn effective validation-step approval into a local proposal for future execution-gate design.
 
 The proposal is not an execution gate. Runtime execution remains disabled and no target interaction occurs.
+
+## Execution Gate Proposal Review Packets
+
+Blackhole can review a local execution-gate proposal before any future execution-gate design.
+
+The packet separates proposal readiness from execution. It never creates an execution gate and never interacts with a target.
