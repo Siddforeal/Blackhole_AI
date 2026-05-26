@@ -1755,3 +1755,60 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-validation-step-approval-decision-import
+
+Import a local human reviewer decision for validation-step approval.
+
+Examples:
+
+    blackhole brain-chat-validation-step-approval-decision-import /tmp/case/validation-step-decision.json \
+      --approval-decision-file /tmp/case/approval-decision.json
+
+With a local checklist status file:
+
+    blackhole brain-chat-validation-step-approval-decision-import /tmp/case/validation-step-decision.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --status-file /tmp/case/evidence-status.json
+
+With an explicit session:
+
+    blackhole brain-chat-validation-step-approval-decision-import /tmp/case/validation-step-decision.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --status-file /tmp/case/evidence-status.json \
+      --session-file /tmp/case/brain-chat-session.json
+
+Decision statuses:
+
+    approved
+    rejected
+    changes-requested
+
+The decision import reports:
+
+- decision
+- reviewer
+- reason
+- request status
+- gate status
+- step review readiness
+- validation allowed flag
+- effective step approval granted
+- approved steps
+- allowed next steps
+- rejected next steps
+- safety metadata
+
+Safety properties:
+
+- local decision import only
+- no side-effectful step approval is granted
+- no validation execution
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation

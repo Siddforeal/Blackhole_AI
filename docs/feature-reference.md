@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.89.0
+Current version: 0.90.0
 
 ## Research Goal
 
@@ -1495,3 +1495,17 @@ It stays blocked when the step review gate is:
 It becomes ready only when the step review gate is ready for manual step review.
 
 This feature remains deterministic and local-only. It does not grant approval, execute validation, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v0.90.0 - Validation Step Approval Decision Importer
+
+The validation step approval decision importer records a local human reviewer decision for validation-step approval.
+
+Supported decisions:
+
+    approved
+    rejected
+    changes-requested
+
+An approved decision becomes effective only when the validation step approval request is ready, step review is ready, validation is allowed, and reviewed steps exist for approval.
+
+This feature remains deterministic and local-only. It does not grant side-effectful approval, execute validation, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.

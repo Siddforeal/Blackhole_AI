@@ -1806,3 +1806,9 @@ The gate classifies steps for human review and keeps execution disabled. It sepa
 Blackhole can turn a ready validation step review gate into a local human approval-request packet.
 
 The packet separates step-review readiness from actual approval. It never grants approval and never executes validation steps.
+
+## Validation Step Approval Decision Imports
+
+Blackhole can import a local reviewer decision for validation-step approval.
+
+The decision import records approval metadata only. It does not execute validation steps and does not turn a blocked step approval request into an effective approval.
