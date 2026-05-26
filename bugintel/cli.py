@@ -106,6 +106,7 @@ from bugintel.core.brain_chat_validation_plan_step_review_gate import build_vali
 from bugintel.core.brain_chat_validation_step_approval_request import build_validation_step_approval_request
 from bugintel.core.brain_chat_validation_step_approval_decision_importer import import_validation_step_approval_decision_file
 from bugintel.core.brain_chat_validation_step_execution_gate_proposal import build_validation_step_execution_gate_proposal
+from bugintel.core.brain_chat_execution_gate_proposal_review_packet import build_execution_gate_proposal_review_packet
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -630,6 +631,127 @@ def _resolve_brain_chat_session_path(
         return cwd / "brain-chat-session.json"
 
     return None
+
+
+@app.command("brain-chat-execution-gate-proposal-review-packet")
+def brain_chat_execution_gate_proposal_review_packet_command(
+    step_decision_file: Path = typer.Argument(..., help="Local JSON file containing the validation step approval decision."),
+    approval_decision_file: Path = typer.Option(..., "--approval-decision-file", "--approval-decision", help="Local JSON file containing the earlier evidence approval decision."),
+    status_file: Path | None = typer.Option(None, "--status-file", "--status", help="Optional local JSON file containing evidence checklist statuses."),
+    session_file: Path | None = typer.Option(None, "--session-file", "--session", help="Path to brain-chat-session JSON. Defaults to ./brain-chat-session.json."),
+    output_file: Path | None = typer.Option(None, "--output-file", "--output", help="Optional Markdown output path."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional JSON output path."),
+):
+    """Review a local execution-gate proposal before any future gate design."""
+    resolved_session_file = session_file or Path("brain-chat-session.json")
+
+    if not resolved_session_file.exists():
+        console.print(f"[bold red]Brain chat session JSON not found:[/bold red] {resolved_session_file}")
+        raise typer.Exit(code=1)
+
+    if not approval_decision_file.exists():
+        console.print(f"[bold red]Evidence approval decision JSON not found:[/bold red] {approval_decision_file}")
+        raise typer.Exit(code=1)
+
+    if not step_decision_file.exists():
+        console.print(f"[bold red]Validation step approval decision JSON not found:[/bold red] {step_decision_file}")
+        raise typer.Exit(code=1)
+
+    session = load_brain_chat_session(resolved_session_file)
+
+    try:
+        if status_file is not None:
+            if not status_file.exists():
+                console.print(f"[bold red]Evidence checklist status JSON not found:[/bold red] {status_file}")
+                raise typer.Exit(code=1)
+            import_result = import_evidence_checklist_status_file(session, status_file)
+            checklist = import_result.checklist
+        else:
+            checklist = build_brain_chat_evidence_checklist(session)
+
+        gate = build_evidence_checklist_review_gate(checklist)
+        approval_request = build_evidence_approval_request(gate)
+        approval_decision = import_evidence_approval_decision_file(approval_request, approval_decision_file)
+        plan = build_evidence_approved_validation_plan(approval_decision)
+        step_gate = build_validation_plan_step_review_gate(plan)
+        step_approval_request = build_validation_step_approval_request(step_gate)
+        step_decision = import_validation_step_approval_decision_file(step_approval_request, step_decision_file)
+        proposal = build_validation_step_execution_gate_proposal(step_decision)
+        review_packet = build_execution_gate_proposal_review_packet(proposal)
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=1) from exc
+
+    markdown = review_packet.to_markdown()
+    data = review_packet.to_dict()
+
+    table = Table(title="Brain Chat Execution Gate Proposal Review Packet")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Session", str(resolved_session_file))
+    table.add_row("Status file", str(status_file) if status_file else "none")
+    table.add_row("Evidence approval decision file", str(approval_decision_file))
+    table.add_row("Step decision file", str(step_decision_file))
+    table.add_row("Target", review_packet.target_name)
+    table.add_row("Focus endpoint", review_packet.focus_endpoint or "none")
+    table.add_row("Review status", review_packet.review_status)
+    table.add_row("Proposal status", review_packet.proposal_status)
+    table.add_row("Effective step approval granted", str(review_packet.effective_step_approval_granted))
+    table.add_row("Execution gate proposal ready", str(review_packet.execution_gate_proposal_ready))
+    table.add_row("Runtime execution allowed", str(review_packet.runtime_execution_allowed))
+    table.add_row("Design review ready", str(review_packet.design_review_ready))
+    table.add_row("Approved steps", str(len(review_packet.approved_steps)))
+    table.add_row("Proposal requirements", str(len(review_packet.proposal_requirements)))
+    table.add_row("Runtime guards", str(len(review_packet.runtime_guards)))
+    table.add_row("Blockers", str(len(review_packet.blockers)))
+    table.add_row("Human review items", str(len(review_packet.human_review_items)))
+    table.add_row("Tool execution", "false")
+    table.add_row("Evidence collection", "false")
+    table.add_row("Validation execution", "false")
+    table.add_row("Execution gate created", "false")
+    table.add_row("Report submission", "false")
+    table.add_row("Vulnerability confirmation", "false")
+    console.print(table)
+
+    if review_packet.blockers:
+        console.print("[bold yellow]Blockers:[/bold yellow]")
+        for item in review_packet.blockers:
+            console.print(f"- {item}")
+
+    if review_packet.human_review_items:
+        console.print("[bold yellow]Human review items:[/bold yellow]")
+        for item in review_packet.human_review_items:
+            console.print(f"- {item}")
+
+    if review_packet.proposal_requirements:
+        console.print("[bold yellow]Proposal requirements:[/bold yellow]")
+        for item in review_packet.proposal_requirements:
+            console.print(f"- {item}")
+
+    if review_packet.runtime_guards:
+        console.print("[bold yellow]Runtime guards:[/bold yellow]")
+        for item in review_packet.runtime_guards:
+            console.print(f"- {item}")
+
+    if review_packet.rejected_actions:
+        console.print("[bold yellow]Rejected actions:[/bold yellow]")
+        for item in review_packet.rejected_actions:
+            console.print(f"- {item}")
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved execution gate proposal review packet Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved execution gate proposal review packet JSON:[/bold green] {json_output}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only reviews a local execution-gate proposal. "
+        "It does not create an execution gate, execute validation, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities."
+    )
 
 
 @app.command("brain-chat-validation-step-execution-gate-proposal")
