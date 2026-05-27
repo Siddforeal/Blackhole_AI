@@ -1836,3 +1836,9 @@ The summary explains the current stage, blockers, missing evidence, safest next 
 Blackhole can answer deterministic local questions from the current case intelligence summary.
 
 The answerer explains blockers, missing evidence, safest next action, validation state, runtime state, report state, chain position, and safety posture without executing validation or interacting with a target.
+
+## Case Intelligence Question Sets
+
+Blackhole can run a deterministic local question set against the current case intelligence summary.
+
+The question set gives a compact case briefing covering status, blockers, missing evidence, next action, validation state, runtime state, report state, chain position, and safety posture without executing validation or interacting with a target.

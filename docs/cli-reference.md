@@ -2036,3 +2036,65 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-case-intelligence-question-set
+
+Run a local deterministic case-intelligence question set.
+
+Examples:
+
+    blackhole brain-chat-case-intelligence-question-set
+
+With an explicit session:
+
+    blackhole brain-chat-case-intelligence-question-set \
+      --session-file /tmp/case/brain-chat-session.json
+
+With local evidence and approval metadata:
+
+    blackhole brain-chat-case-intelligence-question-set \
+      --session-file /tmp/case/brain-chat-session.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json
+
+With a custom local questions file:
+
+    blackhole brain-chat-case-intelligence-question-set \
+      --questions-file /tmp/case/questions.json
+
+Default questions include:
+
+- What is the current status?
+- What is blocking this case?
+- What evidence is missing?
+- What should I do next?
+- Is validation allowed?
+- Why is runtime execution blocked?
+- Can I submit a report?
+- Is this vulnerability confirmed?
+- Where am I in the chain?
+- Is it safe?
+
+The question-set packet reports:
+
+- case state
+- question count
+- answers
+- routes
+- supporting points
+- recommended next actions
+- safety metadata
+
+Safety properties:
+
+- local deterministic question set only
+- no LLM provider calls
+- no validation execution
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation
