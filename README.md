@@ -134,6 +134,27 @@ It still does **not** generate or submit reports automatically.
 
 ---
 
+### Case Intelligence and Approval Chain
+
+The latest release line adds a local case-intelligence layer on top of the evidence and approval chain.
+
+Chain:
+
+- evidence checklist
+- evidence status import
+- evidence review gate
+- approval request
+- approval decision import
+- approved validation plan
+- validation step review gate
+- validation step approval request
+- validation step approval decision import
+- execution gate proposal
+- execution gate proposal review
+- case intelligence status summary
+
+This layer explains the current case stage, blockers, missing evidence, safest next action, and whether validation, runtime execution, report submission, or vulnerability confirmation are allowed.
+
 ## Quick Start
 
 ```bash
