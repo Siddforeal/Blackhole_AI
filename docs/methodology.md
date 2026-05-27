@@ -1830,3 +1830,9 @@ The packet separates proposal readiness from execution. It never creates an exec
 Blackhole can summarize local case status across the full review chain.
 
 The summary explains the current stage, blockers, missing evidence, safest next action, and safety state without executing validation or interacting with a target.
+
+## Case Intelligence Question Answering
+
+Blackhole can answer deterministic local questions from the current case intelligence summary.
+
+The answerer explains blockers, missing evidence, safest next action, validation state, runtime state, report state, chain position, and safety posture without executing validation or interacting with a target.

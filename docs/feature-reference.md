@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.93.0
+Current version: 0.94.0
 
 ## Research Goal
 
@@ -1541,3 +1541,11 @@ It summarizes local state across the evidence, approval, validation, step-review
 The summary reports the current stage, latest status, blockers, missing evidence, safest next action, chain position, and whether validation, runtime execution, report submission, or vulnerability confirmation are allowed.
 
 This feature remains deterministic and local-only. It does not execute validation, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v0.94.0 - Case Intelligence Question Answerer
+
+The case intelligence question answerer answers local deterministic questions from the case intelligence status summary.
+
+It can explain blockers, missing evidence, safest next action, validation state, runtime execution state, report-submission state, vulnerability-confirmation state, chain position, and safety posture.
+
+This feature remains deterministic and local-only. It does not call LLM providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities.

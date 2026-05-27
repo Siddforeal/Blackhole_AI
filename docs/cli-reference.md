@@ -1973,3 +1973,66 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-case-intelligence-answer
+
+Answer a local deterministic question from case intelligence status.
+
+Examples:
+
+    blackhole brain-chat-case-intelligence-answer "What is blocking this case?"
+
+With an explicit session:
+
+    blackhole brain-chat-case-intelligence-answer "What evidence is missing?" \
+      --session-file /tmp/case/brain-chat-session.json
+
+With local evidence and approval metadata:
+
+    blackhole brain-chat-case-intelligence-answer "Why is runtime execution blocked?" \
+      --session-file /tmp/case/brain-chat-session.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json
+
+Supported local question routes include:
+
+- blockers
+- missing-evidence
+- next-action
+- validation
+- runtime-execution
+- report-submission
+- vulnerability-confirmation
+- chain-position
+- safety
+- status
+
+The answer packet reports:
+
+- question
+- route
+- answer
+- current stage
+- current status
+- blocked state
+- validation allowed state
+- runtime execution allowed state
+- report submission allowed state
+- vulnerability confirmation allowed state
+- supporting points
+- recommended next action
+- safety metadata
+
+Safety properties:
+
+- local deterministic answer only
+- no LLM provider calls
+- no validation execution
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation
