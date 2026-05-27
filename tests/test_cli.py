@@ -1,3 +1,6 @@
+from contextlib import contextmanager
+import os
+import tempfile
 import json
 from pathlib import Path
 
@@ -7,6 +10,22 @@ from bugintel.cli import app
 
 
 runner = CliRunner()
+
+
+if not hasattr(CliRunner, "isolated_filesystem"):
+    @contextmanager
+    def _isolated_filesystem(self):
+        previous_cwd = os.getcwd()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.chdir(temp_dir)
+            try:
+                yield temp_dir
+            finally:
+                os.chdir(previous_cwd)
+
+    CliRunner.isolated_filesystem = _isolated_filesystem
+
+
 
 
 def test_save_browser_capture_command_creates_browser_evidence():
