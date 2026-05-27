@@ -107,6 +107,7 @@ from bugintel.core.brain_chat_validation_step_approval_request import build_vali
 from bugintel.core.brain_chat_validation_step_approval_decision_importer import import_validation_step_approval_decision_file
 from bugintel.core.brain_chat_validation_step_execution_gate_proposal import build_validation_step_execution_gate_proposal
 from bugintel.core.brain_chat_execution_gate_proposal_review_packet import build_execution_gate_proposal_review_packet
+from bugintel.core.brain_chat_case_intelligence_status_summary import build_case_intelligence_status_summary
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -631,6 +632,149 @@ def _resolve_brain_chat_session_path(
         return cwd / "brain-chat-session.json"
 
     return None
+
+
+@app.command("brain-chat-case-intelligence-status")
+def brain_chat_case_intelligence_status_command(
+    session_file: Path | None = typer.Option(None, "--session-file", "--session", help="Path to brain-chat-session JSON. Defaults to ./brain-chat-session.json."),
+    status_file: Path | None = typer.Option(None, "--status-file", "--status", help="Optional local JSON file containing evidence checklist statuses."),
+    approval_decision_file: Path | None = typer.Option(None, "--approval-decision-file", "--approval-decision", help="Optional local JSON file containing evidence approval decision metadata."),
+    step_decision_file: Path | None = typer.Option(None, "--step-decision-file", "--step-decision", help="Optional local JSON file containing validation step approval decision metadata."),
+    output_file: Path | None = typer.Option(None, "--output-file", "--output", help="Optional Markdown output path."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional JSON output path."),
+):
+    """Summarize local case intelligence status across the review chain."""
+    resolved_session_file = session_file or Path("brain-chat-session.json")
+
+    session = None
+    checklist = None
+    evidence_gate = None
+    approval_request = None
+    approval_decision = None
+    validation_plan = None
+    step_gate = None
+    step_approval_request = None
+    step_approval_decision = None
+    execution_proposal = None
+    execution_review = None
+
+    try:
+        if resolved_session_file.exists():
+            session = load_brain_chat_session(resolved_session_file)
+
+            if status_file is not None:
+                if not status_file.exists():
+                    console.print(f"[bold red]Evidence checklist status JSON not found:[/bold red] {status_file}")
+                    raise typer.Exit(code=1)
+                import_result = import_evidence_checklist_status_file(session, status_file)
+                checklist = import_result.checklist
+            else:
+                checklist = build_brain_chat_evidence_checklist(session)
+
+            evidence_gate = build_evidence_checklist_review_gate(checklist)
+            approval_request = build_evidence_approval_request(evidence_gate)
+
+            if approval_decision_file is not None:
+                if not approval_decision_file.exists():
+                    console.print(f"[bold red]Evidence approval decision JSON not found:[/bold red] {approval_decision_file}")
+                    raise typer.Exit(code=1)
+                approval_decision = import_evidence_approval_decision_file(approval_request, approval_decision_file)
+                validation_plan = build_evidence_approved_validation_plan(approval_decision)
+                step_gate = build_validation_plan_step_review_gate(validation_plan)
+                step_approval_request = build_validation_step_approval_request(step_gate)
+
+                if step_decision_file is not None:
+                    if not step_decision_file.exists():
+                        console.print(f"[bold red]Validation step approval decision JSON not found:[/bold red] {step_decision_file}")
+                        raise typer.Exit(code=1)
+                    step_approval_decision = import_validation_step_approval_decision_file(
+                        step_approval_request,
+                        step_decision_file,
+                    )
+                    execution_proposal = build_validation_step_execution_gate_proposal(step_approval_decision)
+                    execution_review = build_execution_gate_proposal_review_packet(execution_proposal)
+        else:
+            if session_file is not None:
+                console.print(f"[bold red]Brain chat session JSON not found:[/bold red] {resolved_session_file}")
+                raise typer.Exit(code=1)
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=1) from exc
+
+    summary = build_case_intelligence_status_summary(
+        session=session,
+        checklist=checklist,
+        evidence_review_gate=evidence_gate,
+        approval_request=approval_request,
+        approval_decision=approval_decision,
+        validation_plan=validation_plan,
+        step_review_gate=step_gate,
+        step_approval_request=step_approval_request,
+        step_approval_decision=step_approval_decision,
+        execution_gate_proposal=execution_proposal,
+        execution_gate_review_packet=execution_review,
+    )
+
+    markdown = summary.to_markdown()
+    data = summary.to_dict()
+
+    table = Table(title="Brain Chat Case Intelligence Status Summary")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Session", str(resolved_session_file) if session else "none")
+    table.add_row("Status file", str(status_file) if status_file else "none")
+    table.add_row("Approval decision file", str(approval_decision_file) if approval_decision_file else "none")
+    table.add_row("Step decision file", str(step_decision_file) if step_decision_file else "none")
+    table.add_row("Target", summary.target_name)
+    table.add_row("Focus endpoint", summary.focus_endpoint or "none")
+    table.add_row("Current stage", summary.current_stage)
+    table.add_row("Current status", summary.current_status)
+    table.add_row("Blocked", str(summary.blocked))
+    table.add_row("Validation allowed", str(summary.validation_allowed))
+    table.add_row("Runtime execution allowed", str(summary.runtime_execution_allowed))
+    table.add_row("Report submission allowed", str(summary.report_submission_allowed))
+    table.add_row("Vulnerability confirmation allowed", str(summary.vulnerability_confirmation_allowed))
+    table.add_row("Missing evidence", str(len(summary.missing_evidence)))
+    table.add_row("Blockers", str(len(summary.blockers)))
+    table.add_row("Tool execution", "false")
+    table.add_row("Evidence collection", "false")
+    table.add_row("Validation execution", "false")
+    table.add_row("Report submission", "false")
+    table.add_row("Vulnerability confirmation", "false")
+    console.print(table)
+
+    console.print("[bold yellow]Safest next action:[/bold yellow]")
+    console.print(summary.safest_next_action)
+
+    if summary.blockers:
+        console.print("[bold yellow]Blockers:[/bold yellow]")
+        for item in summary.blockers:
+            console.print(f"- {item}")
+
+    if summary.missing_evidence:
+        console.print("[bold yellow]Missing evidence:[/bold yellow]")
+        for item in summary.missing_evidence:
+            console.print(f"- {item}")
+
+    if summary.chain_position:
+        console.print("[bold yellow]Chain position:[/bold yellow]")
+        for item in summary.chain_position:
+            console.print(f"- {item.stage}: {item.status} ready={item.ready}")
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved case intelligence summary Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved case intelligence summary JSON:[/bold green] {json_output}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only summarizes local case intelligence. "
+        "It does not execute validation, collect evidence, call providers, execute tools, send requests, submit reports, or confirm vulnerabilities."
+    )
 
 
 @app.command("brain-chat-execution-gate-proposal-review-packet")
