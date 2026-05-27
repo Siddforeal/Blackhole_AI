@@ -1824,3 +1824,9 @@ The proposal is not an execution gate. Runtime execution remains disabled and no
 Blackhole can review a local execution-gate proposal before any future execution-gate design.
 
 The packet separates proposal readiness from execution. It never creates an execution gate and never interacts with a target.
+
+## Case Intelligence Status Summaries
+
+Blackhole can summarize local case status across the full review chain.
+
+The summary explains the current stage, blockers, missing evidence, safest next action, and safety state without executing validation or interacting with a target.

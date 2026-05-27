@@ -1923,3 +1923,53 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-case-intelligence-status
+
+Summarize local case intelligence state across the evidence, approval, validation, step-review, and execution-gate proposal chain.
+
+Examples:
+
+    blackhole brain-chat-case-intelligence-status
+
+With an explicit session:
+
+    blackhole brain-chat-case-intelligence-status \
+      --session-file /tmp/case/brain-chat-session.json
+
+With local evidence and approval metadata:
+
+    blackhole brain-chat-case-intelligence-status \
+      --session-file /tmp/case/brain-chat-session.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json
+
+The status summary reports:
+
+- current stage
+- current status
+- whether the case is blocked
+- validation allowed state
+- runtime execution allowed state
+- report submission allowed state
+- vulnerability confirmation allowed state
+- safest next action
+- blockers
+- missing evidence
+- chain position
+- evidence counts
+- safety metadata
+
+Safety properties:
+
+- local status summary only
+- no validation execution
+- no LLM provider calls
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation
