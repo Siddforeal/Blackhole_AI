@@ -111,6 +111,7 @@ from bugintel.core.brain_chat_case_intelligence_status_summary import build_case
 from bugintel.core.brain_chat_case_intelligence_question_answerer import answer_case_intelligence_question
 from bugintel.core.brain_chat_case_intelligence_question_set_runner import run_case_intelligence_question_set
 from bugintel.core.brain_chat_case_intelligence_briefing_export import build_case_intelligence_briefing_export
+from bugintel.core.brain_chat_case_intelligence_briefing_review_gate import build_case_intelligence_briefing_review_gate
 from bugintel.core.task_tree import build_endpoint_task_tree, render_tree
 from bugintel.core.research_planner import build_research_plan_from_browser_evidence, render_research_plan_markdown, ResearchPlan, ResearchHypothesis, ResearchRecommendation, EvidenceReference
 from bugintel.core.llm_prompt import LLMPromptPackage, build_llm_prompt_package_from_research_plan, render_llm_prompt_package_markdown
@@ -635,6 +636,178 @@ def _resolve_brain_chat_session_path(
         return cwd / "brain-chat-session.json"
 
     return None
+
+
+@app.command("brain-chat-case-intelligence-briefing-review-gate")
+def brain_chat_case_intelligence_briefing_review_gate_command(
+    questions_file: Path | None = typer.Option(None, "--questions-file", "--questions", help="Optional local JSON file containing a list of questions."),
+    session_file: Path | None = typer.Option(None, "--session-file", "--session", help="Path to brain-chat-session JSON. Defaults to ./brain-chat-session.json."),
+    status_file: Path | None = typer.Option(None, "--status-file", "--status", help="Optional local JSON file containing evidence checklist statuses."),
+    approval_decision_file: Path | None = typer.Option(None, "--approval-decision-file", "--approval-decision", help="Optional local JSON file containing evidence approval decision metadata."),
+    step_decision_file: Path | None = typer.Option(None, "--step-decision-file", "--step-decision", help="Optional local JSON file containing validation step approval decision metadata."),
+    output_file: Path | None = typer.Option(None, "--output-file", "--output", help="Optional Markdown output path."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional JSON output path."),
+):
+    """Review a local deterministic case-intelligence briefing packet."""
+    resolved_session_file = session_file or Path("brain-chat-session.json")
+
+    session = None
+    checklist = None
+    evidence_gate = None
+    approval_request = None
+    approval_decision = None
+    validation_plan = None
+    step_gate = None
+    step_approval_request = None
+    step_approval_decision = None
+    execution_proposal = None
+    execution_review = None
+
+    try:
+        if resolved_session_file.exists():
+            session = load_brain_chat_session(resolved_session_file)
+
+            if status_file is not None:
+                if not status_file.exists():
+                    console.print(f"[bold red]Evidence checklist status JSON not found:[/bold red] {status_file}")
+                    raise typer.Exit(code=1)
+                import_result = import_evidence_checklist_status_file(session, status_file)
+                checklist = import_result.checklist
+            else:
+                checklist = build_brain_chat_evidence_checklist(session)
+
+            evidence_gate = build_evidence_checklist_review_gate(checklist)
+            approval_request = build_evidence_approval_request(evidence_gate)
+
+            if approval_decision_file is not None:
+                if not approval_decision_file.exists():
+                    console.print(f"[bold red]Evidence approval decision JSON not found:[/bold red] {approval_decision_file}")
+                    raise typer.Exit(code=1)
+                approval_decision = import_evidence_approval_decision_file(approval_request, approval_decision_file)
+                validation_plan = build_evidence_approved_validation_plan(approval_decision)
+                step_gate = build_validation_plan_step_review_gate(validation_plan)
+                step_approval_request = build_validation_step_approval_request(step_gate)
+
+                if step_decision_file is not None:
+                    if not step_decision_file.exists():
+                        console.print(f"[bold red]Validation step approval decision JSON not found:[/bold red] {step_decision_file}")
+                        raise typer.Exit(code=1)
+                    step_approval_decision = import_validation_step_approval_decision_file(
+                        step_approval_request,
+                        step_decision_file,
+                    )
+                    execution_proposal = build_validation_step_execution_gate_proposal(step_approval_decision)
+                    execution_review = build_execution_gate_proposal_review_packet(execution_proposal)
+        else:
+            if session_file is not None:
+                console.print(f"[bold red]Brain chat session JSON not found:[/bold red] {resolved_session_file}")
+                raise typer.Exit(code=1)
+
+        questions = None
+        if questions_file is not None:
+            if not questions_file.exists():
+                console.print(f"[bold red]Questions JSON not found:[/bold red] {questions_file}")
+                raise typer.Exit(code=1)
+            raw_questions = json.loads(questions_file.read_text(encoding="utf-8"))
+            if isinstance(raw_questions, dict):
+                raw_questions = raw_questions.get("questions")
+            if not isinstance(raw_questions, list) or not all(isinstance(item, str) for item in raw_questions):
+                console.print("[bold red]Questions JSON must be a list of strings or an object with a questions list.[/bold red]")
+                raise typer.Exit(code=1)
+            questions = tuple(raw_questions)
+
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid JSON:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=1) from exc
+
+    summary = build_case_intelligence_status_summary(
+        session=session,
+        checklist=checklist,
+        evidence_review_gate=evidence_gate,
+        approval_request=approval_request,
+        approval_decision=approval_decision,
+        validation_plan=validation_plan,
+        step_review_gate=step_gate,
+        step_approval_request=step_approval_request,
+        step_approval_decision=step_approval_decision,
+        execution_gate_proposal=execution_proposal,
+        execution_gate_review_packet=execution_review,
+    )
+    question_set = run_case_intelligence_question_set(summary, questions=questions)
+    briefing = build_case_intelligence_briefing_export(summary, question_set=question_set)
+    gate = build_case_intelligence_briefing_review_gate(briefing)
+
+    markdown = gate.to_markdown()
+    data = gate.to_dict()
+
+    table = Table(title="Brain Chat Case Intelligence Briefing Review Gate")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target", gate.target_name)
+    table.add_row("Focus endpoint", gate.focus_endpoint or "none")
+    table.add_row("Current stage", gate.current_stage)
+    table.add_row("Current status", gate.current_status)
+    table.add_row("Briefing status", gate.briefing_status)
+    table.add_row("Review status", gate.review_status)
+    table.add_row("Case review ready", str(gate.case_review_ready))
+    table.add_row("Blocked", str(gate.blocked))
+    table.add_row("Validation allowed", str(gate.validation_allowed))
+    table.add_row("Runtime execution allowed", str(gate.runtime_execution_allowed))
+    table.add_row("Report submission allowed", str(gate.report_submission_allowed))
+    table.add_row("Vulnerability confirmation allowed", str(gate.vulnerability_confirmation_allowed))
+    table.add_row("Missing evidence", str(len(gate.missing_evidence)))
+    table.add_row("Blockers", str(len(gate.blockers)))
+    table.add_row("Human review items", str(len(gate.human_review_items)))
+    table.add_row("Required human checks", str(len(gate.required_human_checks)))
+    table.add_row("Questions answered", str(gate.question_count))
+    table.add_row("Tool execution", "false")
+    table.add_row("Evidence collection", "false")
+    table.add_row("Validation execution", "false")
+    table.add_row("Report submission", "false")
+    table.add_row("Vulnerability confirmation", "false")
+    console.print(table)
+
+    if gate.missing_evidence:
+        console.print("[bold yellow]Missing evidence:[/bold yellow]")
+        for item in gate.missing_evidence:
+            console.print(f"- {item}")
+
+    if gate.blockers:
+        console.print("[bold yellow]Blockers:[/bold yellow]")
+        for item in gate.blockers:
+            console.print(f"- {item}")
+
+    if gate.human_review_items:
+        console.print("[bold yellow]Human review items:[/bold yellow]")
+        for item in gate.human_review_items:
+            console.print(f"- {item}")
+
+    if gate.required_human_checks:
+        console.print("[bold yellow]Required human checks:[/bold yellow]")
+        for item in gate.required_human_checks:
+            console.print(f"- {item}")
+
+    console.print("[bold yellow]Rejected actions:[/bold yellow]")
+    for item in gate.rejected_actions:
+        console.print(f"- {item}")
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved briefing review gate Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved briefing review gate JSON:[/bold green] {json_output}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only reviews a local deterministic briefing. "
+        "It does not call providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities."
+    )
 
 
 @app.command("brain-chat-case-intelligence-briefing-export")
