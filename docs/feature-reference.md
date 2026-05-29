@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.95.0
+Current version: 0.96.0
 
 ## Research Goal
 
@@ -1555,5 +1555,13 @@ This feature remains deterministic and local-only. It does not call LLM provider
 The case intelligence question set runner runs a bundled set of deterministic local questions against the case intelligence status summary.
 
 The default set covers current status, blockers, missing evidence, safest next action, validation state, runtime execution state, report-submission state, vulnerability-confirmation state, chain position, and safety posture.
+
+This feature remains deterministic and local-only. It does not call LLM providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v0.96.0 - Case Intelligence Briefing Export
+
+The case intelligence briefing export creates one local deterministic briefing packet from the case intelligence status summary and question-set answers.
+
+The briefing combines case state, current status, missing evidence, blockers, safest next action, chain position, evidence counts, question-set answers, and safety metadata.
 
 This feature remains deterministic and local-only. It does not call LLM providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities.

@@ -2098,3 +2098,58 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-case-intelligence-briefing-export
+
+Export a local deterministic case-intelligence briefing packet.
+
+Examples:
+
+    blackhole brain-chat-case-intelligence-briefing-export
+
+With an explicit session:
+
+    blackhole brain-chat-case-intelligence-briefing-export \
+      --session-file /tmp/case/brain-chat-session.json
+
+With local evidence and approval metadata:
+
+    blackhole brain-chat-case-intelligence-briefing-export \
+      --session-file /tmp/case/brain-chat-session.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json
+
+With Markdown and JSON export:
+
+    blackhole brain-chat-case-intelligence-briefing-export \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json \
+      --output-file /tmp/case/briefing.md \
+      --json-output /tmp/case/briefing.json
+
+The briefing packet reports:
+
+- briefing summary
+- case state
+- safest next action
+- missing evidence
+- blockers
+- chain position
+- evidence counts
+- question-set answers
+- safety metadata
+
+Safety properties:
+
+- local deterministic briefing only
+- no LLM provider calls
+- no validation execution
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation

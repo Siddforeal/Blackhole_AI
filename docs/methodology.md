@@ -1842,3 +1842,9 @@ The answerer explains blockers, missing evidence, safest next action, validation
 Blackhole can run a deterministic local question set against the current case intelligence summary.
 
 The question set gives a compact case briefing covering status, blockers, missing evidence, next action, validation state, runtime state, report state, chain position, and safety posture without executing validation or interacting with a target.
+
+## Case Intelligence Briefing Exports
+
+Blackhole can export one deterministic local briefing packet from the current case intelligence summary and question-set answers.
+
+The briefing gives a compact case state, blockers, missing evidence, safest next action, chain position, and safety posture without executing validation or interacting with a target.
