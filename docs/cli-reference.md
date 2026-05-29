@@ -2153,3 +2153,64 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-case-intelligence-briefing-review-gate
+
+Review a local deterministic case-intelligence briefing packet.
+
+Examples:
+
+    blackhole brain-chat-case-intelligence-briefing-review-gate
+
+With an explicit session:
+
+    blackhole brain-chat-case-intelligence-briefing-review-gate \
+      --session-file /tmp/case/brain-chat-session.json
+
+With local evidence and approval metadata:
+
+    blackhole brain-chat-case-intelligence-briefing-review-gate \
+      --session-file /tmp/case/brain-chat-session.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json
+
+With Markdown and JSON export:
+
+    blackhole brain-chat-case-intelligence-briefing-review-gate \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json \
+      --output-file /tmp/case/briefing-review-gate.md \
+      --json-output /tmp/case/briefing-review-gate.json
+
+Review statuses:
+
+- blocked-briefing
+- needs-human-review
+- ready-for-human-case-review
+
+The review gate reports:
+
+- briefing status
+- review status
+- case-review readiness
+- missing evidence
+- blockers
+- human review items
+- required human checks
+- rejected actions
+- safety metadata
+
+Safety properties:
+
+- local deterministic briefing review only
+- no LLM provider calls
+- no validation execution
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation

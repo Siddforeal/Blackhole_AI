@@ -1848,3 +1848,9 @@ The question set gives a compact case briefing covering status, blockers, missin
 Blackhole can export one deterministic local briefing packet from the current case intelligence summary and question-set answers.
 
 The briefing gives a compact case state, blockers, missing evidence, safest next action, chain position, and safety posture without executing validation or interacting with a target.
+
+## Case Intelligence Briefing Review Gates
+
+Blackhole can review a deterministic local briefing packet before any human case-review step.
+
+The gate classifies the briefing as blocked, needing human review, or ready for human case review while keeping validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled.

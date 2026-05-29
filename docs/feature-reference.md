@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.96.0
+Current version: 0.97.0
 
 ## Research Goal
 
@@ -1563,5 +1563,13 @@ This feature remains deterministic and local-only. It does not call LLM provider
 The case intelligence briefing export creates one local deterministic briefing packet from the case intelligence status summary and question-set answers.
 
 The briefing combines case state, current status, missing evidence, blockers, safest next action, chain position, evidence counts, question-set answers, and safety metadata.
+
+This feature remains deterministic and local-only. It does not call LLM providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v0.97.0 - Case Intelligence Briefing Review Gate
+
+The case intelligence briefing review gate reviews a local briefing export and classifies it as blocked, needing human review, or ready for human case review.
+
+The gate checks missing evidence, blockers, unsafe permission flags, runtime/reporting/confirmation state, briefing completeness, human review items, required human checks, rejected actions, and safety metadata.
 
 This feature remains deterministic and local-only. It does not call LLM providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities.
