@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 0.97.0
+Current version: 0.98.0
 
 ## Research Goal
 
@@ -1573,3 +1573,11 @@ The case intelligence briefing review gate reviews a local briefing export and c
 The gate checks missing evidence, blockers, unsafe permission flags, runtime/reporting/confirmation state, briefing completeness, human review items, required human checks, rejected actions, and safety metadata.
 
 This feature remains deterministic and local-only. It does not call LLM providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v0.98.0 - Case Intelligence Human Review Request
+
+The case intelligence human review request turns a briefing review gate into a clean local request packet for human review.
+
+The packet includes review request status, human-review readiness, missing evidence checklist, blockers checklist, required human checks, requested human decision options, rejected actions, and explicit no-approval-granted safety metadata.
+
+This feature remains deterministic and local-only. It does not grant approval, call LLM providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities.

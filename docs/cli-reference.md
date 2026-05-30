@@ -2214,3 +2214,68 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-case-intelligence-human-review-request
+
+Build a local deterministic case-intelligence human-review request.
+
+Examples:
+
+    blackhole brain-chat-case-intelligence-human-review-request
+
+With an explicit session:
+
+    blackhole brain-chat-case-intelligence-human-review-request \
+      --session-file /tmp/case/brain-chat-session.json
+
+With local evidence and approval metadata:
+
+    blackhole brain-chat-case-intelligence-human-review-request \
+      --session-file /tmp/case/brain-chat-session.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json
+
+With Markdown and JSON export:
+
+    blackhole brain-chat-case-intelligence-human-review-request \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json \
+      --output-file /tmp/case/human-review-request.md \
+      --json-output /tmp/case/human-review-request.json
+
+Request statuses:
+
+- blocked-pending-briefing-review-gate
+- blocked-pending-safe-review-gate
+- ready-for-human-review
+- ready-for-human-case-review
+
+The request packet reports:
+
+- request status
+- human-review request readiness
+- case-review readiness
+- approval-granted state
+- missing evidence checklist
+- blockers checklist
+- human review items
+- required human checks
+- requested human decision options
+- rejected actions
+- safety metadata
+
+Safety properties:
+
+- local deterministic human-review request only
+- no approval granted
+- no LLM provider calls
+- no validation execution
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation

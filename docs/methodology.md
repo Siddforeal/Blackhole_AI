@@ -1854,3 +1854,9 @@ The briefing gives a compact case state, blockers, missing evidence, safest next
 Blackhole can review a deterministic local briefing packet before any human case-review step.
 
 The gate classifies the briefing as blocked, needing human review, or ready for human case review while keeping validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled.
+
+## Case Intelligence Human Review Requests
+
+Blackhole can turn a deterministic briefing review gate into a local human-review request packet.
+
+The request packet asks for human review without granting approval and keeps validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled.
