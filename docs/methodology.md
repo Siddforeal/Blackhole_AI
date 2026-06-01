@@ -1866,3 +1866,9 @@ The request packet asks for human review without granting approval and keeps val
 Blackhole can import a deterministic local human-review decision for a case-intelligence review request.
 
 The importer separates a human decision from effective approval. A decision only becomes effective when the request and case-review gates are ready, while validation, runtime execution, evidence collection, reporting, and vulnerability confirmation remain disabled.
+
+## Case Intelligence Human Review Decision Gates
+
+Blackhole can review an imported human-review decision before allowing local human case review.
+
+The gate separates a typed approval from effective approval, verifies request readiness and safety state, and keeps validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled.

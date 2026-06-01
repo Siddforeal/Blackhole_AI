@@ -2339,3 +2339,69 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-case-intelligence-human-review-decision-gate
+
+Review an imported case-intelligence human-review decision and classify the next local state.
+
+Examples:
+
+    blackhole brain-chat-case-intelligence-human-review-decision-gate /tmp/case/human-review-decision.json
+
+With an explicit session:
+
+    blackhole brain-chat-case-intelligence-human-review-decision-gate /tmp/case/human-review-decision.json \
+      --session-file /tmp/case/brain-chat-session.json
+
+With local evidence and approval metadata:
+
+    blackhole brain-chat-case-intelligence-human-review-decision-gate /tmp/case/human-review-decision.json \
+      --session-file /tmp/case/brain-chat-session.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json
+
+With Markdown and JSON export:
+
+    blackhole brain-chat-case-intelligence-human-review-decision-gate /tmp/case/human-review-decision.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json \
+      --output-file /tmp/case/human-review-decision-gate.md \
+      --json-output /tmp/case/human-review-decision-gate.json
+
+Decision gate statuses:
+
+- blocked-pending-effective-human-review
+- changes-requested
+- rejected
+- ready-for-human-case-review
+
+The decision gate reports:
+
+- decision
+- decision gate status
+- human case review readiness
+- effective human-review approval state
+- request, review, and briefing statuses
+- decision blockers
+- allowed local next steps
+- rejected actions
+- missing evidence checklist
+- blockers checklist
+- required human checks
+- safety metadata
+
+Safety properties:
+
+- local deterministic decision gate only
+- no side-effectful approval granted
+- no LLM provider calls
+- no validation execution
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation
