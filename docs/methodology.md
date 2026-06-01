@@ -1860,3 +1860,9 @@ The gate classifies the briefing as blocked, needing human review, or ready for 
 Blackhole can turn a deterministic briefing review gate into a local human-review request packet.
 
 The request packet asks for human review without granting approval and keeps validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled.
+
+## Case Intelligence Human Review Decision Imports
+
+Blackhole can import a deterministic local human-review decision for a case-intelligence review request.
+
+The importer separates a human decision from effective approval. A decision only becomes effective when the request and case-review gates are ready, while validation, runtime execution, evidence collection, reporting, and vulnerability confirmation remain disabled.

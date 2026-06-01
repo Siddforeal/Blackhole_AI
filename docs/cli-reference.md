@@ -2279,3 +2279,63 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-case-intelligence-human-review-decision-import
+
+Import a local deterministic case-intelligence human-review decision.
+
+Examples:
+
+    blackhole brain-chat-case-intelligence-human-review-decision-import /tmp/case/human-review-decision.json
+
+With an explicit session:
+
+    blackhole brain-chat-case-intelligence-human-review-decision-import /tmp/case/human-review-decision.json \
+      --session-file /tmp/case/brain-chat-session.json
+
+With local evidence and approval metadata:
+
+    blackhole brain-chat-case-intelligence-human-review-decision-import /tmp/case/human-review-decision.json \
+      --session-file /tmp/case/brain-chat-session.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json
+
+Supported decisions:
+
+- approved-for-human-case-review
+- changes-requested
+- rejected
+
+An approval decision becomes effective only when the human-review request is ready and the case review is ready.
+
+The decision packet reports:
+
+- decision
+- reviewer
+- reason
+- request status
+- human-review request readiness
+- case-review readiness
+- approval-granted state
+- effective human-review approval state
+- missing evidence checklist
+- blockers checklist
+- required human checks
+- allowed next steps
+- rejected next steps
+- safety metadata
+
+Safety properties:
+
+- local deterministic decision import only
+- no side-effectful approval granted
+- no LLM provider calls
+- no validation execution
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation
