@@ -2405,3 +2405,72 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-human-case-review-packet
+
+Build a local deterministic human case-review packet.
+
+Examples:
+
+    blackhole brain-chat-human-case-review-packet /tmp/case/human-review-decision.json
+
+With an explicit session:
+
+    blackhole brain-chat-human-case-review-packet /tmp/case/human-review-decision.json \
+      --session-file /tmp/case/brain-chat-session.json
+
+With local evidence and approval metadata:
+
+    blackhole brain-chat-human-case-review-packet /tmp/case/human-review-decision.json \
+      --session-file /tmp/case/brain-chat-session.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json
+
+With Markdown and JSON export:
+
+    blackhole brain-chat-human-case-review-packet /tmp/case/human-review-decision.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json \
+      --output-file /tmp/case/human-case-review-packet.md \
+      --json-output /tmp/case/human-case-review-packet.json
+
+Packet statuses:
+
+- blocked-pending-human-review-decision-gate
+- changes-requested
+- rejected
+- ready-for-human-case-review
+
+The packet reports:
+
+- decision
+- decision gate status
+- packet status
+- human case-review readiness
+- effective human-review approval state
+- review objective
+- review scope
+- human review tasks
+- decision blockers
+- missing evidence checklist
+- blockers checklist
+- required human checks
+- allowed local next steps
+- rejected actions
+- safety metadata
+
+Safety properties:
+
+- local deterministic human case-review packet only
+- no side-effectful approval granted
+- no LLM provider calls
+- no validation execution
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation

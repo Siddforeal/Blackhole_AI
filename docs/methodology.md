@@ -1872,3 +1872,9 @@ The importer separates a human decision from effective approval. A decision only
 Blackhole can review an imported human-review decision before allowing local human case review.
 
 The gate separates a typed approval from effective approval, verifies request readiness and safety state, and keeps validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled.
+
+## Human Case Review Packets
+
+Blackhole can turn a human-review decision gate into a local human case-review packet.
+
+The packet prepares review scope, tasks, blockers, evidence gaps, next local steps, and rejected actions while keeping validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled.
