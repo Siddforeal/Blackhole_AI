@@ -1884,3 +1884,9 @@ The packet prepares review scope, tasks, blockers, evidence gaps, next local ste
 Blackhole can review a local human case-review packet before any future human case-review decision step.
 
 The gate verifies readiness, blockers, missing evidence, required checks, safety flags, allowed local next steps, and rejected actions while keeping validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled.
+
+## Human Case Review Decision Requests
+
+Blackhole can turn a reviewed human case-review packet into a local human decision request.
+
+The request prepares allowed decision options, reviewer instructions, required checks, blockers, local next steps, and rejected actions while keeping validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled.
