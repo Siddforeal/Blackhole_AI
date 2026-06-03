@@ -1878,3 +1878,9 @@ The gate separates a typed approval from effective approval, verifies request re
 Blackhole can turn a human-review decision gate into a local human case-review packet.
 
 The packet prepares review scope, tasks, blockers, evidence gaps, next local steps, and rejected actions while keeping validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled.
+
+## Human Case Review Packet Review Gates
+
+Blackhole can review a local human case-review packet before any future human case-review decision step.
+
+The gate verifies readiness, blockers, missing evidence, required checks, safety flags, allowed local next steps, and rejected actions while keeping validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled.

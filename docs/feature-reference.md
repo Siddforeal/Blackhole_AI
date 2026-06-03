@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.1.0
+Current version: 1.2.0
 
 ## Research Goal
 
@@ -1605,5 +1605,15 @@ This feature remains deterministic and local-only. It does not grant side-effect
 The human case review packet turns a case-intelligence human-review decision gate into a clean local packet for human case review.
 
 The packet reports whether human case review can begin, whether the path is blocked, changes-requested, rejected, or ready, what the human should review, what blockers or missing evidence remain, what local-only next step is allowed, and what actions remain rejected.
+
+This feature remains deterministic and local-only. It does not grant side-effectful approval, call LLM providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v1.2.0 - Human Case Review Packet Review Gate
+
+The human case review packet review gate reviews a local human case-review packet before any future human case-review decision step.
+
+The gate classifies packet review state as blocked-pending-human-case-review-packet, changes-requested, rejected, or ready-for-human-case-review.
+
+It verifies packet status, human case-review readiness, effective approval state, decision blockers, missing evidence, blocker checklist, required human checks, unsafe flags, allowed local next step, and rejected actions.
 
 This feature remains deterministic and local-only. It does not grant side-effectful approval, call LLM providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities.
