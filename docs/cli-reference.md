@@ -2615,3 +2615,77 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-human-case-review-decision-import
+
+Import a local deterministic human case-review decision.
+
+Examples:
+
+    blackhole brain-chat-human-case-review-decision-import /tmp/case/human-case-review-decision.json \
+      --human-review-decision-file /tmp/case/human-review-decision.json
+
+With an explicit session:
+
+    blackhole brain-chat-human-case-review-decision-import /tmp/case/human-case-review-decision.json \
+      --human-review-decision-file /tmp/case/human-review-decision.json \
+      --session-file /tmp/case/brain-chat-session.json
+
+With local evidence and approval metadata:
+
+    blackhole brain-chat-human-case-review-decision-import /tmp/case/human-case-review-decision.json \
+      --human-review-decision-file /tmp/case/human-review-decision.json \
+      --session-file /tmp/case/brain-chat-session.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json
+
+With Markdown and JSON export:
+
+    blackhole brain-chat-human-case-review-decision-import /tmp/case/human-case-review-decision.json \
+      --human-review-decision-file /tmp/case/human-review-decision.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json \
+      --output-file /tmp/case/human-case-review-decision-import.md \
+      --json-output /tmp/case/human-case-review-decision-import.json
+
+Supported decisions:
+
+- approved-for-next-local-planning-gate
+- changes-requested
+- rejected
+
+The import packet reports:
+
+- decision
+- reviewer
+- reason
+- decision request status
+- decision import status
+- human case-review decision readiness
+- effective next local planning approval state
+- decision effectiveness
+- requested human decision options
+- required human checks
+- packet blockers
+- decision blockers
+- missing evidence checklist
+- blockers checklist
+- allowed local next steps
+- rejected next steps
+- safety metadata
+
+Safety properties:
+
+- local deterministic decision import only
+- no side-effectful approval granted
+- no LLM provider calls
+- no validation execution
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation

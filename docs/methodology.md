@@ -1890,3 +1890,9 @@ The gate verifies readiness, blockers, missing evidence, required checks, safety
 Blackhole can turn a reviewed human case-review packet into a local human decision request.
 
 The request prepares allowed decision options, reviewer instructions, required checks, blockers, local next steps, and rejected actions while keeping validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled.
+
+## Human Case Review Decision Imports
+
+Blackhole can import a local human case-review decision and determine whether that decision is effective.
+
+Approval only becomes effective when the request is ready and safety flags remain locked. Rejected and changes-requested decisions can be recorded while keeping validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled.

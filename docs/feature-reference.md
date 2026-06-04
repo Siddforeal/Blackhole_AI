@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.3.0
+Current version: 1.4.0
 
 ## Research Goal
 
@@ -1623,5 +1623,13 @@ This feature remains deterministic and local-only. It does not grant side-effect
 The human case review decision request turns a reviewed human case-review packet into a local request packet for a future human decision.
 
 The request says whether a human case-review decision can be requested, whether the path is blocked, changes-requested, rejected, or ready, what decision options are allowed, what the reviewer must check before deciding, what blockers remain, what local-only next step is allowed, and what actions remain rejected.
+
+This feature remains deterministic and local-only. It does not grant side-effectful approval, call LLM providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v1.4.0 - Human Case Review Decision Importer
+
+The human case review decision importer imports a local reviewer decision for a human case-review decision request.
+
+It supports approved-for-next-local-planning-gate, changes-requested, and rejected decisions. Approval only becomes effective when the decision request is ready and unsafe flags remain disabled. Blocked requests only allow rejected or changes-requested outcomes.
 
 This feature remains deterministic and local-only. It does not grant side-effectful approval, call LLM providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities.
