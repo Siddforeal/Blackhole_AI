@@ -2689,3 +2689,77 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-human-case-review-decision-gate
+
+Review a local deterministic human case-review decision gate.
+
+Examples:
+
+    blackhole brain-chat-human-case-review-decision-gate /tmp/case/human-case-review-decision.json \
+      --human-review-decision-file /tmp/case/human-review-decision.json
+
+With an explicit session:
+
+    blackhole brain-chat-human-case-review-decision-gate /tmp/case/human-case-review-decision.json \
+      --human-review-decision-file /tmp/case/human-review-decision.json \
+      --session-file /tmp/case/brain-chat-session.json
+
+With local evidence and approval metadata:
+
+    blackhole brain-chat-human-case-review-decision-gate /tmp/case/human-case-review-decision.json \
+      --human-review-decision-file /tmp/case/human-review-decision.json \
+      --session-file /tmp/case/brain-chat-session.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json
+
+With Markdown and JSON export:
+
+    blackhole brain-chat-human-case-review-decision-gate /tmp/case/human-case-review-decision.json \
+      --human-review-decision-file /tmp/case/human-review-decision.json \
+      --status-file /tmp/case/evidence-status.json \
+      --approval-decision-file /tmp/case/approval-decision.json \
+      --step-decision-file /tmp/case/validation-step-decision.json \
+      --output-file /tmp/case/human-case-review-decision-gate.md \
+      --json-output /tmp/case/human-case-review-decision-gate.json
+
+Decision gate statuses:
+
+- blocked-pending-effective-human-case-review-decision
+- blocked-pending-safe-human-case-review-decision-import
+- changes-requested
+- rejected
+- ready-for-next-local-planning-gate
+
+The decision gate reports:
+
+- decision
+- decision request status
+- decision import status
+- decision gate status
+- human case-review decision readiness
+- effective next local planning approval state
+- next local planning gate readiness
+- decision effectiveness
+- decision blockers
+- packet blockers
+- missing evidence checklist
+- blockers checklist
+- required human checks
+- allowed local next steps
+- rejected actions
+- safety metadata
+
+Safety properties:
+
+- local deterministic decision gate only
+- next local planning gate readiness only
+- no validation execution
+- no tool execution
+- no browser execution
+- no curl or Kali execution
+- no network interaction
+- no evidence collection
+- no report submission
+- no automatic vulnerability confirmation

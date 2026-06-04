@@ -1896,3 +1896,9 @@ The request prepares allowed decision options, reviewer instructions, required c
 Blackhole can import a local human case-review decision and determine whether that decision is effective.
 
 Approval only becomes effective when the request is ready and safety flags remain locked. Rejected and changes-requested decisions can be recorded while keeping validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled.
+
+## Human Case Review Decision Gates
+
+Blackhole can review an imported human case-review decision and decide whether it is ready for the next local planning gate.
+
+The decision gate only unlocks local planning readiness. It keeps validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled behind separate gates.

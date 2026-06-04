@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.4.0
+Current version: 1.5.0
 
 ## Research Goal
 
@@ -1633,3 +1633,11 @@ The human case review decision importer imports a local reviewer decision for a 
 It supports approved-for-next-local-planning-gate, changes-requested, and rejected decisions. Approval only becomes effective when the decision request is ready and unsafe flags remain disabled. Blocked requests only allow rejected or changes-requested outcomes.
 
 This feature remains deterministic and local-only. It does not grant side-effectful approval, call LLM providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v1.5.0 - Human Case Review Decision Gate
+
+The human case review decision gate reviews an imported human case-review decision and determines whether the case can move to the next local planning gate.
+
+It classifies imported decisions as blocked, changes-requested, rejected, or ready for the next local planning gate. Even when ready, this gate does not authorize validation, runtime execution, evidence collection, report submission, or vulnerability confirmation.
+
+This feature remains deterministic and local-only. It does not grant runtime execution, call LLM providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities.
