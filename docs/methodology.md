@@ -1902,3 +1902,9 @@ Approval only becomes effective when the request is ready and safety flags remai
 Blackhole can review an imported human case-review decision and decide whether it is ready for the next local planning gate.
 
 The decision gate only unlocks local planning readiness. It keeps validation, runtime execution, evidence collection, reporting, and vulnerability confirmation disabled behind separate gates.
+
+## Research Source Packets
+
+Blackhole can turn local research sources into a structured packet before any hypotheses, commands, or target interaction are considered.
+
+The packet records source types, observations, attack surfaces, source gaps, and research questions. It stays local-only and keeps browsing, command generation, validation, evidence collection, reporting, and vulnerability confirmation behind later gates.

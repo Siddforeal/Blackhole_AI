@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.5.0
+Current version: 1.6.0
 
 ## Research Goal
 
@@ -1641,3 +1641,11 @@ The human case review decision gate reviews an imported human case-review decisi
 It classifies imported decisions as blocked, changes-requested, rejected, or ready for the next local planning gate. Even when ready, this gate does not authorize validation, runtime execution, evidence collection, report submission, or vulnerability confirmation.
 
 This feature remains deterministic and local-only. It does not grant runtime execution, call LLM providers, execute validation, collect evidence, execute tools, send requests, submit reports, or confirm vulnerabilities.
+
+## v1.6.0 - Research Source Packet
+
+The research source packet turns local, user-provided research sources into a deterministic planning packet.
+
+It normalizes source metadata, identifies source gaps, derives likely attack surfaces, and produces research questions for later hypothesis planning. This is the first local research-brain layer.
+
+This feature remains deterministic and local-only. It does not browse the web, call LLM providers, execute tools, send requests, collect evidence, submit reports, or confirm vulnerabilities.

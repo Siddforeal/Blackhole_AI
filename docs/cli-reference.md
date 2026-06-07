@@ -2763,3 +2763,76 @@ Safety properties:
 - no evidence collection
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-research-source-packet
+
+Build a local deterministic research source packet from user-provided local sources.
+
+Examples:
+
+    blackhole brain-chat-research-source-packet --target-name demo.local
+
+With a local sources JSON file:
+
+    blackhole brain-chat-research-source-packet \
+      --sources-file /tmp/case/research-sources.json \
+      --target-name demo.local
+
+With Markdown and JSON export:
+
+    blackhole brain-chat-research-source-packet \
+      --sources-file /tmp/case/research-sources.json \
+      --target-name demo.local \
+      --output-file /tmp/case/research-source-packet.md \
+      --json-output /tmp/case/research-source-packet.json
+
+Supported source types:
+
+- vendor-docs
+- security-advisory
+- cve
+- research-paper
+- source-code
+- repository
+- bug-bounty-scope
+- release-notes
+- api-docs
+- blog-post
+- local-notes
+- unknown
+
+Packet statuses:
+
+- blocked-pending-research-sources
+- review-needed-source-gaps
+- ready-for-research-review
+
+The packet reports:
+
+- target name
+- packet status
+- source count
+- source types
+- normalized source summaries
+- observations
+- keywords
+- likely attack surfaces
+- research questions
+- source gaps
+- allowed local next steps
+- rejected actions
+- safety metadata
+
+Safety properties:
+
+- local deterministic source packet only
+- no web browsing
+- no network interaction
+- no tool execution
+- no browser execution
+- no curl execution
+- no Kali execution
+- no evidence collection
+- no validation execution
+- no report submission
+- no automatic vulnerability confirmation
