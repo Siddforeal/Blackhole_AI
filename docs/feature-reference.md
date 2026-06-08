@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.6.0
+Current version: 1.7.0
 
 ## Research Goal
 
@@ -1649,3 +1649,11 @@ The research source packet turns local, user-provided research sources into a de
 It normalizes source metadata, identifies source gaps, derives likely attack surfaces, and produces research questions for later hypothesis planning. This is the first local research-brain layer.
 
 This feature remains deterministic and local-only. It does not browse the web, call LLM providers, execute tools, send requests, collect evidence, submit reports, or confirm vulnerabilities.
+
+## v1.7.0 - Research Hypothesis Packet
+
+The research hypothesis packet turns a ready local research source packet into deterministic bug-hunting hypotheses.
+
+It converts derived attack surfaces into structured hypotheses with hypothesis type, rationale, local review questions, evidence needed, allowed local checks, rejected actions, priority, confidence, and tags.
+
+This feature remains deterministic and local-only. It does not browse the web, call LLM providers, generate commands, execute tools, send requests, collect evidence, validate findings, submit reports, or confirm vulnerabilities.

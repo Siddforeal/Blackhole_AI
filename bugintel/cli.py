@@ -257,7 +257,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.6.0",
+                version="1.7.0",
                 force=True,
             )
         )
@@ -278,7 +278,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.6.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.7.0")
 
 
 @app.command("scope-check")

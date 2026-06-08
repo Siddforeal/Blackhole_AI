@@ -1908,3 +1908,9 @@ The decision gate only unlocks local planning readiness. It keeps validation, ru
 Blackhole can turn local research sources into a structured packet before any hypotheses, commands, or target interaction are considered.
 
 The packet records source types, observations, attack surfaces, source gaps, and research questions. It stays local-only and keeps browsing, command generation, validation, evidence collection, reporting, and vulnerability confirmation behind later gates.
+
+## Research Hypothesis Packets
+
+Blackhole can turn a ready local research source packet into structured bug-hunting hypotheses.
+
+The packet ranks local hypotheses, explains the rationale, lists evidence needed, and defines local-only review checks. It keeps command generation, browsing, validation, evidence collection, reporting, and vulnerability confirmation behind later gates.
