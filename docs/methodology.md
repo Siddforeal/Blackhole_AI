@@ -1920,3 +1920,9 @@ The packet ranks local hypotheses, explains the rationale, lists evidence needed
 Blackhole prioritizes precise hypothesis typing so local research planning stays accurate.
 
 Authorization and administrative access-control surfaces are classified before authentication/session surfaces to avoid treating authorization review as token/session review.
+
+## Research Hypothesis Selection Packets
+
+Blackhole can rank and select local hypotheses before deeper investigation planning.
+
+The selection packet chooses a primary hypothesis and a small ranked set of local-only research priorities. It keeps command generation, browsing, validation, evidence collection, reporting, and vulnerability confirmation behind later gates.

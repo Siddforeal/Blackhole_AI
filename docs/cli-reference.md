@@ -2901,3 +2901,67 @@ Safety properties:
 - no validation execution
 - no report submission
 - no automatic vulnerability confirmation
+
+## brain-chat-research-hypothesis-selection-packet
+
+Build a local deterministic research hypothesis selection packet from user-provided local research sources.
+
+Examples:
+
+    blackhole brain-chat-research-hypothesis-selection-packet \
+      --sources-file /tmp/case/research-sources.json
+
+With a target name and selected count:
+
+    blackhole brain-chat-research-hypothesis-selection-packet \
+      --sources-file /tmp/case/research-sources.json \
+      --target-name demo.local \
+      --max-selected 3
+
+With Markdown and JSON export:
+
+    blackhole brain-chat-research-hypothesis-selection-packet \
+      --sources-file /tmp/case/research-sources.json \
+      --target-name demo.local \
+      --output-file /tmp/case/research-hypothesis-selection-packet.md \
+      --json-output /tmp/case/research-hypothesis-selection-packet.json
+
+Packet statuses:
+
+- blocked-pending-ready-hypothesis-packet
+- review-needed-selection-gaps
+- ready-for-local-investigation-planning
+
+The packet reports:
+
+- target name
+- packet status
+- hypothesis packet status
+- selection status
+- selected hypotheses
+- primary hypothesis ID
+- selection rank
+- selection score
+- selection reason
+- evidence needed
+- allowed local checks
+- tags
+- selection gaps
+- allowed local next steps
+- rejected actions
+- safety metadata
+
+Safety properties:
+
+- local deterministic selection packet only
+- no web browsing
+- no network interaction
+- no command generation
+- no tool execution
+- no browser execution
+- no curl execution
+- no Kali execution
+- no evidence collection
+- no validation execution
+- no report submission
+- no automatic vulnerability confirmation
