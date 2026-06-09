@@ -147,6 +147,9 @@ from bugintel.integrations.har_importer import load_har
 from bugintel.core.brain_chat_research_source_packet import build_research_source_packet
 from bugintel.core.brain_chat_research_hypothesis_packet import build_research_hypothesis_packet
 from bugintel.core.brain_chat_research_hypothesis_selection_packet import build_research_hypothesis_selection_packet
+from bugintel.core.brain_chat_research_investigation_plan_packet import (
+    build_packet_from_file as build_research_investigation_plan_packet_from_file,
+)
 
 app = typer.Typer(
     name="bugintel",
@@ -10299,6 +10302,97 @@ def load_browser_artifacts_command(
         console.print(f"[bold green]Capture result JSON saved:[/bold green] {json_output}")
 
 
+
+
+
+
+@app.command("brain-chat-research-investigation-plan-packet")
+def brain_chat_research_investigation_plan_packet_command(
+    selection_file: Path = typer.Option(..., "--selection-file", "--selection", help="Local JSON file containing a research hypothesis selection packet."),
+    output_file: Path | None = typer.Option(None, "--output-file", "--output", help="Optional Markdown output path."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional JSON output path."),
+):
+    """Build a local-only research investigation plan packet."""
+    if not selection_file.exists():
+        console.print(f"[bold red]Research hypothesis selection JSON not found:[/bold red] {selection_file}")
+        raise typer.Exit(code=1)
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        packet = build_research_investigation_plan_packet_from_file(
+            selection_file,
+            output_file=output_file,
+            json_output=json_output,
+        )
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid JSON:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
+    except ValueError as exc:
+        console.print(f"[bold red]Invalid selection packet:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
+
+    table = Table(title="Brain Chat Research Investigation Plan Packet")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target name", str(packet.get("target_name", "unknown-target")))
+    table.add_row("Packet status", str(packet.get("packet_status", "unknown")))
+    table.add_row("Selection status", str(packet.get("selection_status", "unknown")))
+    table.add_row("Investigation plan status", str(packet.get("investigation_plan_status", "unknown")))
+    table.add_row("Selected count", str(packet.get("selected_count", 0)))
+    table.add_row("Plan count", str(packet.get("plan_count", 0)))
+    table.add_row("Primary hypothesis", str(packet.get("primary_hypothesis_id", "") or "none"))
+    table.add_row("Allowed local next steps", str(packet.get("allowed_local_next_steps_count", 0)))
+    table.add_row("Rejected actions", str(packet.get("rejected_actions_count", 0)))
+
+    safety_flags = packet.get("safety_flags", {})
+    if isinstance(safety_flags, dict):
+        table.add_row("Web browsing", str(bool(safety_flags.get("web_browsing", False))).lower())
+        table.add_row("Network interaction", str(bool(safety_flags.get("network_interaction", False))).lower())
+        table.add_row("Command generation", str(bool(safety_flags.get("command_generation", False))).lower())
+        table.add_row("Tool execution", str(bool(safety_flags.get("tool_execution", False))).lower())
+        table.add_row("Browser execution", str(bool(safety_flags.get("browser_execution", False))).lower())
+        table.add_row("Curl execution", str(bool(safety_flags.get("curl_execution", False))).lower())
+        table.add_row("Kali execution", str(bool(safety_flags.get("kali_execution", False))).lower())
+        table.add_row("Burp execution", str(bool(safety_flags.get("burp_execution", False))).lower())
+        table.add_row("Target interaction", str(bool(safety_flags.get("target_interaction", False))).lower())
+        table.add_row("Evidence collection", str(bool(safety_flags.get("evidence_collection", False))).lower())
+        table.add_row("Validation execution", str(bool(safety_flags.get("validation_execution", False))).lower())
+        table.add_row("Report submission", str(bool(safety_flags.get("report_submission", False))).lower())
+        table.add_row("Vulnerability confirmation", str(bool(safety_flags.get("vulnerability_confirmation", False))).lower())
+
+    console.print(table)
+    console.print(f"[bold yellow]Investigation plan status:[/bold yellow] {packet.get('investigation_plan_status', 'unknown')}")
+
+    plans = packet.get("plans", [])
+    if isinstance(plans, list) and plans:
+        console.print("[bold yellow]Investigation plans:[/bold yellow]")
+        for plan in plans:
+            if isinstance(plan, dict):
+                console.print(
+                    f"- {plan.get('hypothesis_id', 'unknown')} "
+                    f"[{plan.get('priority', 'unknown')}/{plan.get('confidence', 'unknown')}] "
+                    f"{plan.get('hypothesis_type', 'unknown')} :: {plan.get('title', '')}"
+                )
+
+    rejected_actions = packet.get("rejected_actions", [])
+    if isinstance(rejected_actions, list) and rejected_actions:
+        console.print("[bold yellow]Rejected actions:[/bold yellow]")
+        for item in rejected_actions:
+            if isinstance(item, dict):
+                console.print(f"- {item.get('action', '')}: {item.get('reason', '')}")
+            else:
+                console.print(f"- {item}")
+
+    if output_file:
+        console.print(f"[bold green]Investigation plan packet saved:[/bold green] {output_file}")
+
+    if json_output:
+        console.print(f"[bold green]Investigation plan JSON saved:[/bold green] {json_output}")
 
 
 @app.command("brain-chat-research-hypothesis-selection-packet")
