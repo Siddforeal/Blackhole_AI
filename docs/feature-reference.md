@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.7.0
+Current version: 1.8.0
 
 ## Research Goal
 
@@ -1657,3 +1657,13 @@ The research hypothesis packet turns a ready local research source packet into d
 It converts derived attack surfaces into structured hypotheses with hypothesis type, rationale, local review questions, evidence needed, allowed local checks, rejected actions, priority, confidence, and tags.
 
 This feature remains deterministic and local-only. It does not browse the web, call LLM providers, generate commands, execute tools, send requests, collect evidence, validate findings, submit reports, or confirm vulnerabilities.
+
+## v1.8.0 - Research Hypothesis Type Refinement
+
+This release refines research hypothesis classification for authorization and administrative access-control surfaces.
+
+Authorization-oriented surfaces such as `Authorization and administrative access control` now resolve to `authorization-admin-boundary` instead of being caught by the broader authentication/session classifier.
+
+The authentication/session classifier now matches explicit authentication concepts such as authentication, OAuth, session, JWT, and token.
+
+Safety defaults remain unchanged: local-only, deterministic, no web browsing, no network interaction, no command generation, no tool execution, no evidence collection, no validation, no report submission, and no vulnerability confirmation.

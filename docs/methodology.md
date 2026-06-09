@@ -1914,3 +1914,9 @@ The packet records source types, observations, attack surfaces, source gaps, and
 Blackhole can turn a ready local research source packet into structured bug-hunting hypotheses.
 
 The packet ranks local hypotheses, explains the rationale, lists evidence needed, and defines local-only review checks. It keeps command generation, browsing, validation, evidence collection, reporting, and vulnerability confirmation behind later gates.
+
+## Research Hypothesis Type Refinement
+
+Blackhole prioritizes precise hypothesis typing so local research planning stays accurate.
+
+Authorization and administrative access-control surfaces are classified before authentication/session surfaces to avoid treating authorization review as token/session review.
