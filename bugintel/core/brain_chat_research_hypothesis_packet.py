@@ -292,23 +292,6 @@ def _surface_profile(surface: str) -> dict[str, Any]:
             "tags": ["api", "webhook", "authz", "token"],
         }
 
-    if "auth" in lowered or "session" in lowered:
-        return {
-            "hypothesis_type": "authentication-session-trust-boundary",
-            "rationale": "Authentication/session code can fail around token validation, refresh flows, audience checks, and session binding.",
-            "evidence_needed": [
-                "Local token/session lifecycle map.",
-                "Validation checks for issuer, audience, expiry, tenant, and session binding.",
-                "Source evidence for refresh and logout invalidation behavior.",
-            ],
-            "allowed_local_checks": [
-                "Review local authentication middleware and token validation helpers.",
-                "Map session creation, refresh, and invalidation flows.",
-                "Identify missing checks before any runtime validation is proposed.",
-            ],
-            "tags": ["authentication", "session", "jwt", "token"],
-        }
-
     if "authorization" in lowered or "admin" in lowered or "access control" in lowered:
         return {
             "hypothesis_type": "authorization-admin-boundary",
@@ -324,6 +307,23 @@ def _surface_profile(surface: str) -> dict[str, Any]:
                 "Identify endpoints that require differential validation later.",
             ],
             "tags": ["authorization", "admin", "rbac", "tenant"],
+        }
+
+    if "authentication" in lowered or "oauth" in lowered or "session" in lowered or "jwt" in lowered or "token" in lowered:
+        return {
+            "hypothesis_type": "authentication-session-trust-boundary",
+            "rationale": "Authentication/session code can fail around token validation, refresh flows, audience checks, and session binding.",
+            "evidence_needed": [
+                "Local token/session lifecycle map.",
+                "Validation checks for issuer, audience, expiry, tenant, and session binding.",
+                "Source evidence for refresh and logout invalidation behavior.",
+            ],
+            "allowed_local_checks": [
+                "Review local authentication middleware and token validation helpers.",
+                "Map session creation, refresh, and invalidation flows.",
+                "Identify missing checks before any runtime validation is proposed.",
+            ],
+            "tags": ["authentication", "session", "jwt", "token"],
         }
 
     if "agent" in lowered or "runner" in lowered or "worker" in lowered or "deployment" in lowered:

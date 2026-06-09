@@ -123,3 +123,28 @@ def test_hypothesis_packet_markdown_is_readable():
     assert "Rejected Actions" in markdown
     assert "Safety" in markdown
     assert "\\n" not in markdown
+
+
+def test_authorization_surface_uses_authorization_hypothesis_type():
+    source_packet = build_research_source_packet(
+        [
+            {"title": "Scope", "source_type": "bug-bounty-scope", "summary": "Authorized local lab."},
+            {"title": "Vendor docs", "source_type": "vendor-docs", "summary": "Admin role and permission model."},
+            {"title": "Source", "source_type": "source-code", "summary": "Authorization and access control checks."},
+            {"title": "Advisory", "source_type": "security-advisory", "summary": "Historical admin access-control weakness."},
+        ],
+        target_name="demo.local",
+    )
+
+    packet = build_research_hypothesis_packet(source_packet)
+    data = packet.to_dict()
+
+    authz_hypothesis = next(
+        item for item in data["hypotheses"]
+        if item["attack_surface"] == "Authorization and administrative access control"
+    )
+
+    assert authz_hypothesis["hypothesis_type"] == "authorization-admin-boundary"
+    assert authz_hypothesis["priority"] == "high"
+    assert "authorization" in authz_hypothesis["tags"]
+    assert "admin" in authz_hypothesis["tags"]
