@@ -146,6 +146,7 @@ from bugintel.integrations.web_fetcher import fetch_web_page
 from bugintel.integrations.har_importer import load_har
 from bugintel.core.brain_chat_research_source_packet import build_research_source_packet
 from bugintel.core.brain_chat_research_hypothesis_packet import build_research_hypothesis_packet
+from bugintel.core.brain_chat_research_hypothesis_selection_packet import build_research_hypothesis_selection_packet
 
 app = typer.Typer(
     name="bugintel",
@@ -10298,6 +10299,110 @@ def load_browser_artifacts_command(
         console.print(f"[bold green]Capture result JSON saved:[/bold green] {json_output}")
 
 
+
+
+@app.command("brain-chat-research-hypothesis-selection-packet")
+def brain_chat_research_hypothesis_selection_packet_command(
+    sources_file: Path = typer.Option(..., "--sources-file", "--sources", help="Local JSON file containing research sources."),
+    target_name: str = typer.Option("unknown-target", "--target-name", "--target", help="Target name for the selection packet."),
+    max_selected: int = typer.Option(3, "--max-selected", help="Maximum number of hypotheses to select."),
+    output_file: Path | None = typer.Option(None, "--output-file", "--output", help="Optional Markdown output path."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional JSON output path."),
+):
+    """Build a local deterministic research hypothesis selection packet."""
+    if not sources_file.exists():
+        console.print(f"[bold red]Research sources JSON not found:[/bold red] {sources_file}")
+        raise typer.Exit(code=1)
+
+    resolved_target_name = target_name
+
+    try:
+        raw = json.loads(sources_file.read_text(encoding="utf-8"))
+
+        if isinstance(raw, dict):
+            if raw.get("target_name"):
+                resolved_target_name = str(raw.get("target_name"))
+            raw_sources = raw.get("sources", [])
+        else:
+            raw_sources = raw
+
+        if not isinstance(raw_sources, list):
+            console.print("[bold red]Research sources JSON must be a list or an object with a sources list.[/bold red]")
+            raise typer.Exit(code=1)
+
+        if not all(isinstance(item, dict) for item in raw_sources):
+            console.print("[bold red]Each research source must be a JSON object.[/bold red]")
+            raise typer.Exit(code=1)
+
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid JSON:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
+
+    source_packet = build_research_source_packet(raw_sources, target_name=resolved_target_name)
+    hypothesis_packet = build_research_hypothesis_packet(source_packet)
+    packet = build_research_hypothesis_selection_packet(hypothesis_packet, max_selected=max_selected)
+
+    markdown = packet.to_markdown()
+    data = packet.to_dict()
+
+    table = Table(title="Brain Chat Research Hypothesis Selection Packet")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target name", packet.target_name)
+    table.add_row("Packet status", packet.packet_status)
+    table.add_row("Hypothesis packet status", packet.hypothesis_packet_status)
+    table.add_row("Selection status", packet.selection_status)
+    table.add_row("Selected count", str(packet.selected_count))
+    table.add_row("Primary hypothesis", packet.primary_hypothesis_id or "none")
+    table.add_row("Selection gaps", str(len(packet.selection_gaps)))
+    table.add_row("Allowed local next steps", str(len(packet.allowed_local_next_steps)))
+    table.add_row("Rejected actions", str(len(packet.rejected_actions)))
+    table.add_row("Web browsing", "false")
+    table.add_row("Network interaction", "false")
+    table.add_row("Command generation", "false")
+    table.add_row("Tool execution", "false")
+    table.add_row("Browser execution", "false")
+    table.add_row("Curl execution", "false")
+    table.add_row("Kali execution", "false")
+    table.add_row("Evidence collection", "false")
+    table.add_row("Validation execution", "false")
+    table.add_row("Report submission", "false")
+    table.add_row("Vulnerability confirmation", "false")
+    console.print(table)
+    console.print(f"[bold yellow]Selection status:[/bold yellow] {packet.selection_status}")
+
+    if packet.selected_hypotheses:
+        console.print("[bold yellow]Selected hypotheses:[/bold yellow]")
+        for item in packet.selected_hypotheses:
+            console.print(
+                f"- rank={item.selection_rank} score={item.selection_score} "
+                f"{item.hypothesis_id} [{item.priority}/{item.confidence}] "
+                f"{item.hypothesis_type} :: {item.attack_surface}"
+            )
+
+    if packet.selection_gaps:
+        console.print("[bold yellow]Selection gaps:[/bold yellow]")
+        for item in packet.selection_gaps:
+            console.print(f"- {item}")
+
+    console.print("[bold yellow]Rejected actions:[/bold yellow]")
+    for item in packet.rejected_actions:
+        console.print(f"- {item}")
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved research hypothesis selection packet Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved research hypothesis selection packet JSON:[/bold green] {json_output}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only builds a local deterministic research hypothesis selection packet. "
+        "It does not browse, generate commands, execute tools, send requests, collect evidence, validate, submit reports, or confirm vulnerabilities."
+    )
 
 
 @app.command("brain-chat-research-hypothesis-packet")
