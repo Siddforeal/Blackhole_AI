@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-from click.utils import strip_ansi
+import re
 from typer.testing import CliRunner
 
 from bugintel.cli import app
@@ -418,7 +418,7 @@ def test_cli_help_lists_required_input() -> None:
     )
 
     assert result.exit_code == 0, result.output
-    output = strip_ansi(result.output)
+    output = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", result.output)
     assert "--proposal-file" in output
     assert "--proposal" in output
     assert "--output-file" in output
