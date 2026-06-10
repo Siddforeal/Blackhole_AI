@@ -4,6 +4,27 @@
 
 ### Added
 
+## v1.13.0 - Research Action Proposal Review Gate
+
+Released: 2026-06-11
+
+### Added
+
+- Local-only `brain-chat-research-action-proposal-review-gate` CLI command
+- Research action proposal review-gate core module
+- Packet and per-proposal schema validation
+- Action ID uniqueness and deterministic ordering checks
+- Action-type, tool-family, approval, scope, and blocker validation
+- Packet-level and per-proposal fail-closed safety validation
+- Markdown and JSON output
+- Core, CLI, and end-to-end workflow tests
+
+### Safety
+
+- Command and payload generation remain disabled
+- Package installation and tool execution remain disabled
+- Target interaction, evidence collection, validation, state mutation, report submission, and vulnerability confirmation remain disabled
+
 ## v1.12.0 - Research Action Proposal Packet
 
 Released: 2026-06-11
