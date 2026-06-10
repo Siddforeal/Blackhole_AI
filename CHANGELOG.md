@@ -4,6 +4,37 @@
 
 ### Added
 
+## v1.12.0 - Research Action Proposal Packet
+
+Released: 2026-06-11
+
+### Added
+
+- Local-only `brain-chat-research-action-proposal-packet` CLI command
+- Research action proposal packet core module
+- Deterministic action proposals derived from reviewed investigation plans
+- Plan/review target and plan-count consistency checks
+- Blocked states for invalid, mismatched, unsafe, or non-review-ready inputs
+- Per-hypothesis proposal categories for:
+  - local source review
+  - local artifact review
+  - scope confirmation preparation
+  - controlled account preparation
+  - browser observation proposal
+  - Burp request review proposal
+  - command-review preparation
+  - evidence-plan preparation
+- Markdown and JSON output support
+- Unit and CLI tests for the complete proposal workflow
+
+### Safety
+
+- Action proposals do not generate executable commands
+- Package installation remains disabled
+- Tool, browser, curl, Kali, and Burp execution remain disabled
+- Target interaction, evidence collection, validation, state mutation, report submission, and vulnerability confirmation remain disabled
+- Human review and later approval gates remain required before any active workflow
+
 ## v1.11.0 - Research Investigation Plan Review Gate
 
 Released: 2026-06-10
