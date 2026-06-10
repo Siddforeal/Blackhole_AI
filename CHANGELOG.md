@@ -4,6 +4,25 @@
 
 ### Added
 
+## v1.11.0 - Research Investigation Plan Review Gate
+
+Released: 2026-06-10
+
+### Added
+
+- Local-only `brain-chat-research-investigation-plan-review-gate` CLI command
+- Research investigation plan review-gate core module
+- Structured review status for invalid, empty, unsafe, and human-reviewable investigation plan packets
+- Safety findings for top-level execution flags and per-plan validation/evidence/confirmation flags
+- Human review checklist and rejected actions for investigation plan review
+- Markdown and JSON output support for investigation plan review gates
+- Unit and CLI tests for the research investigation plan review gate
+
+### Safety
+
+- Review gate does not browse, generate commands, execute tools, launch browsers, use Kali tools, send requests, collect evidence, validate findings, submit reports, write state, or confirm vulnerabilities
+- Runtime execution, validation, evidence collection, report submission, and vulnerability confirmation remain false in review-gate output
+
 - Playwright execution preview foundation
 - `preview-playwright` CLI command
 - Safe Playwright availability check without installing packages, downloading browsers, or launching a browser

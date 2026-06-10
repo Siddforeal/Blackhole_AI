@@ -147,6 +147,9 @@ from bugintel.integrations.har_importer import load_har
 from bugintel.core.brain_chat_research_source_packet import build_research_source_packet
 from bugintel.core.brain_chat_research_hypothesis_packet import build_research_hypothesis_packet
 from bugintel.core.brain_chat_research_hypothesis_selection_packet import build_research_hypothesis_selection_packet
+from bugintel.core.brain_chat_research_investigation_plan_review_gate import (
+    build_review_gate_from_file as build_research_investigation_plan_review_gate_from_file,
+)
 from bugintel.core.brain_chat_research_investigation_plan_packet import (
     build_packet_from_file as build_research_investigation_plan_packet_from_file,
 )
@@ -261,7 +264,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.10.0",
+                version="1.11.0",
                 force=True,
             )
         )
@@ -273,7 +276,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="0.66.0",
+            version="1.11.0",
             force=True,
         )
     )
@@ -282,7 +285,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.10.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.11.0")
 
 
 @app.command("scope-check")
@@ -10394,6 +10397,103 @@ def brain_chat_research_investigation_plan_packet_command(
     if json_output:
         console.print(f"[bold green]Investigation plan JSON saved:[/bold green] {json_output}")
 
+
+
+
+@app.command("brain-chat-research-investigation-plan-review-gate")
+def brain_chat_research_investigation_plan_review_gate_command(
+    plan_file: Path = typer.Option(..., "--plan-file", "--plan", help="Local JSON file containing a research investigation plan packet."),
+    output_file: Path | None = typer.Option(None, "--output-file", "--output", help="Optional Markdown output path."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional JSON output path."),
+):
+    """Review a local research investigation plan packet before human review."""
+    if not plan_file.exists():
+        console.print(f"[bold red]Research investigation plan JSON not found:[/bold red] {plan_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        if output_file:
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+        if json_output:
+            json_output.parent.mkdir(parents=True, exist_ok=True)
+
+        review_gate = build_research_investigation_plan_review_gate_from_file(
+            plan_file,
+            output_file=output_file,
+            json_output=json_output,
+        )
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid research investigation plan JSON:[/bold red] {exc}")
+        raise typer.Exit(code=2) from exc
+    except ValueError as exc:
+        console.print(f"[bold red]Invalid investigation plan review gate input:[/bold red] {exc}")
+        raise typer.Exit(code=2) from exc
+
+    table = Table(title="Brain Chat Research Investigation Plan Review Gate")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Plan file", str(plan_file))
+    table.add_row("Target", str(review_gate.get("target_name", "unknown-target")))
+    table.add_row("Review status", str(review_gate.get("review_status", "unknown")))
+    table.add_row("Recommendation", str(review_gate.get("recommendation", "")))
+    table.add_row("Packet status", str(review_gate.get("packet_status", "unknown")))
+    table.add_row("Investigation plan status", str(review_gate.get("investigation_plan_status", "unknown")))
+    table.add_row("Selected count", str(review_gate.get("selected_count", 0)))
+    table.add_row("Plan count", str(review_gate.get("plan_count", 0)))
+    table.add_row("Review ready", str(review_gate.get("review_ready", False)))
+    table.add_row("Schema findings", str(len(review_gate.get("schema_findings", []))))
+    table.add_row("Safety findings", str(len(review_gate.get("safety_findings", []))))
+    table.add_row("Plan findings", str(len(review_gate.get("plan_findings", []))))
+    table.add_row("Human review items", str(len(review_gate.get("human_review_items", []))))
+    table.add_row("Rejected actions", str(len(review_gate.get("rejected_actions", []))))
+    table.add_row("Runtime execution allowed", "false")
+    table.add_row("Validation allowed", "false")
+    table.add_row("Evidence collection", "false")
+    table.add_row("Report submission", "false")
+    table.add_row("Vulnerability confirmation", "false")
+    console.print(table)
+
+    schema_findings = review_gate.get("schema_findings", [])
+    if schema_findings:
+        console.print("[bold yellow]Schema findings:[/bold yellow]")
+        for item in schema_findings:
+            console.print(f"- [{item.get('severity', 'unknown')}] {item.get('subject', 'unknown')}: {item.get('message', '')}")
+
+    safety_findings = review_gate.get("safety_findings", [])
+    if safety_findings:
+        console.print("[bold yellow]Safety findings:[/bold yellow]")
+        for item in safety_findings:
+            console.print(f"- [{item.get('severity', 'unknown')}] {item.get('subject', 'unknown')}: {item.get('message', '')}")
+
+    plan_findings = review_gate.get("plan_findings", [])
+    if plan_findings:
+        console.print("[bold yellow]Plan findings:[/bold yellow]")
+        for item in plan_findings:
+            console.print(f"- [{item.get('severity', 'unknown')}] {item.get('subject', 'unknown')}: {item.get('message', '')}")
+
+    human_review_items = review_gate.get("human_review_items", [])
+    if human_review_items:
+        console.print("[bold yellow]Human review items:[/bold yellow]")
+        for item in human_review_items:
+            console.print(f"- [ ] {item}")
+
+    rejected_actions = review_gate.get("rejected_actions", [])
+    if rejected_actions:
+        console.print("[bold yellow]Rejected actions:[/bold yellow]")
+        for item in rejected_actions:
+            console.print(f"- {item}")
+
+    if output_file:
+        console.print(f"[bold green]Saved research investigation plan review gate Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        console.print(f"[bold green]Saved research investigation plan review gate JSON:[/bold green] {json_output}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only reviews a local research investigation plan packet. "
+        "It does not browse, generate commands, execute tools, launch browsers, use Kali tools, send requests, "
+        "collect evidence, validate findings, submit reports, write state, or confirm vulnerabilities."
+    )
 
 @app.command("brain-chat-research-hypothesis-selection-packet")
 def brain_chat_research_hypothesis_selection_packet_command(
