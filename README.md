@@ -8,7 +8,7 @@
 
 It helps researchers turn fragmented notes, endpoints, hypotheses, evidence, and review decisions into a structured local case workflow.
 
-> **Current state:** Blackhole is a planning-oriented, human-controlled research workbench. Its long-term roadmap is an interactive security research agent with scope-gated command-line, browser, Burp Suite, Kali/tooling, evidence, and controlled validation capabilities.
+> **Current state:** Blackhole is a planning-oriented, human-controlled research workbench. Its long-term roadmap is an agentic security research, vulnerability validation, and controlled exploitation framework with scope-gated command-line, browser, Burp Suite, Kali/tooling, evidence, proof-of-concept generation, and autonomous research-loop capabilities.
 
 **Current release:** `v1.12.0`
 
