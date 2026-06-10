@@ -1,5 +1,7 @@
 # Roadmap
 
+> Historical note: the versioned sections below describe the original early roadmap. Many items listed as planned were later implemented. See **Current Direction After v1.12.0** for the active roadmap.
+
 BugIntel AI Workbench is being developed as a human-in-the-loop research prototype for AI-assisted vulnerability discovery and bug intelligence.
 
 ## v0.1.0 - MVP Foundation
@@ -65,3 +67,24 @@ Planned:
 Goal:
 
 A full research workbench for authorized web, API, browser, and mobile vulnerability intelligence with structured evidence, AI-assisted planning, and report generation.
+
+## Current Direction After v1.12.0
+
+Blackhole is moving from a structured planning workbench toward an interactive,
+human-controlled security research agent.
+
+Planned capabilities include:
+
+- critical target and trust-boundary reasoning
+- command-line and workspace interaction
+- approved package installation
+- browser, DevTools, console, and network interaction
+- Burp Suite request and response workflows
+- scope-aware Kali and security-tool adapters
+- controlled proof-of-concept generation and validation
+- observation capture and research-state updates
+- multi-agent coordination
+- a future specialized security-research LLM
+
+These capabilities must remain scope-controlled, auditable, interruptible, and
+subject to risk-appropriate human approval.

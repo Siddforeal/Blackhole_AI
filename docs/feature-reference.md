@@ -4,13 +4,13 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.9.0
+Current version: 1.12.0
 
 ## Research Goal
 
 This project explores AI-assisted vulnerability discovery and bug intelligence workflows for modern web and API security research.
 
-The long-term goal is to support scope-controlled testing, endpoint mining, task-tree based research workflows, safe Kali command planning, controlled execution, response analysis, evidence storage, secret redaction, and report generation.
+The long-term goal is an interactive, human-controlled AI security research environment that can reason over target context, operate approved command-line, browser, Burp Suite, Kali, and analysis tools, perform controlled proof-of-concept validation, capture observations and evidence, update persistent research state, and support evidence-backed reporting.
 
 ## Implemented Features
 

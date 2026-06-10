@@ -212,12 +212,22 @@ Implemented:
 
 ## Future Direction
 
-The long-term goal is a full authorized research workbench where an AI planner helps a researcher:
+The project is evolving from a planning-oriented workbench into the controlled interactive agent runtime described below.
 
-- map a target,
-- discover endpoints,
-- assign specialist agents,
-- plan safe tests,
-- analyze evidence,
-- expand interesting branches,
-- and produce high-quality vulnerability reports.
+## Interactive Agent Runtime Direction
+
+The long-term runtime is intended to be agentic but controlled. The AI research brain should be able to inspect local files and source code, propose and critique command-line actions, install approved dependencies, interact with approved browser, DevTools, Burp Suite, Kali, and analysis-tool adapters, generate controlled proof-of-concept validation, observe results, and update persistent research state.
+
+Side-effectful actions must remain scope-aware, auditable, interruptible, and subject to risk-appropriate human approval.
+
+```text
+reason
+→ propose action
+→ classify scope and risk
+→ obtain approval when required
+→ execute through a controlled adapter
+→ capture and redact observations
+→ update research state
+→ critique the result
+→ select the next action
+```

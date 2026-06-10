@@ -8,7 +8,7 @@
 
 It helps researchers turn fragmented notes, endpoints, hypotheses, evidence, and review decisions into a structured local case workflow.
 
-> Blackhole is **not** a scanner, auto-exploitation framework, or autonomous hacking agent.
+> **Current state:** Blackhole is a planning-oriented, human-controlled research workbench. Its long-term roadmap is an agentic security research, vulnerability validation, and controlled exploitation framework with scope-gated command-line, browser, Burp Suite, Kali/tooling, evidence, proof-of-concept generation, and autonomous research-loop capabilities.
 
 **Current release:** `v1.12.0`
 
@@ -58,7 +58,7 @@ It helps answer practical workflow questions:
 
 - Authorized research only
 - Local-first by default
-- Planning-first, not execution-first
+- Planning-first by default; controlled execution only through explicit scope, approval, and safety gates
 - Human approval before risky actions
 - Provider output is untrusted until reviewed
 - No automatic vulnerability confirmation
