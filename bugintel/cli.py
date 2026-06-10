@@ -147,6 +147,9 @@ from bugintel.integrations.har_importer import load_har
 from bugintel.core.brain_chat_research_source_packet import build_research_source_packet
 from bugintel.core.brain_chat_research_hypothesis_packet import build_research_hypothesis_packet
 from bugintel.core.brain_chat_research_hypothesis_selection_packet import build_research_hypothesis_selection_packet
+from bugintel.core.brain_chat_research_action_proposal_review_gate import (
+    build_review_gate_from_file as build_research_action_proposal_review_gate_from_file,
+)
 from bugintel.core.brain_chat_research_action_proposal_packet import (
     build_packet_from_files as build_research_action_proposal_packet_from_files,
 )
@@ -267,7 +270,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.12.0",
+                version="1.13.0",
                 force=True,
             )
         )
@@ -279,7 +282,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.12.0",
+            version="1.13.0",
             force=True,
         )
     )
@@ -288,7 +291,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.12.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.13.0")
 
 
 @app.command("scope-check")
@@ -10399,6 +10402,214 @@ def brain_chat_research_investigation_plan_packet_command(
 
     if json_output:
         console.print(f"[bold green]Investigation plan JSON saved:[/bold green] {json_output}")
+
+
+
+@app.command("brain-chat-research-action-proposal-review-gate")
+def brain_chat_research_action_proposal_review_gate_command(
+    proposal_file: Path = typer.Option(
+        ...,
+        "--proposal-file",
+        "--proposal",
+        help=(
+            "Local JSON file containing a research action "
+            "proposal packet."
+        ),
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown output path.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON output path.",
+    ),
+):
+    """Review a local research action proposal packet."""
+    if not proposal_file.exists():
+        console.print(
+            "[bold red]Research action proposal JSON not found:"
+            f"[/bold red] {proposal_file}"
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        review_gate = (
+            build_research_action_proposal_review_gate_from_file(
+                proposal_file,
+                output_file=output_file,
+                json_output=json_output,
+            )
+        )
+    except json.JSONDecodeError as exc:
+        console.print(
+            "[bold red]Invalid research action proposal JSON:"
+            f"[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+    except ValueError as exc:
+        console.print(
+            "[bold red]Invalid research action proposal "
+            f"review-gate input:[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+
+    counts = review_gate.get("counts") or {}
+
+    table = Table(
+        title="Brain Chat Research Action Proposal Review Gate"
+    )
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row("Proposal file", str(proposal_file))
+    table.add_row(
+        "Target",
+        str(review_gate.get("target_name") or "unknown-target"),
+    )
+    table.add_row(
+        "Review status",
+        str(review_gate.get("review_status") or "unknown"),
+    )
+    table.add_row(
+        "Recommendation",
+        str(review_gate.get("recommendation") or ""),
+    )
+    table.add_row(
+        "Proposal status",
+        str(review_gate.get("proposal_status") or "unknown"),
+    )
+    table.add_row(
+        "Source review status",
+        str(review_gate.get("source_review_status") or "unknown"),
+    )
+    table.add_row(
+        "Source review ready",
+        str(bool(review_gate.get("source_review_ready"))),
+    )
+    table.add_row(
+        "Source action proposal ready",
+        str(bool(review_gate.get("source_action_proposal_ready"))),
+    )
+    table.add_row(
+        "Plan count",
+        str(review_gate.get("plan_count") or 0),
+    )
+    table.add_row(
+        "Declared proposal count",
+        str(review_gate.get("declared_proposal_count") or 0),
+    )
+    table.add_row(
+        "Proposal count",
+        str(review_gate.get("proposal_count") or 0),
+    )
+    table.add_row(
+        "Review ready",
+        str(bool(review_gate.get("review_ready"))),
+    )
+    table.add_row(
+        "Schema findings",
+        str(counts.get("schema_findings") or 0),
+    )
+    table.add_row(
+        "Safety findings",
+        str(counts.get("safety_findings") or 0),
+    )
+    table.add_row(
+        "Proposal findings",
+        str(counts.get("proposal_findings") or 0),
+    )
+    table.add_row(
+        "High findings",
+        str(counts.get("high_findings") or 0),
+    )
+    table.add_row(
+        "Medium findings",
+        str(counts.get("medium_findings") or 0),
+    )
+    table.add_row(
+        "Human review items",
+        str(counts.get("human_review_items") or 0),
+    )
+    table.add_row("Command generation allowed", "false")
+    table.add_row("Package installation allowed", "false")
+    table.add_row("Execution allowed", "false")
+    table.add_row("Runtime execution allowed", "false")
+    table.add_row("Target interaction allowed", "false")
+    table.add_row("Evidence collection allowed", "false")
+    table.add_row("Validation allowed", "false")
+    table.add_row("Report submission allowed", "false")
+    table.add_row("Vulnerability confirmation allowed", "false")
+
+    console.print(table)
+
+    finding_sections = (
+        ("Schema findings", "schema_findings"),
+        ("Safety findings", "safety_findings"),
+        ("Proposal findings", "proposal_findings"),
+    )
+
+    for heading, key in finding_sections:
+        findings = review_gate.get(key)
+        if not isinstance(findings, list) or not findings:
+            continue
+
+        console.print(f"[bold yellow]{heading}:[/bold yellow]")
+
+        for finding in findings:
+            if not isinstance(finding, dict):
+                continue
+
+            severity = str(finding.get("severity") or "unknown")
+            category = str(finding.get("category") or "finding")
+            subject = str(finding.get("subject") or "unknown")
+            message = str(finding.get("message") or "")
+            required_action = str(
+                finding.get("required_action") or ""
+            )
+
+            console.print(
+                f"- [{severity}] {category} / {subject}: "
+                f"{message} Required action: {required_action}"
+            )
+
+    human_review_items = review_gate.get("human_review_items")
+    if isinstance(human_review_items, list) and human_review_items:
+        console.print(
+            "[bold yellow]Human review items:[/bold yellow]"
+        )
+        for item in human_review_items:
+            console.print(f"- [ ] {item}")
+
+    rejected_actions = review_gate.get("rejected_actions")
+    if isinstance(rejected_actions, list) and rejected_actions:
+        console.print("[bold yellow]Rejected actions:[/bold yellow]")
+        for item in rejected_actions:
+            console.print(f"- {item}")
+
+    if output_file:
+        console.print(
+            "[bold green]Saved research action proposal "
+            f"review-gate Markdown:[/bold green] {output_file}"
+        )
+
+    if json_output:
+        console.print(
+            "[bold green]Saved research action proposal "
+            f"review-gate JSON:[/bold green] {json_output}"
+        )
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only "
+        "reviews a local research action proposal packet. It does "
+        "not generate commands, install software, execute tools, "
+        "launch browsers, interact with Burp Suite, use Kali tools, "
+        "send requests, collect evidence, validate findings, mutate "
+        "state, submit reports, or confirm vulnerabilities."
+    )
 
 @app.command("brain-chat-research-action-proposal-packet")
 def brain_chat_research_action_proposal_packet_command(
