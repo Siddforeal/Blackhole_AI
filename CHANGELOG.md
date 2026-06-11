@@ -4,6 +4,37 @@
 
 ### Added
 
+## v1.15.0 - Typed Tool Request Review Gate
+
+Released: 2026-06-12
+
+### Added
+
+- Local-only `brain-chat-research-typed-tool-request-review-gate` CLI command
+- Typed tool-request manifest integrity and safety review core
+- Manifest-kind, status, readiness, count, and source-digest validation
+- SHA-256 manifest and per-request digest verification
+- Deterministic request-ID, action-ID, and ordering validation
+- Action-profile, tool-family, adapter-family, request-kind, and risk validation
+- Adapter contract validation for allowed inputs, required outputs, and prohibited operations
+- Scope, controlled-assets, observation, redaction, focus-endpoint, and runtime-gate requirement checks
+- Execution-gate input and fail-closed preview consistency validation
+- Per-request review results and aggregate finding counts
+- Markdown and JSON review-gate outputs
+- Core, CLI, forced-color, tampering, deterministic-output, and end-to-end manifest-review tests
+
+### Safety
+
+- Runtime approval-template readiness is separate from runtime authorization
+- Command and payload generation remain disabled
+- Package installation and tool execution remain disabled
+- Browser, Burp Suite, curl, Kali, provider, scanner, and shell execution remain disabled
+- Network and target interaction remain disabled
+- Evidence collection and vulnerability validation remain disabled
+- State mutation, report submission, and vulnerability confirmation remain disabled
+- Every request remains non-executable
+- The execution-gate compatibility preview remains fail-closed
+
 ## v1.14.0 - Research Action Decision Pipeline
 
 Released: 2026-06-11
