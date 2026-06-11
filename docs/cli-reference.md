@@ -3010,3 +3010,20 @@ blackhole brain-chat-research-typed-tool-request-manifest \
 An optional approved focus endpoint may be supplied with `--focus-endpoint`.
 
 The focus endpoint does not enable execution. The generated execution-gate preview remains fail-closed.
+
+## Typed Tool Request Review Gate
+
+Review a planning-only typed tool-request manifest before creating any future exact-action runtime approval artifact.
+
+```bash
+blackhole brain-chat-research-typed-tool-request-review-gate \
+  --manifest-file /tmp/research-typed-tool-requests.json \
+  --output-file /tmp/research-typed-tool-request-review.md \
+  --json-output /tmp/research-typed-tool-request-review.json
+```
+
+The `--typed-manifest` option is an alias for `--manifest-file`, and `--output` is an alias for `--output-file`.
+
+A successful review returns `ready-for-runtime-approval-template` only when the manifest has a focus endpoint and passes digest, identity, ordering, action-profile, adapter-contract, safety, and execution-gate consistency validation.
+
+The command remains local and planning-only. It does not generate commands or payloads, install software, execute tools, launch browsers, replay Burp requests, use Kali tools, send requests, collect evidence, validate vulnerabilities, mutate state, submit reports, or confirm vulnerabilities.

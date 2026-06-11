@@ -249,3 +249,20 @@ reviewed action proposals
 The bridge separates human planning decisions, approved-action normalization, typed request preparation, and runtime authorization.
 
 No v1.14.0 artifact grants runtime authorization. Browser, Burp Suite, shell, Kali, evidence, and other runtime-oriented requests remain blocked by scope, focus-endpoint, controlled-asset, human-approval, observation, redaction, and execution-gate requirements.
+
+## Typed Tool Request Review Boundary
+
+Version 1.15.0 adds a dedicated integrity and safety boundary after typed request generation and before any future exact-action runtime approval artifact.
+
+```text
+approved research actions
+→ typed tool-request manifest
+→ digest and contract verification
+→ focus-endpoint and execution-gate consistency review
+→ runtime approval-template readiness
+→ later exact-action approval and adapter review
+```
+
+The review boundary independently reconstructs manifest and request digests, validates deterministic identity and ordering, verifies action profiles and adapter contracts, and rebuilds the existing execution-gate preview from its compatibility input.
+
+A successful review indicates only that a future runtime approval template may be created. It does not make any request executable and does not grant command generation, package installation, network access, target interaction, evidence collection, validation, state mutation, report submission, or vulnerability confirmation.

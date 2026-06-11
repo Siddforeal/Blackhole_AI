@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.14.0
+Current version: 1.15.0
 
 ## Research Goal
 
@@ -1697,3 +1697,29 @@ The approved-action packet includes only effectively approved actions and normal
 The typed tool-request manifest creates deterministic, non-executable adapter requests with allowed inputs, required outputs, prohibited operations, request identifiers, and SHA-256 digests.
 
 Human approval permits only construction of the next planning artifact. It does not authorize command generation, package installation, tool execution, network interaction, evidence collection, vulnerability validation, state mutation, report submission, or vulnerability confirmation.
+
+## Typed Tool Request Review Gate
+
+Version 1.15.0 adds a fail-closed integrity and safety review between the typed tool-request manifest and any future exact-action runtime approval artifact.
+
+```text
+typed tool-request manifest
+→ typed tool-request review gate
+→ future exact-action runtime approval template
+→ later runtime authorization and adapter review
+```
+
+The review gate validates:
+
+- manifest kind, status, readiness, and request counts
+- SHA-256 manifest and per-request digests
+- deterministic request IDs, action IDs, and ordering
+- action profiles, tool families, adapter families, request kinds, and risks
+- adapter allowed inputs, required outputs, and prohibited operations
+- scope, controlled-assets, focus-endpoint, observation, redaction, and runtime-gate requirements
+- execution-gate input and preview consistency
+- packet, request, and safety flags remain fail-closed
+
+A successful review produces `ready-for-runtime-approval-template`. This status permits only creation of another local planning artifact.
+
+It does not authorize command or payload generation, package installation, tool execution, network or target interaction, evidence collection, vulnerability validation, state mutation, report submission, or vulnerability confirmation.

@@ -147,6 +147,9 @@ from bugintel.integrations.har_importer import load_har
 from bugintel.core.brain_chat_research_source_packet import build_research_source_packet
 from bugintel.core.brain_chat_research_hypothesis_packet import build_research_hypothesis_packet
 from bugintel.core.brain_chat_research_hypothesis_selection_packet import build_research_hypothesis_selection_packet
+from bugintel.core.brain_chat_research_typed_tool_request_review_gate import (
+    build_review_gate_from_file as build_research_typed_tool_request_review_gate_from_file,
+)
 from bugintel.core.brain_chat_research_typed_tool_request_manifest import (
     build_typed_manifest_from_file as build_research_typed_tool_request_manifest_from_file,
 )
@@ -282,7 +285,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.14.0",
+                version="1.15.0",
                 force=True,
             )
         )
@@ -294,7 +297,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.14.0",
+            version="1.15.0",
             force=True,
         )
     )
@@ -303,7 +306,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.14.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.15.0")
 
 
 @app.command("scope-check")
@@ -10422,6 +10425,311 @@ def brain_chat_research_investigation_plan_packet_command(
 
 
 
+
+
+
+@app.command(
+    "brain-chat-research-typed-tool-request-review-gate"
+)
+def brain_chat_research_typed_tool_request_review_gate_command(
+    manifest_file: Path = typer.Option(
+        ...,
+        "--manifest-file",
+        "--typed-manifest",
+        help=(
+            "Local JSON file containing a research typed "
+            "tool-request manifest."
+        ),
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown output path.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON output path.",
+    ),
+):
+    """Review a typed research tool-request manifest."""
+    if not manifest_file.exists():
+        console.print(
+            "[bold red]Research typed tool-request manifest "
+            f"not found:[/bold red] {manifest_file}"
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        review = (
+            build_research_typed_tool_request_review_gate_from_file(
+                manifest_file,
+                output_file=output_file,
+                json_output=json_output,
+            )
+        )
+    except json.JSONDecodeError as exc:
+        console.print(
+            "[bold red]Invalid typed tool-request manifest "
+            f"JSON:[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+    except ValueError as exc:
+        console.print(
+            "[bold red]Invalid typed tool-request review-gate "
+            f"input:[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+
+    counts = review.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+
+    table = Table(
+        title="Research Typed Tool Request Review Gate"
+    )
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    rows = (
+        ("Manifest file", str(manifest_file)),
+        (
+            "Target",
+            str(
+                review.get("target_name")
+                or "unknown-target"
+            ),
+        ),
+        (
+            "Focus endpoint",
+            str(
+                review.get("focus_endpoint")
+                or "none"
+            ),
+        ),
+        (
+            "Review status",
+            str(
+                review.get("review_status")
+                or "unknown"
+            ),
+        ),
+        (
+            "Summary",
+            str(review.get("summary") or ""),
+        ),
+        (
+            "Review ready",
+            str(bool(review.get("review_ready"))),
+        ),
+        (
+            "Runtime approval template ready",
+            str(
+                bool(
+                    review.get(
+                        "runtime_approval_template_ready"
+                    )
+                )
+            ),
+        ),
+        (
+            "Typed requests",
+            str(
+                review.get("typed_request_count")
+                or 0
+            ),
+        ),
+        (
+            "Ready requests",
+            str(counts.get("ready_requests") or 0),
+        ),
+        (
+            "Blocked requests",
+            str(
+                counts.get("blocked_requests")
+                or 0
+            ),
+        ),
+        (
+            "Manifest findings",
+            str(
+                counts.get("manifest_findings")
+                or 0
+            ),
+        ),
+        (
+            "Request findings",
+            str(
+                counts.get("request_findings")
+                or 0
+            ),
+        ),
+        (
+            "Execution-gate findings",
+            str(counts.get("gate_findings") or 0),
+        ),
+        (
+            "High findings",
+            str(counts.get("high_findings") or 0),
+        ),
+        (
+            "Medium findings",
+            str(counts.get("medium_findings") or 0),
+        ),
+        (
+            "Command generation allowed",
+            "false",
+        ),
+        (
+            "Package installation allowed",
+            "false",
+        ),
+        (
+            "Runtime execution allowed",
+            "false",
+        ),
+        (
+            "Network interaction allowed",
+            "false",
+        ),
+        (
+            "Target interaction allowed",
+            "false",
+        ),
+    )
+
+    for field, value in rows:
+        table.add_row(field, value)
+
+    console.print(table)
+
+    request_reviews = review.get("request_reviews")
+
+    if (
+        isinstance(request_reviews, list)
+        and request_reviews
+    ):
+        request_table = Table(
+            title="Typed Request Reviews"
+        )
+        request_table.add_column("Request ID")
+        request_table.add_column("Action ID")
+        request_table.add_column("Tool Family")
+        request_table.add_column("Adapter")
+        request_table.add_column("Risk")
+        request_table.add_column("Status")
+        request_table.add_column("Ready")
+        request_table.add_column("Findings")
+
+        for item in request_reviews:
+            if not isinstance(item, dict):
+                continue
+
+            request_table.add_row(
+                str(item.get("request_id") or ""),
+                str(item.get("action_id") or ""),
+                str(item.get("tool_family") or ""),
+                str(item.get("adapter_family") or ""),
+                str(item.get("risk_level") or ""),
+                str(
+                    item.get("review_status")
+                    or "unknown"
+                ),
+                str(bool(item.get("review_ready"))),
+                str(item.get("finding_count") or 0),
+            )
+
+        console.print(request_table)
+
+    finding_sections = (
+        ("Manifest findings", "manifest_findings"),
+        ("Request findings", "request_findings"),
+        (
+            "Execution-gate findings",
+            "gate_findings",
+        ),
+    )
+
+    for heading, key in finding_sections:
+        findings = review.get(key)
+
+        if not isinstance(findings, list) or not findings:
+            continue
+
+        console.print(
+            f"[bold yellow]{heading}:[/bold yellow]"
+        )
+
+        for finding in findings:
+            if not isinstance(finding, dict):
+                continue
+
+            console.print(
+                "- "
+                f"[{finding.get('severity', 'unknown')}] "
+                f"{finding.get('category', 'finding')} / "
+                f"{finding.get('subject', 'unknown')}: "
+                f"{finding.get('message', '')} "
+                "Required action: "
+                f"{finding.get('required_action', '')}"
+            )
+
+    allowed_next_steps = review.get(
+        "allowed_next_steps"
+    )
+
+    if (
+        isinstance(allowed_next_steps, list)
+        and allowed_next_steps
+    ):
+        console.print(
+            "[bold yellow]Allowed next steps:"
+            "[/bold yellow]"
+        )
+
+        for item in allowed_next_steps:
+            console.print(f"- {item}")
+
+    rejected_next_steps = review.get(
+        "rejected_next_steps"
+    )
+
+    if (
+        isinstance(rejected_next_steps, list)
+        and rejected_next_steps
+    ):
+        console.print(
+            "[bold yellow]Rejected next steps:"
+            "[/bold yellow]"
+        )
+
+        for item in rejected_next_steps:
+            console.print(f"- {item}")
+
+    if output_file:
+        console.print(
+            "[bold green]Saved typed request review "
+            f"Markdown:[/bold green] {output_file}"
+        )
+
+    if json_output:
+        console.print(
+            "[bold green]Saved typed request review "
+            f"JSON:[/bold green] {json_output}"
+        )
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command "
+        "performs local integrity, adapter-contract, digest, "
+        "focus-endpoint, and execution-gate consistency "
+        "review only. It does not generate commands or "
+        "payloads, install software, execute tools, launch "
+        "browsers, replay Burp requests, use Kali tools, "
+        "send network requests, interact with targets, "
+        "collect evidence, validate findings, mutate state, "
+        "submit reports, or confirm vulnerabilities."
+    )
 
 @app.command("brain-chat-research-typed-tool-request-manifest")
 def brain_chat_research_typed_tool_request_manifest_command(
