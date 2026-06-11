@@ -2965,3 +2965,48 @@ Safety properties:
 - no validation execution
 - no report submission
 - no automatic vulnerability confirmation
+
+## Research Action Decision Pipeline
+
+### Create the human decision template
+
+```bash
+blackhole brain-chat-research-action-decision-template \
+  --proposal-file /tmp/research-action-proposal.json \
+  --output-file /tmp/research-action-decisions.json
+```
+
+Record the reviewer and one explicit decision for every proposed action.
+
+### Build the action decision packet
+
+```bash
+blackhole brain-chat-research-action-decision-packet \
+  --proposal-file /tmp/research-action-proposal.json \
+  --review-file /tmp/research-action-proposal-review.json \
+  --decision-file /tmp/research-action-decisions.json \
+  --output-file /tmp/research-action-decision.md \
+  --json-output /tmp/research-action-decision.json
+```
+
+### Build the approved-action packet
+
+```bash
+blackhole brain-chat-research-approved-action-packet \
+  --decision-file /tmp/research-action-decision.json \
+  --output-file /tmp/research-approved-actions.md \
+  --json-output /tmp/research-approved-actions.json
+```
+
+### Build the typed tool-request manifest
+
+```bash
+blackhole brain-chat-research-typed-tool-request-manifest \
+  --approved-action-file /tmp/research-approved-actions.json \
+  --output-file /tmp/research-typed-tool-requests.md \
+  --json-output /tmp/research-typed-tool-requests.json
+```
+
+An optional approved focus endpoint may be supplied with `--focus-endpoint`.
+
+The focus endpoint does not enable execution. The generated execution-gate preview remains fail-closed.

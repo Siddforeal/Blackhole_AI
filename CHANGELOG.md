@@ -4,6 +4,39 @@
 
 ### Added
 
+## v1.14.0 - Research Action Decision Pipeline
+
+Released: 2026-06-11
+
+### Added
+
+- Human decision templates for reviewed research action proposals
+- Per-action `approved`, `rejected`, `changes-requested`, and `deferred` decisions
+- Research action decision packet with coverage, consistency, reviewer, and fail-closed safety validation
+- Approved-action packet containing only effectively approved actions
+- Typed adapter mappings for local-file, local-artifact, scope, controlled-assets, browser, Burp Suite, shell-review, and evidence workflows
+- Per-action risk, scope, controlled-asset, observation, redaction, artifact, and runtime-gate requirements
+- Deterministic typed tool-request manifests compatible with the existing fail-closed execution gate
+- SHA-256 request, source-packet, and manifest digests
+- Optional focus-endpoint execution-gate compatibility previews
+- Markdown and JSON outputs for every new stage
+- Four new CLI commands:
+  - `brain-chat-research-action-decision-template`
+  - `brain-chat-research-action-decision-packet`
+  - `brain-chat-research-approved-action-packet`
+  - `brain-chat-research-typed-tool-request-manifest`
+
+### Safety
+
+- Human decisions authorize only downstream planning artifacts
+- Command and payload generation remain disabled
+- Package installation and tool execution remain disabled
+- Network and target interaction remain disabled
+- Evidence collection and vulnerability validation remain disabled
+- State mutation, report submission, and vulnerability confirmation remain disabled
+- Typed requests remain non-executable
+- The execution-gate compatibility preview remains fail-closed
+
 ## v1.13.0 - Research Action Proposal Review Gate
 
 Released: 2026-06-11
