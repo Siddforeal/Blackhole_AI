@@ -231,3 +231,21 @@ reason
 → critique the result
 → select the next action
 ```
+
+## Research Action Decision Bridge
+
+Version 1.14.0 connects reviewed research actions to the existing execution-gate architecture without granting runtime authority.
+
+```text
+reviewed action proposals
+→ explicit human decisions
+→ effective planning approval
+→ normalized approved actions
+→ typed adapter requests
+→ execution-gate compatibility input
+→ fail-closed gate preview
+```
+
+The bridge separates human planning decisions, approved-action normalization, typed request preparation, and runtime authorization.
+
+No v1.14.0 artifact grants runtime authorization. Browser, Burp Suite, shell, Kali, evidence, and other runtime-oriented requests remain blocked by scope, focus-endpoint, controlled-asset, human-approval, observation, redaction, and execution-gate requirements.

@@ -147,6 +147,18 @@ from bugintel.integrations.har_importer import load_har
 from bugintel.core.brain_chat_research_source_packet import build_research_source_packet
 from bugintel.core.brain_chat_research_hypothesis_packet import build_research_hypothesis_packet
 from bugintel.core.brain_chat_research_hypothesis_selection_packet import build_research_hypothesis_selection_packet
+from bugintel.core.brain_chat_research_typed_tool_request_manifest import (
+    build_typed_manifest_from_file as build_research_typed_tool_request_manifest_from_file,
+)
+from bugintel.core.brain_chat_research_approved_action_packet import (
+    build_approved_action_packet_from_file as build_research_approved_action_packet_from_file,
+)
+from bugintel.core.brain_chat_research_action_decision_packet import (
+    build_decision_packet_from_files as build_research_action_decision_packet_from_files,
+    build_research_action_decision_template,
+    load_json_object as load_research_action_decision_json,
+    write_json as write_research_action_decision_json,
+)
 from bugintel.core.brain_chat_research_action_proposal_review_gate import (
     build_review_gate_from_file as build_research_action_proposal_review_gate_from_file,
 )
@@ -270,7 +282,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.13.0",
+                version="1.14.0",
                 force=True,
             )
         )
@@ -282,7 +294,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.13.0",
+            version="1.14.0",
             force=True,
         )
     )
@@ -291,7 +303,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.13.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.14.0")
 
 
 @app.command("scope-check")
@@ -10404,6 +10416,1298 @@ def brain_chat_research_investigation_plan_packet_command(
         console.print(f"[bold green]Investigation plan JSON saved:[/bold green] {json_output}")
 
 
+
+
+
+
+
+
+
+@app.command("brain-chat-research-typed-tool-request-manifest")
+def brain_chat_research_typed_tool_request_manifest_command(
+    approved_action_file: Path = typer.Option(
+        ...,
+        "--approved-action-file",
+        "--approved-actions",
+        help=(
+            "Local JSON file containing a research "
+            "approved-action packet."
+        ),
+    ),
+    focus_endpoint: str | None = typer.Option(
+        None,
+        "--focus-endpoint",
+        help=(
+            "Optional approved focus endpoint to include in "
+            "the fail-closed execution-gate compatibility "
+            "preview."
+        ),
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown output path.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON output path.",
+    ),
+):
+    """Build typed planning-only tool requests."""
+    if not approved_action_file.exists():
+        console.print(
+            "[bold red]Research approved-action JSON "
+            f"not found:[/bold red] {approved_action_file}"
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        manifest = (
+            build_research_typed_tool_request_manifest_from_file(
+                approved_action_file,
+                output_file=output_file,
+                json_output=json_output,
+                focus_endpoint=focus_endpoint,
+            )
+        )
+    except json.JSONDecodeError as exc:
+        console.print(
+            "[bold red]Invalid research approved-action "
+            f"JSON:[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+    except ValueError as exc:
+        console.print(
+            "[bold red]Invalid typed tool-request manifest "
+            f"input:[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+
+    counts = manifest.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+
+    table = Table(
+        title="Research Typed Tool Request Manifest"
+    )
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row(
+        "Approved-action file",
+        str(approved_action_file),
+    )
+    table.add_row(
+        "Target",
+        str(
+            manifest.get("target_name")
+            or "unknown-target"
+        ),
+    )
+    table.add_row(
+        "Focus endpoint",
+        str(
+            manifest.get("focus_endpoint")
+            or "none"
+        ),
+    )
+    table.add_row(
+        "Manifest status",
+        str(
+            manifest.get("manifest_status")
+            or "unknown"
+        ),
+    )
+    table.add_row(
+        "Summary",
+        str(manifest.get("summary") or ""),
+    )
+    table.add_row(
+        "Manifest ready",
+        str(bool(manifest.get("manifest_ready"))),
+    )
+    table.add_row(
+        "Execution-gate input ready",
+        str(
+            bool(
+                manifest.get(
+                    "execution_gate_input_ready"
+                )
+            )
+        ),
+    )
+    table.add_row(
+        "Execution-gate review ready",
+        str(
+            bool(
+                manifest.get(
+                    "execution_gate_review_ready"
+                )
+            )
+        ),
+    )
+    table.add_row(
+        "Existing gate compatible",
+        str(
+            bool(
+                manifest.get(
+                    "existing_tool_execution_gate_compatible"
+                )
+            )
+        ),
+    )
+    table.add_row(
+        "Typed requests",
+        str(manifest.get("typed_request_count") or 0),
+    )
+    table.add_row(
+        "Tool families",
+        str(counts.get("tool_families") or 0),
+    )
+    table.add_row(
+        "Adapter families",
+        str(counts.get("adapter_families") or 0),
+    )
+    table.add_row(
+        "Request kinds",
+        str(counts.get("request_kinds") or 0),
+    )
+    table.add_row(
+        "Risk levels",
+        str(counts.get("risk_levels") or 0),
+    )
+    table.add_row(
+        "Runtime-gated requests",
+        str(
+            counts.get("runtime_gated_requests")
+            or 0
+        ),
+    )
+    table.add_row(
+        "Scope-required requests",
+        str(
+            counts.get("scope_required_requests")
+            or 0
+        ),
+    )
+    table.add_row(
+        "Controlled-assets requests",
+        str(
+            counts.get(
+                "controlled_assets_requests"
+            )
+            or 0
+        ),
+    )
+    table.add_row(
+        "Observation-capture requests",
+        str(
+            counts.get(
+                "observation_capture_requests"
+            )
+            or 0
+        ),
+    )
+    table.add_row(
+        "Source findings",
+        str(counts.get("source_findings") or 0),
+    )
+    table.add_row(
+        "Request findings",
+        str(counts.get("request_findings") or 0),
+    )
+    table.add_row(
+        "High findings",
+        str(counts.get("high_findings") or 0),
+    )
+    table.add_row(
+        "Medium findings",
+        str(counts.get("medium_findings") or 0),
+    )
+    table.add_row(
+        "Focus endpoint required",
+        str(
+            bool(
+                manifest.get(
+                    "requires_focus_endpoint_before_runtime_review"
+                )
+            )
+        ),
+    )
+    table.add_row(
+        "Gate preview decision",
+        str(
+            manifest.get(
+                "execution_gate_preview_decision"
+            )
+            or "unknown"
+        ),
+    )
+    table.add_row(
+        "Gate preview execution allowed",
+        str(
+            bool(
+                manifest.get(
+                    "execution_gate_preview_execution_allowed"
+                )
+            )
+        ),
+    )
+    table.add_row(
+        "Command generation allowed",
+        "false",
+    )
+    table.add_row(
+        "Payload generation allowed",
+        "false",
+    )
+    table.add_row(
+        "Package installation allowed",
+        "false",
+    )
+    table.add_row(
+        "Runtime execution allowed",
+        "false",
+    )
+    table.add_row(
+        "Network interaction allowed",
+        "false",
+    )
+    table.add_row(
+        "Target interaction allowed",
+        "false",
+    )
+    table.add_row(
+        "Evidence collection allowed",
+        "false",
+    )
+    table.add_row(
+        "Validation allowed",
+        "false",
+    )
+
+    console.print(table)
+
+    typed_requests = manifest.get("typed_requests")
+
+    if (
+        isinstance(typed_requests, list)
+        and typed_requests
+    ):
+        request_table = Table(
+            title="Typed Planning Requests"
+        )
+        request_table.add_column("Order")
+        request_table.add_column("Request ID")
+        request_table.add_column("Action ID")
+        request_table.add_column("Request Kind")
+        request_table.add_column("Tool Family")
+        request_table.add_column("Adapter")
+        request_table.add_column("Risk")
+        request_table.add_column("Scope")
+        request_table.add_column("Assets")
+        request_table.add_column("Runtime Gate")
+        request_table.add_column("Eligible")
+
+        for item in typed_requests:
+            if not isinstance(item, dict):
+                continue
+
+            request_table.add_row(
+                str(item.get("manual_order") or 0),
+                str(item.get("request_id") or ""),
+                str(item.get("action_id") or ""),
+                str(item.get("request_kind") or ""),
+                str(item.get("tool_family") or ""),
+                str(item.get("adapter_family") or ""),
+                str(item.get("risk_level") or ""),
+                str(
+                    bool(
+                        item.get(
+                            "requires_scope_confirmation"
+                        )
+                    )
+                ),
+                str(
+                    bool(
+                        item.get(
+                            "requires_controlled_assets"
+                        )
+                    )
+                ),
+                str(
+                    bool(
+                        item.get(
+                            "requires_runtime_gate"
+                        )
+                    )
+                ),
+                str(
+                    bool(
+                        item.get("manifest_eligible")
+                    )
+                ),
+            )
+
+        console.print(request_table)
+
+    count_sections = (
+        ("Tool family counts", "tool_family_counts"),
+        (
+            "Adapter family counts",
+            "adapter_family_counts",
+        ),
+        ("Request kind counts", "request_kind_counts"),
+        ("Risk level counts", "risk_level_counts"),
+    )
+
+    for heading, key in count_sections:
+        values = manifest.get(key)
+
+        if not isinstance(values, dict) or not values:
+            continue
+
+        console.print(
+            f"[bold yellow]{heading}:[/bold yellow]"
+        )
+
+        for name, count in values.items():
+            console.print(f"- {name}: {count}")
+
+    finding_sections = (
+        ("Source findings", "source_findings"),
+        ("Request findings", "request_findings"),
+    )
+
+    for heading, key in finding_sections:
+        findings = manifest.get(key)
+
+        if not isinstance(findings, list) or not findings:
+            continue
+
+        console.print(
+            f"[bold yellow]{heading}:[/bold yellow]"
+        )
+
+        for finding in findings:
+            if not isinstance(finding, dict):
+                continue
+
+            console.print(
+                "- "
+                f"[{finding.get('severity', 'unknown')}] "
+                f"{finding.get('category', 'finding')} / "
+                f"{finding.get('subject', 'unknown')}: "
+                f"{finding.get('message', '')} "
+                "Required action: "
+                f"{finding.get('required_action', '')}"
+            )
+
+    gate_preview = manifest.get(
+        "execution_gate_preview"
+    )
+
+    if isinstance(gate_preview, dict):
+        console.print(
+            "[bold yellow]Execution-gate "
+            "compatibility preview:[/bold yellow]"
+        )
+        console.print(
+            "- decision: "
+            f"{gate_preview.get('gate_decision', 'unknown')}"
+        )
+        console.print(
+            "- execution_allowed: "
+            f"{bool(gate_preview.get('execution_allowed'))}"
+        )
+        console.print(
+            "- planning_only: "
+            f"{bool(gate_preview.get('planning_only'))}"
+        )
+        console.print(
+            "- execution_state: "
+            f"{gate_preview.get('execution_state', 'unknown')}"
+        )
+
+        blockers = gate_preview.get("blockers")
+        if isinstance(blockers, list):
+            for blocker in blockers:
+                console.print(f"- blocker: {blocker}")
+
+    allowed_next_steps = manifest.get(
+        "allowed_next_steps"
+    )
+
+    if (
+        isinstance(allowed_next_steps, list)
+        and allowed_next_steps
+    ):
+        console.print(
+            "[bold yellow]Allowed next steps:[/bold yellow]"
+        )
+
+        for item in allowed_next_steps:
+            console.print(f"- {item}")
+
+    rejected_next_steps = manifest.get(
+        "rejected_next_steps"
+    )
+
+    if (
+        isinstance(rejected_next_steps, list)
+        and rejected_next_steps
+    ):
+        console.print(
+            "[bold yellow]Rejected next steps:[/bold yellow]"
+        )
+
+        for item in rejected_next_steps:
+            console.print(f"- {item}")
+
+    console.print(
+        "[bold yellow]Digests:[/bold yellow]"
+    )
+    console.print(
+        "- approved-action packet: "
+        f"{manifest.get('approved_action_packet_digest', '')}"
+    )
+    console.print(
+        "- typed manifest: "
+        f"{manifest.get('manifest_digest', '')}"
+    )
+
+    if output_file:
+        console.print(
+            "[bold green]Saved research typed tool-request "
+            f"Markdown:[/bold green] {output_file}"
+        )
+
+    if json_output:
+        console.print(
+            "[bold green]Saved research typed tool-request "
+            f"JSON:[/bold green] {json_output}"
+        )
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only "
+        "converts approved planning actions into typed, "
+        "non-executable request records and builds a fail-closed "
+        "execution-gate compatibility preview. It does not "
+        "generate commands or payloads, install software, "
+        "execute tools, launch browsers, replay Burp requests, "
+        "use Kali tools, send network requests, collect "
+        "evidence, validate findings, mutate state, submit "
+        "reports, or confirm vulnerabilities."
+    )
+
+@app.command("brain-chat-research-approved-action-packet")
+def brain_chat_research_approved_action_packet_command(
+    decision_file: Path = typer.Option(
+        ...,
+        "--decision-file",
+        "--decision",
+        help=(
+            "Local JSON file containing a research action "
+            "decision packet."
+        ),
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown output path.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON output path.",
+    ),
+):
+    """Normalize effectively approved research actions."""
+    if not decision_file.exists():
+        console.print(
+            "[bold red]Research action decision JSON not found:"
+            f"[/bold red] {decision_file}"
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        packet = (
+            build_research_approved_action_packet_from_file(
+                decision_file,
+                output_file=output_file,
+                json_output=json_output,
+            )
+        )
+    except json.JSONDecodeError as exc:
+        console.print(
+            "[bold red]Invalid research action decision JSON:"
+            f"[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+    except ValueError as exc:
+        console.print(
+            "[bold red]Invalid approved-action packet "
+            f"input:[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+
+    counts = packet.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+
+    table = Table(
+        title="Research Approved Action Packet"
+    )
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row(
+        "Decision file",
+        str(decision_file),
+    )
+    table.add_row(
+        "Target",
+        str(packet.get("target_name") or "unknown-target"),
+    )
+    table.add_row(
+        "Packet status",
+        str(packet.get("packet_status") or "unknown"),
+    )
+    table.add_row(
+        "Summary",
+        str(packet.get("summary") or ""),
+    )
+    table.add_row(
+        "Reviewer",
+        str(packet.get("reviewer") or "unspecified"),
+    )
+    table.add_row(
+        "Source decision status",
+        str(
+            packet.get("source_decision_status")
+            or "unknown"
+        ),
+    )
+    table.add_row(
+        "Source decision ready",
+        str(bool(packet.get("source_decision_ready"))),
+    )
+    table.add_row(
+        "Effective approval granted",
+        str(
+            bool(
+                packet.get(
+                    "source_effective_approval_granted"
+                )
+            )
+        ),
+    )
+    table.add_row(
+        "Packet ready",
+        str(bool(packet.get("packet_ready"))),
+    )
+    table.add_row(
+        "Typed manifest ready",
+        str(
+            bool(
+                packet.get(
+                    "typed_tool_request_manifest_ready"
+                )
+            )
+        ),
+    )
+    table.add_row(
+        "Approved actions",
+        str(packet.get("approved_action_count") or 0),
+    )
+    table.add_row(
+        "Tool families",
+        str(counts.get("tool_families") or 0),
+    )
+    table.add_row(
+        "Adapter families",
+        str(counts.get("adapter_families") or 0),
+    )
+    table.add_row(
+        "Risk levels",
+        str(counts.get("risk_levels") or 0),
+    )
+    table.add_row(
+        "Scope-confirmation actions",
+        str(
+            counts.get(
+                "scope_confirmation_actions"
+            )
+            or 0
+        ),
+    )
+    table.add_row(
+        "Controlled-assets actions",
+        str(
+            counts.get(
+                "controlled_assets_actions"
+            )
+            or 0
+        ),
+    )
+    table.add_row(
+        "Runtime-gated actions",
+        str(
+            counts.get("runtime_gated_actions")
+            or 0
+        ),
+    )
+    table.add_row(
+        "Source findings",
+        str(counts.get("source_findings") or 0),
+    )
+    table.add_row(
+        "Action findings",
+        str(counts.get("action_findings") or 0),
+    )
+    table.add_row(
+        "High findings",
+        str(counts.get("high_findings") or 0),
+    )
+    table.add_row(
+        "Medium findings",
+        str(counts.get("medium_findings") or 0),
+    )
+    table.add_row(
+        "Command generation allowed",
+        "false",
+    )
+    table.add_row(
+        "Package installation allowed",
+        "false",
+    )
+    table.add_row(
+        "Runtime execution allowed",
+        "false",
+    )
+    table.add_row(
+        "Target interaction allowed",
+        "false",
+    )
+    table.add_row(
+        "Evidence collection allowed",
+        "false",
+    )
+    table.add_row(
+        "Validation allowed",
+        "false",
+    )
+
+    console.print(table)
+
+    approved_actions = packet.get("approved_actions")
+    if (
+        isinstance(approved_actions, list)
+        and approved_actions
+    ):
+        actions_table = Table(
+            title="Normalized Approved Actions"
+        )
+        actions_table.add_column("Order")
+        actions_table.add_column("Action ID")
+        actions_table.add_column("Action Type")
+        actions_table.add_column("Tool Family")
+        actions_table.add_column("Adapter")
+        actions_table.add_column("Risk")
+        actions_table.add_column("Runtime Gate")
+        actions_table.add_column("Manifest Eligible")
+
+        for item in approved_actions:
+            if not isinstance(item, dict):
+                continue
+
+            actions_table.add_row(
+                str(item.get("manual_order") or 0),
+                str(item.get("action_id") or ""),
+                str(item.get("action_type") or ""),
+                str(item.get("tool_family") or ""),
+                str(item.get("adapter_family") or ""),
+                str(item.get("risk_level") or ""),
+                str(
+                    bool(
+                        item.get(
+                            "requires_runtime_gate"
+                        )
+                    )
+                ),
+                str(
+                    bool(
+                        item.get("manifest_eligible")
+                    )
+                ),
+            )
+
+        console.print(actions_table)
+
+    count_sections = (
+        ("Tool family counts", "tool_family_counts"),
+        (
+            "Adapter family counts",
+            "adapter_family_counts",
+        ),
+        ("Risk level counts", "risk_level_counts"),
+    )
+
+    for heading, key in count_sections:
+        values = packet.get(key)
+
+        if not isinstance(values, dict) or not values:
+            continue
+
+        console.print(
+            f"[bold yellow]{heading}:[/bold yellow]"
+        )
+
+        for name, count in values.items():
+            console.print(f"- {name}: {count}")
+
+    finding_sections = (
+        ("Source findings", "source_findings"),
+        ("Action findings", "action_findings"),
+    )
+
+    for heading, key in finding_sections:
+        findings = packet.get(key)
+
+        if not isinstance(findings, list) or not findings:
+            continue
+
+        console.print(
+            f"[bold yellow]{heading}:[/bold yellow]"
+        )
+
+        for finding in findings:
+            if not isinstance(finding, dict):
+                continue
+
+            console.print(
+                "- "
+                f"[{finding.get('severity', 'unknown')}] "
+                f"{finding.get('category', 'finding')} / "
+                f"{finding.get('subject', 'unknown')}: "
+                f"{finding.get('message', '')} "
+                "Required action: "
+                f"{finding.get('required_action', '')}"
+            )
+
+    allowed_next_steps = packet.get("allowed_next_steps")
+    if (
+        isinstance(allowed_next_steps, list)
+        and allowed_next_steps
+    ):
+        console.print(
+            "[bold yellow]Allowed next steps:[/bold yellow]"
+        )
+
+        for item in allowed_next_steps:
+            console.print(f"- {item}")
+
+    rejected_next_steps = packet.get(
+        "rejected_next_steps"
+    )
+    if (
+        isinstance(rejected_next_steps, list)
+        and rejected_next_steps
+    ):
+        console.print(
+            "[bold yellow]Rejected next steps:[/bold yellow]"
+        )
+
+        for item in rejected_next_steps:
+            console.print(f"- {item}")
+
+    if output_file:
+        console.print(
+            "[bold green]Saved research approved-action "
+            f"Markdown:[/bold green] {output_file}"
+        )
+
+    if json_output:
+        console.print(
+            "[bold green]Saved research approved-action "
+            f"JSON:[/bold green] {json_output}"
+        )
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only "
+        "normalizes effectively approved actions into typed "
+        "planning records. It does not generate commands, "
+        "install software, execute tools, launch browsers, "
+        "interact with Burp Suite, use Kali tools, send "
+        "requests, collect evidence, validate findings, mutate "
+        "state, submit reports, or confirm vulnerabilities. "
+        "A typed tool-request manifest and separate execution "
+        "gate are still required."
+    )
+
+@app.command("brain-chat-research-action-decision-template")
+def brain_chat_research_action_decision_template_command(
+    proposal_file: Path = typer.Option(
+        ...,
+        "--proposal-file",
+        "--proposal",
+        help=(
+            "Local JSON file containing a research action "
+            "proposal packet."
+        ),
+    ),
+    output_file: Path = typer.Option(
+        ...,
+        "--output-file",
+        "--output",
+        help=(
+            "Required output path for the local human "
+            "decision-template JSON."
+        ),
+    ),
+):
+    """Build a local human decision template for action proposals."""
+    if not proposal_file.exists():
+        console.print(
+            "[bold red]Research action proposal JSON not found:"
+            f"[/bold red] {proposal_file}"
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        proposal_packet = (
+            load_research_action_decision_json(
+                proposal_file
+            )
+        )
+        decision_template = (
+            build_research_action_decision_template(
+                proposal_packet
+            )
+        )
+        write_research_action_decision_json(
+            output_file,
+            decision_template,
+        )
+    except json.JSONDecodeError as exc:
+        console.print(
+            "[bold red]Invalid research action proposal JSON:"
+            f"[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+    except ValueError as exc:
+        console.print(
+            "[bold red]Invalid research action proposal "
+            f"template input:[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+
+    decisions = decision_template.get("decisions")
+    decision_count = (
+        len(decisions)
+        if isinstance(decisions, list)
+        else 0
+    )
+
+    table = Table(
+        title="Research Action Decision Template"
+    )
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row("Proposal file", str(proposal_file))
+    table.add_row("Output file", str(output_file))
+    table.add_row(
+        "Target",
+        str(
+            decision_template.get("target_name")
+            or "unknown-target"
+        ),
+    )
+    table.add_row(
+        "Decision input kind",
+        str(decision_template.get("kind") or "unknown"),
+    )
+    table.add_row(
+        "Action decisions",
+        str(decision_count),
+    )
+    table.add_row(
+        "Default decision",
+        "deferred",
+    )
+    table.add_row(
+        "Planning only",
+        str(
+            bool(
+                decision_template.get("planning_only")
+            )
+        ),
+    )
+    table.add_row(
+        "Execution state",
+        str(
+            decision_template.get("execution_state")
+            or "unknown"
+        ),
+    )
+
+    console.print(table)
+
+    console.print(
+        "[bold green]Saved research action decision "
+        f"template JSON:[/bold green] {output_file}"
+    )
+
+    console.print(
+        "[bold yellow]Next step:[/bold yellow] Set a reviewer "
+        "and record exactly one approved, rejected, "
+        "changes-requested, or deferred decision for every "
+        "action before building the decision packet."
+    )
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only "
+        "creates a local decision template. It does not approve "
+        "actions, generate commands, install software, execute "
+        "tools, send requests, collect evidence, validate "
+        "findings, mutate state, submit reports, or confirm "
+        "vulnerabilities."
+    )
+
+
+@app.command("brain-chat-research-action-decision-packet")
+def brain_chat_research_action_decision_packet_command(
+    proposal_file: Path = typer.Option(
+        ...,
+        "--proposal-file",
+        "--proposal",
+        help=(
+            "Local JSON file containing the research action "
+            "proposal packet."
+        ),
+    ),
+    review_file: Path = typer.Option(
+        ...,
+        "--review-file",
+        "--review",
+        help=(
+            "Local JSON file containing the matching action "
+            "proposal review gate."
+        ),
+    ),
+    decision_file: Path = typer.Option(
+        ...,
+        "--decision-file",
+        "--decision",
+        help=(
+            "Local JSON file containing explicit human "
+            "decisions for every action."
+        ),
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown output path.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON output path.",
+    ),
+):
+    """Import human decisions for reviewed research actions."""
+    missing_inputs = (
+        (
+            proposal_file,
+            "Research action proposal JSON not found",
+        ),
+        (
+            review_file,
+            "Research action proposal review JSON not found",
+        ),
+        (
+            decision_file,
+            "Research action decision JSON not found",
+        ),
+    )
+
+    for input_path, message in missing_inputs:
+        if not input_path.exists():
+            console.print(
+                f"[bold red]{message}:[/bold red] "
+                f"{input_path}"
+            )
+            raise typer.Exit(code=1)
+
+    try:
+        packet = (
+            build_research_action_decision_packet_from_files(
+                proposal_file,
+                review_file,
+                decision_file,
+                output_file=output_file,
+                json_output=json_output,
+            )
+        )
+    except json.JSONDecodeError as exc:
+        console.print(
+            "[bold red]Invalid research action decision "
+            f"pipeline JSON:[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+    except ValueError as exc:
+        console.print(
+            "[bold red]Invalid research action decision "
+            f"pipeline input:[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+
+    counts = packet.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+
+    table = Table(
+        title="Research Action Decision Packet"
+    )
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row(
+        "Target",
+        str(packet.get("target_name") or "unknown-target"),
+    )
+    table.add_row(
+        "Decision status",
+        str(packet.get("decision_status") or "unknown"),
+    )
+    table.add_row(
+        "Summary",
+        str(packet.get("summary") or ""),
+    )
+    table.add_row(
+        "Reviewer",
+        str(packet.get("reviewer") or "unspecified"),
+    )
+    table.add_row(
+        "Proposal status",
+        str(packet.get("proposal_status") or "unknown"),
+    )
+    table.add_row(
+        "Review status",
+        str(packet.get("review_status") or "unknown"),
+    )
+    table.add_row(
+        "Decision ready",
+        str(bool(packet.get("decision_ready"))),
+    )
+    table.add_row(
+        "Effective approval granted",
+        str(
+            bool(
+                packet.get(
+                    "effective_approval_granted"
+                )
+            )
+        ),
+    )
+    table.add_row(
+        "Approved-action packet ready",
+        str(
+            bool(
+                packet.get(
+                    "approved_action_packet_ready"
+                )
+            )
+        ),
+    )
+    table.add_row(
+        "Proposal count",
+        str(packet.get("proposal_count") or 0),
+    )
+    table.add_row(
+        "Decision count",
+        str(packet.get("decision_count") or 0),
+    )
+    table.add_row(
+        "Approved",
+        str(packet.get("approved_action_count") or 0),
+    )
+    table.add_row(
+        "Rejected",
+        str(packet.get("rejected_action_count") or 0),
+    )
+    table.add_row(
+        "Changes requested",
+        str(packet.get("changes_requested_count") or 0),
+    )
+    table.add_row(
+        "Deferred",
+        str(packet.get("deferred_action_count") or 0),
+    )
+    table.add_row(
+        "Missing decisions",
+        str(packet.get("missing_decision_count") or 0),
+    )
+    table.add_row(
+        "Source findings",
+        str(counts.get("source_findings") or 0),
+    )
+    table.add_row(
+        "Decision findings",
+        str(counts.get("decision_findings") or 0),
+    )
+    table.add_row(
+        "High findings",
+        str(counts.get("high_findings") or 0),
+    )
+    table.add_row(
+        "Medium findings",
+        str(counts.get("medium_findings") or 0),
+    )
+    table.add_row(
+        "Command generation allowed",
+        "false",
+    )
+    table.add_row(
+        "Package installation allowed",
+        "false",
+    )
+    table.add_row(
+        "Runtime execution allowed",
+        "false",
+    )
+    table.add_row(
+        "Target interaction allowed",
+        "false",
+    )
+    table.add_row(
+        "Evidence collection allowed",
+        "false",
+    )
+    table.add_row(
+        "Validation allowed",
+        "false",
+    )
+
+    console.print(table)
+
+    action_decisions = packet.get("action_decisions")
+    if (
+        isinstance(action_decisions, list)
+        and action_decisions
+    ):
+        decisions_table = Table(
+            title="Per-Action Human Decisions"
+        )
+        decisions_table.add_column("Order")
+        decisions_table.add_column("Action ID")
+        decisions_table.add_column("Tool Family")
+        decisions_table.add_column("Decision")
+        decisions_table.add_column("Effective")
+
+        for item in action_decisions:
+            if not isinstance(item, dict):
+                continue
+
+            decisions_table.add_row(
+                str(item.get("manual_order") or 0),
+                str(item.get("action_id") or ""),
+                str(
+                    item.get("proposed_tool_family")
+                    or ""
+                ),
+                str(item.get("decision") or ""),
+                str(
+                    bool(
+                        item.get(
+                            "effective_approval_granted"
+                        )
+                    )
+                ),
+            )
+
+        console.print(decisions_table)
+
+    finding_sections = (
+        ("Source findings", "source_findings"),
+        ("Decision findings", "decision_findings"),
+    )
+
+    for heading, key in finding_sections:
+        findings = packet.get(key)
+
+        if not isinstance(findings, list) or not findings:
+            continue
+
+        console.print(
+            f"[bold yellow]{heading}:[/bold yellow]"
+        )
+
+        for finding in findings:
+            if not isinstance(finding, dict):
+                continue
+
+            console.print(
+                "- "
+                f"[{finding.get('severity', 'unknown')}] "
+                f"{finding.get('category', 'finding')} / "
+                f"{finding.get('subject', 'unknown')}: "
+                f"{finding.get('message', '')} "
+                "Required action: "
+                f"{finding.get('required_action', '')}"
+            )
+
+    allowed_next_steps = packet.get("allowed_next_steps")
+    if (
+        isinstance(allowed_next_steps, list)
+        and allowed_next_steps
+    ):
+        console.print(
+            "[bold yellow]Allowed next steps:[/bold yellow]"
+        )
+        for item in allowed_next_steps:
+            console.print(f"- {item}")
+
+    rejected_next_steps = packet.get(
+        "rejected_next_steps"
+    )
+    if (
+        isinstance(rejected_next_steps, list)
+        and rejected_next_steps
+    ):
+        console.print(
+            "[bold yellow]Rejected next steps:[/bold yellow]"
+        )
+        for item in rejected_next_steps:
+            console.print(f"- {item}")
+
+    if output_file:
+        console.print(
+            "[bold green]Saved research action decision "
+            f"Markdown:[/bold green] {output_file}"
+        )
+
+    if json_output:
+        console.print(
+            "[bold green]Saved research action decision "
+            f"JSON:[/bold green] {json_output}"
+        )
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only "
+        "records and validates local human decisions. Effective "
+        "approval permits only the next planning packet stage. "
+        "It does not generate commands, install software, "
+        "execute tools, launch browsers, interact with Burp "
+        "Suite, use Kali tools, send requests, collect evidence, "
+        "validate findings, mutate state, submit reports, or "
+        "confirm vulnerabilities."
+    )
 
 @app.command("brain-chat-research-action-proposal-review-gate")
 def brain_chat_research_action_proposal_review_gate_command(

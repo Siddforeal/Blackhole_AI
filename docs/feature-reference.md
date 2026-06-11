@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.13.0
+Current version: 1.14.0
 
 ## Research Goal
 
@@ -1675,3 +1675,25 @@ The research hypothesis selection packet ranks and selects the strongest local-o
 It turns a ready research hypothesis packet into selected hypotheses with selection rank, selection score, selection reason, primary hypothesis ID, evidence needed, allowed local checks, tags, and selection gaps.
 
 This feature remains deterministic and local-only. It does not browse the web, call LLM providers, generate commands, execute tools, send requests, collect evidence, validate findings, submit reports, or confirm vulnerabilities.
+
+## Research Action Decision Pipeline
+
+Version 1.14.0 extends the reviewed research-planning chain:
+
+```text
+action proposal packet
+→ action proposal review gate
+→ human decision template
+→ action decision packet
+→ approved-action packet
+→ typed tool-request manifest
+→ fail-closed execution-gate compatibility preview
+```
+
+The decision packet validates reviewer identity, decision coverage, source consistency, planning-only state, and fail-closed safety fields.
+
+The approved-action packet includes only effectively approved actions and normalizes tool families, adapter families, request kinds, risks, scope requirements, controlled assets, expected artifacts, and downstream blockers.
+
+The typed tool-request manifest creates deterministic, non-executable adapter requests with allowed inputs, required outputs, prohibited operations, request identifiers, and SHA-256 digests.
+
+Human approval permits only construction of the next planning artifact. It does not authorize command generation, package installation, tool execution, network interaction, evidence collection, vulnerability validation, state mutation, report submission, or vulnerability confirmation.

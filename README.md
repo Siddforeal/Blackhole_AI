@@ -10,7 +10,7 @@ It helps researchers turn fragmented notes, endpoints, hypotheses, evidence, and
 
 > **Current state:** Blackhole is a planning-oriented, human-controlled research workbench. Its long-term roadmap is an agentic security research, vulnerability validation, and controlled exploitation framework with scope-gated command-line, browser, Burp Suite, Kali/tooling, evidence, proof-of-concept generation, and autonomous research-loop capabilities.
 
-**Current release:** `v1.13.0`
+**Current release:** `v1.14.0`
 
 **Project status:** active research prototype
 
@@ -165,11 +165,16 @@ research source packet
 → investigation plan review gate
 → action proposal packet
 → action proposal review gate
+→ human action decision template
+→ human action decision packet
+→ approved-action packet
+→ typed tool-request manifest
+→ fail-closed execution-gate compatibility preview
 ```
 
-The action proposal review gate validates structure, action IDs, tool-family mappings, approval and scope requirements, blockers, ordering, and fail-closed execution flags.
+The action proposal review gate validates structure, action IDs, tool-family mappings, approval and scope requirements, blockers, ordering, and fail-closed execution flags. The v1.14.0 pipeline then records explicit human decisions, selects effectively approved actions, normalizes typed adapter requests, assigns deterministic digests, and builds a compatibility preview for the existing execution gate.
 
-It does not approve command generation, package installation, tool execution, target interaction, evidence collection, or vulnerability validation.
+Human approval in this chain authorizes only the next planning artifact. It does not authorize command or payload generation, package installation, tool execution, network or target interaction, evidence collection, vulnerability validation, state mutation, report submission, or vulnerability confirmation.
 
 ---
 
@@ -244,7 +249,7 @@ call providers, execute tools, or confirm a vulnerability.
 
 ## Release History
 
-The current release is `v1.13.0`.
+The current release is `v1.14.0`.
 
 Full release notes and historical versions are available on the [GitHub releases page](https://github.com/Siddforeal/Blackhole_AI/releases).
 
