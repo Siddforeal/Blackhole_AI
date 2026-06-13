@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.15.0
+Current version: 1.16.0
 
 ## Research Goal
 
@@ -1723,3 +1723,25 @@ The review gate validates:
 A successful review produces `ready-for-runtime-approval-template`. This status permits only creation of another local planning artifact.
 
 It does not authorize command or payload generation, package installation, tool execution, network or target interaction, evidence collection, vulnerability validation, state mutation, report submission, or vulnerability confirmation.
+
+## Research Observation Feedback Pipeline
+
+Version 1.16.0 adds a deterministic, local-only observation feedback pipeline.
+
+Pipeline:
+
+- research observation packet
+- observation review gate
+- hypothesis feedback packet
+- future human feedback decision
+- future research-state transition gate
+
+The observation packet normalizes imported observations, deterministic observation IDs, source linkage, evidence strength, scope status, controlled-assets status, redaction status, human-review state, preliminary confidence effects, and SHA-256 digests.
+
+The observation review gate independently verifies packet integrity, observation integrity, source linkage, redaction, scope, controlled assets, human review, fail-closed safety fields, and aggregate hypothesis-impact calculations.
+
+The hypothesis feedback packet joins verified observation impacts to the original hypothesis packet and creates proposal-only confidence feedback.
+
+Version 1.16.0 does not modify hypothesis packets, hypothesis selection, investigation plans, approved actions, persistent research state, targets, reports, or vulnerability status.
+
+Command generation, payload generation, package installation, tool execution, browser execution, Burp Suite execution, Kali execution, network interaction, evidence collection, vulnerability validation, report submission, and vulnerability confirmation remain disabled.

@@ -144,6 +144,15 @@ from bugintel.integrations.playwright_runner import (
 )
 from bugintel.integrations.web_fetcher import fetch_web_page
 from bugintel.integrations.har_importer import load_har
+from bugintel.core.brain_chat_research_hypothesis_feedback_packet import (
+    build_feedback_packet_from_files as build_research_hypothesis_feedback_packet_from_files,
+)
+from bugintel.core.brain_chat_research_observation_review_gate import (
+    build_review_gate_from_file as build_research_observation_review_gate_from_file,
+)
+from bugintel.core.brain_chat_research_observation_packet import (
+    build_observation_packet_from_file as build_research_observation_packet_from_file,
+)
 from bugintel.core.brain_chat_research_source_packet import build_research_source_packet
 from bugintel.core.brain_chat_research_hypothesis_packet import build_research_hypothesis_packet
 from bugintel.core.brain_chat_research_hypothesis_selection_packet import build_research_hypothesis_selection_packet
@@ -285,7 +294,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.15.0",
+                version="1.16.0",
                 force=True,
             )
         )
@@ -297,7 +306,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.15.0",
+            version="1.16.0",
             force=True,
         )
     )
@@ -306,7 +315,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.15.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.16.0")
 
 
 @app.command("scope-check")
@@ -10427,6 +10436,1228 @@ def brain_chat_research_investigation_plan_packet_command(
 
 
 
+
+
+
+
+
+
+
+@app.command("brain-chat-research-hypothesis-feedback-packet")
+def brain_chat_research_hypothesis_feedback_packet_command(
+    hypothesis_file: Path = typer.Option(
+        ...,
+        "--hypothesis-file",
+        "--hypothesis-packet",
+        help=(
+            "Local JSON research hypothesis packet."
+        ),
+    ),
+    observation_file: Path = typer.Option(
+        ...,
+        "--observation-file",
+        "--observation-packet",
+        help=(
+            "Local JSON normalized research observation packet."
+        ),
+    ),
+    review_file: Path = typer.Option(
+        ...,
+        "--review-file",
+        "--observation-review",
+        help=(
+            "Local JSON observation review-gate artifact."
+        ),
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown output path.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON output path.",
+    ),
+):
+    """Build proposed hypothesis feedback."""
+    required_files = (
+        (
+            "Research hypothesis packet",
+            hypothesis_file,
+        ),
+        (
+            "Research observation packet",
+            observation_file,
+        ),
+        (
+            "Research observation review",
+            review_file,
+        ),
+    )
+
+    for label, source_file in required_files:
+        if source_file.exists():
+            continue
+
+        console.print(
+            f"[bold red]{label} not found:"
+            f"[/bold red] {source_file}"
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        packet = (
+            build_research_hypothesis_feedback_packet_from_files(
+                hypothesis_file,
+                observation_file,
+                review_file,
+                output_file=output_file,
+                json_output=json_output,
+            )
+        )
+    except json.JSONDecodeError as exc:
+        console.print(
+            "[bold red]Invalid hypothesis feedback "
+            f"JSON input:[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+    except ValueError as exc:
+        console.print(
+            "[bold red]Invalid hypothesis feedback "
+            f"input:[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+
+    counts = packet.get("counts")
+
+    if not isinstance(counts, dict):
+        counts = {}
+
+    table = Table(
+        title="Research Hypothesis Feedback Packet"
+    )
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    rows = (
+        (
+            "Hypothesis file",
+            str(hypothesis_file),
+        ),
+        (
+            "Observation file",
+            str(observation_file),
+        ),
+        (
+            "Review file",
+            str(review_file),
+        ),
+        (
+            "Target",
+            str(
+                packet.get("target_name")
+                or "unknown-target"
+            ),
+        ),
+        (
+            "Packet status",
+            str(
+                packet.get("packet_status")
+                or "unknown"
+            ),
+        ),
+        (
+            "Summary",
+            str(packet.get("summary") or ""),
+        ),
+        (
+            "Packet ready",
+            str(bool(packet.get("packet_ready"))),
+        ),
+        (
+            "Feedback review ready",
+            str(
+                bool(
+                    packet.get(
+                        "hypothesis_feedback_review_ready"
+                    )
+                )
+            ),
+        ),
+        (
+            "Source hypotheses",
+            str(
+                counts.get("source_hypotheses")
+                or 0
+            ),
+        ),
+        (
+            "Verified impacts",
+            str(
+                counts.get(
+                    "verified_hypothesis_impacts"
+                )
+                or 0
+            ),
+        ),
+        (
+            "Feedback proposals",
+            str(
+                counts.get("feedback_proposals")
+                or 0
+            ),
+        ),
+        (
+            "Categorical confidence changes",
+            str(
+                counts.get(
+                    "categorical_confidence_changes"
+                )
+                or 0
+            ),
+        ),
+        (
+            "Strengthening proposals",
+            str(
+                counts.get(
+                    "strengthening_proposals"
+                )
+                or 0
+            ),
+        ),
+        (
+            "Weakening proposals",
+            str(
+                counts.get("weakening_proposals")
+                or 0
+            ),
+        ),
+        (
+            "Hold proposals",
+            str(
+                counts.get("hold_proposals")
+                or 0
+            ),
+        ),
+        (
+            "High findings",
+            str(
+                counts.get("high_findings")
+                or 0
+            ),
+        ),
+        (
+            "Medium findings",
+            str(
+                counts.get("medium_findings")
+                or 0
+            ),
+        ),
+        (
+            "Confidence update ready",
+            "false",
+        ),
+        (
+            "Selection update ready",
+            "false",
+        ),
+        (
+            "Research-state transition ready",
+            "false",
+        ),
+        (
+            "Runtime execution allowed",
+            "false",
+        ),
+    )
+
+    for field, value in rows:
+        table.add_row(field, value)
+
+    console.print(table)
+
+    proposals = packet.get(
+        "feedback_proposals"
+    )
+
+    if isinstance(proposals, list) and proposals:
+        proposal_table = Table(
+            title="Hypothesis Feedback Proposals"
+        )
+        proposal_table.add_column("Feedback")
+        proposal_table.add_column("Hypothesis")
+        proposal_table.add_column("Current")
+        proposal_table.add_column("Proposed")
+        proposal_table.add_column("Delta")
+        proposal_table.add_column("Direction")
+        proposal_table.add_column("Disposition")
+        proposal_table.add_column("Change")
+        proposal_table.add_column("Observations")
+
+        for proposal in proposals:
+            if not isinstance(proposal, dict):
+                continue
+
+            proposal_table.add_row(
+                str(
+                    proposal.get("feedback_id")
+                    or ""
+                ),
+                str(
+                    proposal.get("hypothesis_id")
+                    or ""
+                ),
+                str(
+                    proposal.get(
+                        "current_confidence"
+                    )
+                    or ""
+                ),
+                str(
+                    proposal.get(
+                        "proposed_confidence"
+                    )
+                    or ""
+                ),
+                str(
+                    proposal.get(
+                        "net_confidence_delta"
+                    )
+                    or 0
+                ),
+                str(
+                    proposal.get(
+                        "evidence_direction"
+                    )
+                    or ""
+                ),
+                str(
+                    proposal.get(
+                        "proposed_disposition"
+                    )
+                    or ""
+                ),
+                str(
+                    bool(
+                        proposal.get(
+                            "categorical_confidence_change"
+                        )
+                    )
+                ),
+                str(
+                    proposal.get(
+                        "observation_count"
+                    )
+                    or 0
+                ),
+            )
+
+        console.print(proposal_table)
+
+    findings = packet.get("findings")
+
+    if isinstance(findings, list) and findings:
+        console.print(
+            "[bold yellow]Feedback findings:"
+            "[/bold yellow]"
+        )
+
+        for finding in findings:
+            if not isinstance(finding, dict):
+                continue
+
+            console.print(
+                "- "
+                f"[{finding.get('severity', 'unknown')}] "
+                f"{finding.get('category', 'finding')} / "
+                f"{finding.get('subject', 'unknown')}: "
+                f"{finding.get('message', '')} "
+                "Required action: "
+                f"{finding.get('required_action', '')}"
+            )
+
+    allowed_next_steps = packet.get(
+        "allowed_next_steps"
+    )
+
+    if (
+        isinstance(allowed_next_steps, list)
+        and allowed_next_steps
+    ):
+        console.print(
+            "[bold yellow]Allowed next steps:"
+            "[/bold yellow]"
+        )
+
+        for item in allowed_next_steps:
+            console.print(f"- {item}")
+
+    rejected_next_steps = packet.get(
+        "rejected_next_steps"
+    )
+
+    if (
+        isinstance(rejected_next_steps, list)
+        and rejected_next_steps
+    ):
+        console.print(
+            "[bold yellow]Rejected next steps:"
+            "[/bold yellow]"
+        )
+
+        for item in rejected_next_steps:
+            console.print(f"- {item}")
+
+    digest_rows = (
+        (
+            "Hypothesis packet digest",
+            packet.get(
+                "hypothesis_packet_digest"
+            ),
+        ),
+        (
+            "Observation packet digest",
+            packet.get(
+                "observation_packet_digest"
+            ),
+        ),
+        (
+            "Observation review digest",
+            packet.get(
+                "observation_review_digest"
+            ),
+        ),
+        (
+            "Feedback digest",
+            packet.get("feedback_digest"),
+        ),
+    )
+
+    for label, digest in digest_rows:
+        if not digest:
+            continue
+
+        console.print(
+            f"[bold yellow]{label}:[/bold yellow] "
+            f"`{digest}`"
+        )
+
+    if output_file:
+        console.print(
+            "[bold green]Saved hypothesis feedback "
+            f"Markdown:[/bold green] {output_file}"
+        )
+
+    if json_output:
+        console.print(
+            "[bold green]Saved hypothesis feedback "
+            f"JSON:[/bold green] {json_output}"
+        )
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command "
+        "creates local proposed hypothesis-confidence feedback "
+        "only. It does not change hypothesis confidence, alter "
+        "hypothesis selection, modify investigation plans, "
+        "mutate research state, generate commands or payloads, "
+        "execute tools, launch browsers, replay Burp requests, "
+        "run Kali tools, send network requests, interact with "
+        "targets, collect evidence, validate findings, submit "
+        "reports, or confirm vulnerabilities."
+    )
+
+@app.command("brain-chat-research-observation-review-gate")
+def brain_chat_research_observation_review_gate_command(
+    packet_file: Path = typer.Option(
+        ...,
+        "--packet-file",
+        "--observation-packet",
+        help=(
+            "Local JSON file containing a normalized "
+            "research observation packet."
+        ),
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown output path.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON output path.",
+    ),
+):
+    """Review a normalized research observation packet."""
+    if not packet_file.exists():
+        console.print(
+            "[bold red]Research observation packet not found:"
+            f"[/bold red] {packet_file}"
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        review = (
+            build_research_observation_review_gate_from_file(
+                packet_file,
+                output_file=output_file,
+                json_output=json_output,
+            )
+        )
+    except json.JSONDecodeError as exc:
+        console.print(
+            "[bold red]Invalid research observation packet "
+            f"JSON:[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+    except ValueError as exc:
+        console.print(
+            "[bold red]Invalid research observation review "
+            f"input:[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+
+    counts = review.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+
+    table = Table(
+        title="Research Observation Review Gate"
+    )
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    rows = (
+        ("Packet file", str(packet_file)),
+        (
+            "Target",
+            str(
+                review.get("target_name")
+                or "unknown-target"
+            ),
+        ),
+        (
+            "Focus endpoint",
+            str(
+                review.get("focus_endpoint")
+                or "none"
+            ),
+        ),
+        (
+            "Source packet status",
+            str(
+                review.get("source_packet_status")
+                or "unknown"
+            ),
+        ),
+        (
+            "Review status",
+            str(
+                review.get("review_status")
+                or "unknown"
+            ),
+        ),
+        (
+            "Summary",
+            str(review.get("summary") or ""),
+        ),
+        (
+            "Review ready",
+            str(bool(review.get("review_ready"))),
+        ),
+        (
+            "Hypothesis feedback packet ready",
+            str(
+                bool(
+                    review.get(
+                        "hypothesis_feedback_packet_ready"
+                    )
+                )
+            ),
+        ),
+        (
+            "Research-state transition ready",
+            str(
+                bool(
+                    review.get(
+                        "research_state_transition_ready"
+                    )
+                )
+            ),
+        ),
+        (
+            "Observations",
+            str(counts.get("observations") or 0),
+        ),
+        (
+            "Ready observations",
+            str(
+                counts.get("ready_observations")
+                or 0
+            ),
+        ),
+        (
+            "Blocked observations",
+            str(
+                counts.get("blocked_observations")
+                or 0
+            ),
+        ),
+        (
+            "Review-needed observations",
+            str(
+                counts.get(
+                    "review_needed_observations"
+                )
+                or 0
+            ),
+        ),
+        (
+            "Expected hypothesis impacts",
+            str(
+                counts.get(
+                    "expected_hypothesis_impacts"
+                )
+                or 0
+            ),
+        ),
+        (
+            "Packet findings",
+            str(
+                counts.get("packet_findings")
+                or 0
+            ),
+        ),
+        (
+            "Observation findings",
+            str(
+                counts.get("observation_findings")
+                or 0
+            ),
+        ),
+        (
+            "Impact findings",
+            str(
+                counts.get("impact_findings")
+                or 0
+            ),
+        ),
+        (
+            "High findings",
+            str(counts.get("high_findings") or 0),
+        ),
+        (
+            "Medium findings",
+            str(
+                counts.get("medium_findings")
+                or 0
+            ),
+        ),
+        (
+            "Low findings",
+            str(counts.get("low_findings") or 0),
+        ),
+        (
+            "Hypothesis mutation allowed",
+            "false",
+        ),
+        (
+            "Research-state mutation allowed",
+            "false",
+        ),
+        (
+            "Runtime execution allowed",
+            "false",
+        ),
+    )
+
+    for field, value in rows:
+        table.add_row(field, value)
+
+    console.print(table)
+
+    observation_reviews = review.get(
+        "observation_reviews"
+    )
+
+    if (
+        isinstance(observation_reviews, list)
+        and observation_reviews
+    ):
+        observation_table = Table(
+            title="Observation Reviews"
+        )
+        observation_table.add_column("ID")
+        observation_table.add_column("Request")
+        observation_table.add_column("Action")
+        observation_table.add_column("Hypothesis")
+        observation_table.add_column("Outcome")
+        observation_table.add_column("Strength")
+        observation_table.add_column("Delta")
+        observation_table.add_column("Status")
+        observation_table.add_column("Ready")
+        observation_table.add_column("Findings")
+
+        for item in observation_reviews:
+            if not isinstance(item, dict):
+                continue
+
+            observation_table.add_row(
+                str(
+                    item.get("observation_id")
+                    or ""
+                ),
+                str(item.get("request_id") or "none"),
+                str(item.get("action_id") or "none"),
+                str(
+                    item.get("hypothesis_id")
+                    or "none"
+                ),
+                str(item.get("outcome") or ""),
+                str(
+                    item.get("evidence_strength")
+                    or ""
+                ),
+                str(
+                    item.get(
+                        "expected_confidence_delta"
+                    )
+                    or 0
+                ),
+                str(
+                    item.get("review_status")
+                    or "unknown"
+                ),
+                str(bool(item.get("review_ready"))),
+                str(item.get("finding_count") or 0),
+            )
+
+        console.print(observation_table)
+
+    impacts = review.get(
+        "expected_preliminary_hypothesis_impacts"
+    )
+
+    if isinstance(impacts, list) and impacts:
+        impact_table = Table(
+            title="Verified Preliminary Hypothesis Impacts"
+        )
+        impact_table.add_column("Hypothesis")
+        impact_table.add_column("Observations")
+        impact_table.add_column("Net Delta")
+        impact_table.add_column("Direction")
+        impact_table.add_column("Automatic Update")
+
+        for item in impacts:
+            if not isinstance(item, dict):
+                continue
+
+            impact_table.add_row(
+                str(item.get("hypothesis_id") or ""),
+                str(
+                    item.get("observation_count")
+                    or 0
+                ),
+                str(
+                    item.get("net_confidence_delta")
+                    or 0
+                ),
+                str(
+                    item.get(
+                        "preliminary_direction"
+                    )
+                    or ""
+                ),
+                str(
+                    bool(
+                        item.get(
+                            "automatic_update_allowed"
+                        )
+                    )
+                ),
+            )
+
+        console.print(impact_table)
+
+    finding_sections = (
+        ("Packet findings", "packet_findings"),
+        (
+            "Observation findings",
+            "observation_findings",
+        ),
+        ("Impact findings", "impact_findings"),
+    )
+
+    for heading, key in finding_sections:
+        findings = review.get(key)
+
+        if not isinstance(findings, list) or not findings:
+            continue
+
+        console.print(
+            f"[bold yellow]{heading}:[/bold yellow]"
+        )
+
+        for finding in findings:
+            if not isinstance(finding, dict):
+                continue
+
+            console.print(
+                "- "
+                f"[{finding.get('severity', 'unknown')}] "
+                f"{finding.get('category', 'finding')} / "
+                f"{finding.get('subject', 'unknown')}: "
+                f"{finding.get('message', '')} "
+                "Required action: "
+                f"{finding.get('required_action', '')}"
+            )
+
+    allowed_next_steps = review.get(
+        "allowed_next_steps"
+    )
+
+    if (
+        isinstance(allowed_next_steps, list)
+        and allowed_next_steps
+    ):
+        console.print(
+            "[bold yellow]Allowed next steps:"
+            "[/bold yellow]"
+        )
+
+        for item in allowed_next_steps:
+            console.print(f"- {item}")
+
+    rejected_next_steps = review.get(
+        "rejected_next_steps"
+    )
+
+    if (
+        isinstance(rejected_next_steps, list)
+        and rejected_next_steps
+    ):
+        console.print(
+            "[bold yellow]Rejected next steps:"
+            "[/bold yellow]"
+        )
+
+        for item in rejected_next_steps:
+            console.print(f"- {item}")
+
+    source_packet_digest = review.get(
+        "source_packet_digest"
+    )
+    review_digest = review.get("review_digest")
+
+    if source_packet_digest:
+        console.print(
+            "[bold yellow]Source packet digest:"
+            "[/bold yellow] "
+            f"`{source_packet_digest}`"
+        )
+
+    if review_digest:
+        console.print(
+            "[bold yellow]Review digest:"
+            "[/bold yellow] "
+            f"`{review_digest}`"
+        )
+
+    if output_file:
+        console.print(
+            "[bold green]Saved observation review "
+            f"Markdown:[/bold green] {output_file}"
+        )
+
+    if json_output:
+        console.print(
+            "[bold green]Saved observation review "
+            f"JSON:[/bold green] {json_output}"
+        )
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command "
+        "performs local integrity, linkage, authorization, "
+        "redaction, safety, and hypothesis-impact consistency "
+        "review only. It does not execute commands, launch "
+        "browsers, replay Burp requests, run Kali tools, send "
+        "network requests, interact with targets, collect "
+        "evidence, validate findings, automatically change "
+        "hypothesis confidence, mutate research state, submit "
+        "reports, or confirm vulnerabilities."
+    )
+
+@app.command("brain-chat-research-observation-packet")
+def brain_chat_research_observation_packet_command(
+    observation_file: Path = typer.Option(
+        ...,
+        "--observation-file",
+        "--observations",
+        help=(
+            "Local JSON file containing imported research "
+            "observation records."
+        ),
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional Markdown output path.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional JSON output path.",
+    ),
+):
+    """Normalize imported research observations."""
+    if not observation_file.exists():
+        console.print(
+            "[bold red]Research observation input not found:"
+            f"[/bold red] {observation_file}"
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        packet = (
+            build_research_observation_packet_from_file(
+                observation_file,
+                output_file=output_file,
+                json_output=json_output,
+            )
+        )
+    except json.JSONDecodeError as exc:
+        console.print(
+            "[bold red]Invalid research observation JSON:"
+            f"[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+    except ValueError as exc:
+        console.print(
+            "[bold red]Invalid research observation input:"
+            f"[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+
+    counts = packet.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+
+    table = Table(title="Research Observation Packet")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    rows = (
+        ("Observation file", str(observation_file)),
+        (
+            "Target",
+            str(
+                packet.get("target_name")
+                or "unknown-target"
+            ),
+        ),
+        (
+            "Focus endpoint",
+            str(
+                packet.get("focus_endpoint")
+                or "none"
+            ),
+        ),
+        (
+            "Packet status",
+            str(
+                packet.get("packet_status")
+                or "unknown"
+            ),
+        ),
+        (
+            "Summary",
+            str(packet.get("summary") or ""),
+        ),
+        (
+            "Packet ready",
+            str(bool(packet.get("packet_ready"))),
+        ),
+        (
+            "Observation review ready",
+            str(
+                bool(
+                    packet.get(
+                        "observation_review_ready"
+                    )
+                )
+            ),
+        ),
+        (
+            "Hypothesis feedback review ready",
+            str(
+                bool(
+                    packet.get(
+                        "hypothesis_feedback_review_ready"
+                    )
+                )
+            ),
+        ),
+        (
+            "Research-state transition ready",
+            str(
+                bool(
+                    packet.get(
+                        "research_state_transition_ready"
+                    )
+                )
+            ),
+        ),
+        (
+            "Observations",
+            str(
+                packet.get("observation_count")
+                or 0
+            ),
+        ),
+        (
+            "Linked requests",
+            str(counts.get("linked_requests") or 0),
+        ),
+        (
+            "Linked actions",
+            str(counts.get("linked_actions") or 0),
+        ),
+        (
+            "Linked hypotheses",
+            str(
+                counts.get("linked_hypotheses")
+                or 0
+            ),
+        ),
+        (
+            "Preliminary hypothesis impacts",
+            str(
+                counts.get(
+                    "preliminary_hypothesis_impacts"
+                )
+                or 0
+            ),
+        ),
+        (
+            "High findings",
+            str(counts.get("high_findings") or 0),
+        ),
+        (
+            "Medium findings",
+            str(
+                counts.get("medium_findings")
+                or 0
+            ),
+        ),
+        (
+            "Low findings",
+            str(counts.get("low_findings") or 0),
+        ),
+        (
+            "Hypothesis mutation allowed",
+            "false",
+        ),
+        (
+            "Research-state mutation allowed",
+            "false",
+        ),
+        (
+            "Runtime execution allowed",
+            "false",
+        ),
+    )
+
+    for field, value in rows:
+        table.add_row(field, value)
+
+    console.print(table)
+
+    observations = packet.get("observations")
+
+    if isinstance(observations, list) and observations:
+        observation_table = Table(
+            title="Normalized Observations"
+        )
+        observation_table.add_column("ID")
+        observation_table.add_column("Request")
+        observation_table.add_column("Action")
+        observation_table.add_column("Hypothesis")
+        observation_table.add_column("Source")
+        observation_table.add_column("Outcome")
+        observation_table.add_column("Strength")
+        observation_table.add_column("Delta")
+        observation_table.add_column("Reviewed")
+
+        for item in observations:
+            if not isinstance(item, dict):
+                continue
+
+            observation_table.add_row(
+                str(
+                    item.get("observation_id")
+                    or ""
+                ),
+                str(item.get("request_id") or "none"),
+                str(item.get("action_id") or "none"),
+                str(
+                    item.get("hypothesis_id")
+                    or "none"
+                ),
+                str(item.get("source_type") or ""),
+                str(item.get("outcome") or ""),
+                str(
+                    item.get("evidence_strength")
+                    or ""
+                ),
+                str(
+                    item.get(
+                        "preliminary_confidence_delta"
+                    )
+                    or 0
+                ),
+                str(
+                    bool(
+                        item.get("human_reviewed")
+                    )
+                ),
+            )
+
+        console.print(observation_table)
+
+    impacts = packet.get(
+        "preliminary_hypothesis_impacts"
+    )
+
+    if isinstance(impacts, list) and impacts:
+        impact_table = Table(
+            title="Preliminary Hypothesis Impacts"
+        )
+        impact_table.add_column("Hypothesis")
+        impact_table.add_column("Observations")
+        impact_table.add_column("Net Delta")
+        impact_table.add_column("Direction")
+        impact_table.add_column("Automatic Update")
+
+        for item in impacts:
+            if not isinstance(item, dict):
+                continue
+
+            impact_table.add_row(
+                str(item.get("hypothesis_id") or ""),
+                str(
+                    item.get("observation_count")
+                    or 0
+                ),
+                str(
+                    item.get("net_confidence_delta")
+                    or 0
+                ),
+                str(
+                    item.get(
+                        "preliminary_direction"
+                    )
+                    or ""
+                ),
+                str(
+                    bool(
+                        item.get(
+                            "automatic_update_allowed"
+                        )
+                    )
+                ),
+            )
+
+        console.print(impact_table)
+
+    findings = packet.get("findings")
+
+    if isinstance(findings, list) and findings:
+        console.print(
+            "[bold yellow]Observation findings:"
+            "[/bold yellow]"
+        )
+
+        for finding in findings:
+            if not isinstance(finding, dict):
+                continue
+
+            console.print(
+                "- "
+                f"[{finding.get('severity', 'unknown')}] "
+                f"{finding.get('category', 'finding')} / "
+                f"{finding.get('subject', 'unknown')}: "
+                f"{finding.get('message', '')} "
+                "Required action: "
+                f"{finding.get('required_action', '')}"
+            )
+
+    allowed_next_steps = packet.get(
+        "allowed_next_steps"
+    )
+
+    if (
+        isinstance(allowed_next_steps, list)
+        and allowed_next_steps
+    ):
+        console.print(
+            "[bold yellow]Allowed next steps:"
+            "[/bold yellow]"
+        )
+
+        for item in allowed_next_steps:
+            console.print(f"- {item}")
+
+    rejected_next_steps = packet.get(
+        "rejected_next_steps"
+    )
+
+    if (
+        isinstance(rejected_next_steps, list)
+        and rejected_next_steps
+    ):
+        console.print(
+            "[bold yellow]Rejected next steps:"
+            "[/bold yellow]"
+        )
+
+        for item in rejected_next_steps:
+            console.print(f"- {item}")
+
+    packet_digest = packet.get("packet_digest")
+
+    if packet_digest:
+        console.print(
+            "[bold yellow]Packet digest:"
+            "[/bold yellow] "
+            f"`{packet_digest}`"
+        )
+
+    if output_file:
+        console.print(
+            "[bold green]Saved observation packet "
+            f"Markdown:[/bold green] {output_file}"
+        )
+
+    if json_output:
+        console.print(
+            "[bold green]Saved observation packet "
+            f"JSON:[/bold green] {json_output}"
+        )
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command "
+        "only imports and normalizes local, user-provided "
+        "observation records. It does not execute commands, "
+        "launch browsers, replay Burp requests, run Kali "
+        "tools, send network requests, interact with targets, "
+        "collect evidence, validate findings, automatically "
+        "change hypothesis confidence, mutate research state, "
+        "submit reports, or confirm vulnerabilities."
+    )
 
 @app.command(
     "brain-chat-research-typed-tool-request-review-gate"

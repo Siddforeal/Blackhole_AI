@@ -266,3 +266,26 @@ approved research actions
 The review boundary independently reconstructs manifest and request digests, validates deterministic identity and ordering, verifies action profiles and adapter contracts, and rebuilds the existing execution-gate preview from its compatibility input.
 
 A successful review indicates only that a future runtime approval template may be created. It does not make any request executable and does not grant command generation, package installation, network access, target interaction, evidence collection, validation, state mutation, report submission, or vulnerability confirmation.
+
+## Research Observation Feedback Boundary
+
+Version 1.16.0 adds a local feedback boundary between imported research observations and any future persistent research-state transition.
+
+Pipeline:
+
+- external or manually recorded observation
+- normalization and deterministic observation identity
+- observation and packet digest generation
+- independent integrity and safety review
+- verified preliminary hypothesis impacts
+- proposed hypothesis-confidence feedback
+- future human decision
+- future state-transition review
+
+The boundary separates observation import, observation normalization, independent observation review, hypothesis-feedback proposal generation, and future persistent state mutation.
+
+Observation import accepts user-provided facts and artifacts but performs no collection. Observation normalization assigns deterministic identities and computes preliminary effects. Observation review independently verifies integrity, linkage, safety, redaction, scope, controlled assets, and impact consistency.
+
+Hypothesis feedback joins verified impacts to the original hypothesis packet and records current confidence, proposed confidence, evidence direction, aggregate confidence delta, linked observation IDs, required human review, and deterministic proposal digests.
+
+A ready feedback packet means only that a human feedback-review artifact may be created. It does not update hypothesis confidence, reorder selected hypotheses, alter investigation plans, authorize execution, collect additional evidence, validate a vulnerability, or mutate persistent research state.
