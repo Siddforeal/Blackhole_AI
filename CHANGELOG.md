@@ -4,6 +4,43 @@
 
 ### Added
 
+## v1.16.0 - Research Observation Feedback Pipeline
+
+Released: 2026-06-12
+
+### Added
+
+- Local-only `brain-chat-research-observation-packet` CLI command
+- Local-only `brain-chat-research-observation-review-gate` CLI command
+- Local-only `brain-chat-research-hypothesis-feedback-packet` CLI command
+- Deterministic normalization of imported research observations
+- Observation IDs and SHA-256 observation and packet digests
+- Request, action, hypothesis, artifact, signal, and source linkage
+- Outcome, evidence-strength, redaction, scope, controlled-assets, and human-review validation
+- Preliminary per-observation confidence effects and aggregated hypothesis impacts
+- Independent packet, observation, and review-digest verification
+- Observation review-gate status and per-observation review results
+- Deterministic hypothesis-feedback proposals joined to the original hypothesis packet
+- Proposed categorical confidence retention, promotion, and demotion
+- Per-proposal and feedback-packet SHA-256 digests
+- Markdown and JSON output for all three pipeline stages
+- Core, CLI, forced-color, tampering, deterministic-output, status-precedence, and end-to-end pipeline tests
+
+### Safety
+
+- Observation import does not collect evidence or interact with targets
+- Observation review does not validate vulnerabilities
+- Hypothesis feedback remains proposal-only
+- Source hypothesis packets are never modified
+- Hypothesis confidence mutation remains disabled
+- Hypothesis selection and investigation-plan mutation remain disabled
+- Persistent research-state mutation remains disabled
+- Command and payload generation remain disabled
+- Package installation and tool execution remain disabled
+- Browser, Burp Suite, curl, Kali, provider, scanner, and shell execution remain disabled
+- Network and target interaction remain disabled
+- Report submission and vulnerability confirmation remain disabled
+
 ## v1.15.0 - Typed Tool Request Review Gate
 
 Released: 2026-06-12

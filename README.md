@@ -10,7 +10,7 @@ It helps researchers turn fragmented notes, endpoints, hypotheses, evidence, and
 
 > **Current state:** Blackhole is a planning-oriented, human-controlled research workbench. Its long-term roadmap is an agentic security research, vulnerability validation, and controlled exploitation framework with scope-gated command-line, browser, Burp Suite, Kali/tooling, evidence, proof-of-concept generation, and autonomous research-loop capabilities.
 
-**Current release:** `v1.15.0`
+**Current release:** `v1.16.0`
 
 **Project status:** active research prototype
 
@@ -172,11 +172,20 @@ research source packet
 → typed tool-request review gate
 → future exact-action runtime approval template
 → fail-closed execution-gate compatibility preview
+→ imported research observation packet
+→ observation integrity and safety review gate
+→ proposed hypothesis feedback packet
+→ future human feedback decision
+→ future research-state transition gate
 ```
 
 The action proposal review gate validates structure, action IDs, tool-family mappings, approval and scope requirements, blockers, ordering, and fail-closed execution flags. The v1.14.0 pipeline then records explicit human decisions, selects effectively approved actions, normalizes typed adapter requests, assigns deterministic digests, and builds a compatibility preview for the existing execution gate.
 
 The v1.15.0 typed tool-request review gate verifies request and manifest digests, deterministic identities and ordering, action profiles, adapter contracts, focus-endpoint requirements, fail-closed execution flags, and execution-gate preview consistency before a future exact-action runtime approval template may be created.
+
+The v1.16.0 observation feedback pipeline imports user-provided research observations, normalizes and digests each observation, verifies packet and observation integrity, validates source linkage, redaction, scope, controlled assets, human review, and preliminary hypothesis-impact calculations, and then creates deterministic proposed confidence feedback against the original hypothesis packet.
+
+The feedback packet may propose retaining, promoting, or demoting categorical hypothesis confidence, but it never changes the source hypothesis packet, hypothesis selection, investigation plans, or persistent research state.
 
 Human approval in this chain authorizes only the next planning artifact. It does not authorize command or payload generation, package installation, tool execution, network or target interaction, evidence collection, vulnerability validation, state mutation, report submission, or vulnerability confirmation.
 
@@ -253,7 +262,7 @@ call providers, execute tools, or confirm a vulnerability.
 
 ## Release History
 
-The current release is `v1.15.0`.
+The current release is `v1.16.0`.
 
 Full release notes and historical versions are available on the [GitHub releases page](https://github.com/Siddforeal/Blackhole_AI/releases).
 

@@ -3027,3 +3027,37 @@ The `--typed-manifest` option is an alias for `--manifest-file`, and `--output` 
 A successful review returns `ready-for-runtime-approval-template` only when the manifest has a focus endpoint and passes digest, identity, ordering, action-profile, adapter-contract, safety, and execution-gate consistency validation.
 
 The command remains local and planning-only. It does not generate commands or payloads, install software, execute tools, launch browsers, replay Burp requests, use Kali tools, send requests, collect evidence, validate vulnerabilities, mutate state, submit reports, or confirm vulnerabilities.
+
+## Research Observation Feedback Pipeline
+
+Version 1.16.0 adds three local-only CLI commands for observation feedback.
+
+### Build a normalized observation packet
+
+```bash
+blackhole brain-chat-research-observation-packet --observation-file /tmp/research-observations.json --output-file /tmp/research-observation-packet.md --json-output /tmp/research-observation-packet.json
+```
+
+This command normalizes imported observations, linkage, outcomes, evidence strength, redaction, scope, controlled-assets status, human-review state, preliminary hypothesis effects, and deterministic digests.
+
+### Review the observation packet
+
+```bash
+blackhole brain-chat-research-observation-review-gate --packet-file /tmp/research-observation-packet.json --output-file /tmp/research-observation-review.md --json-output /tmp/research-observation-review.json
+```
+
+The --observation-packet option is an alias for --packet-file, and --output is an alias for --output-file.
+
+A successful review returns ready-for-hypothesis-feedback-review after integrity, linkage, redaction, scope, controlled-assets, human-review, safety, and hypothesis-impact checks pass.
+
+### Build proposed hypothesis feedback
+
+```bash
+blackhole brain-chat-research-hypothesis-feedback-packet --hypothesis-file /tmp/research-hypotheses.json --observation-file /tmp/research-observation-packet.json --review-file /tmp/research-observation-review.json --output-file /tmp/research-hypothesis-feedback.md --json-output /tmp/research-hypothesis-feedback.json
+```
+
+Aliases are available: --hypothesis-packet, --observation-packet, --observation-review, and --output.
+
+The feedback packet verifies that the hypothesis packet, observation packet, and observation review belong to the same deterministic feedback chain.
+
+These commands remain local and planning-only. They do not collect evidence, execute tools, interact with targets, change hypothesis confidence, alter hypothesis selection, modify investigation plans, mutate research state, submit reports, or confirm vulnerabilities.
