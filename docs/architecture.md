@@ -292,6 +292,13 @@ A ready feedback packet means only that a human feedback-review artifact may be 
 
 ## v1.17.0 Human Feedback Decision Boundary
 
-Version 1.17.0 adds a human decision boundary after proposed hypothesis feedback. The boundary converts proposal-only feedback into explicit local human decisions, then emits a deterministic decision packet. Accepted decisions are still not state mutation; they only allow a later confidence-update packet to be prepared and reviewed by a future transition gate.
+Version 1.18.0 adds a human decision boundary after proposed hypothesis feedback. The boundary converts proposal-only feedback into explicit local human decisions, then emits a deterministic decision packet. Accepted decisions are still not state mutation; they only allow a later confidence-update packet to be prepared and reviewed by a future transition gate.
 
 This preserves the local-first architecture: no command generation, no runtime execution, no target interaction, no evidence collection, no report submission, and no vulnerability confirmation occur in this stage.
+
+
+## v1.18.0 Confidence Update Boundary
+
+Accepted feedback decisions do not directly modify hypothesis confidence. The confidence update packet is an intermediate review artifact that prepares proposed updates for a later research-state transition review gate.
+
+All mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.

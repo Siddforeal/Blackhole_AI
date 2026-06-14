@@ -150,6 +150,9 @@ from bugintel.core.brain_chat_research_hypothesis_feedback_packet import (
 from bugintel.core.brain_chat_research_hypothesis_feedback_decision_packet import (
     build_decision_packet_from_files as build_research_hypothesis_feedback_decision_packet_from_files,
 )
+from bugintel.core.brain_chat_research_hypothesis_confidence_update_packet import (
+    build_confidence_update_packet_from_files as build_research_hypothesis_confidence_update_packet_from_files,
+)
 from bugintel.core.brain_chat_research_hypothesis_feedback_decision_template import (
     build_research_hypothesis_feedback_decision_template,
     load_json_object as load_research_hypothesis_feedback_decision_template_json,
@@ -302,7 +305,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.17.0",
+                version="1.18.0",
                 force=True,
             )
         )
@@ -314,7 +317,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.17.0",
+            version="1.18.0",
             force=True,
         )
     )
@@ -323,7 +326,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.17.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.18.0")
 
 
 @app.command("scope-check")
@@ -14154,6 +14157,72 @@ def brain_chat_research_source_packet_command(
     console.print(
         "[bold yellow]Safety:[/bold yellow] This command only builds a local deterministic research source packet. "
         "It does not browse the web, call providers, execute tools, send requests, collect evidence, submit reports, or confirm vulnerabilities."
+    )
+
+@app.command("brain-chat-research-hypothesis-confidence-update-packet")
+def brain_chat_research_hypothesis_confidence_update_packet_command(
+    hypothesis_file: Path = typer.Option(..., "--hypothesis-file", "--hypothesis-packet", help="Path to source research hypothesis packet JSON."),
+    decision_file: Path = typer.Option(..., "--decision-file", "--decision-packet", help="Path to accepted hypothesis feedback decision packet JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional JSON output path for confidence update packet."),
+):
+    """Build a local-only proposed hypothesis confidence update packet."""
+    if not hypothesis_file.exists():
+        console.print(f"[bold red]Hypothesis packet JSON not found:[/bold red] {hypothesis_file}")
+        raise typer.Exit(code=1)
+
+    if not decision_file.exists():
+        console.print(f"[bold red]Feedback decision packet JSON not found:[/bold red] {decision_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        packet = build_research_hypothesis_confidence_update_packet_from_files(
+            hypothesis_file,
+            decision_file,
+            json_output,
+        )
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=2) from exc
+
+    table = Table(title="Hypothesis Confidence Update Packet")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target", packet["target_name"])
+    table.add_row("Status", packet["update_status"])
+    table.add_row("Hypotheses", str(packet["hypothesis_count"]))
+    table.add_row("Accepted feedback", str(packet["accepted_feedback_count"]))
+    table.add_row("Confidence updates", str(packet["confidence_update_count"]))
+    table.add_row("Transition review required", str(packet["research_state_transition_review_required"]))
+    table.add_row("State transition ready", str(packet["research_state_transition_ready"]))
+    table.add_row("Execution", "planning-only; no confidence mutation, state mutation, target interaction, or tool execution")
+    console.print(table)
+
+    if packet["confidence_updates"]:
+        updates = Table(title="Proposed Confidence Updates")
+        updates.add_column("Update")
+        updates.add_column("Hypothesis")
+        updates.add_column("Current")
+        updates.add_column("Proposed")
+        updates.add_column("Ready")
+        for item in packet["confidence_updates"]:
+            updates.add_row(
+                item["update_id"],
+                item["hypothesis_id"],
+                item["current_confidence"],
+                item["proposed_confidence"],
+                str(item["effective_confidence_update_ready"]),
+            )
+        console.print(updates)
+
+    if json_output:
+        console.print(f"[bold green]Saved hypothesis confidence update packet JSON:[/bold green] {json_output}")
+    else:
+        console.print(json.dumps(packet, indent=2, sort_keys=True))
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only builds a local proposed confidence update packet. "
+        "It does not mutate hypothesis confidence, persistent research state, selected hypotheses, investigation plans, "
+        "targets, evidence, reports, or vulnerability status."
     )
 
 

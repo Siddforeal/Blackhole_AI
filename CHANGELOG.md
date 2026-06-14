@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.18.0 - Hypothesis Confidence Update Packet
+
+- Adds a local-only proposed hypothesis confidence update packet.
+- Converts accepted hypothesis feedback decision packets into reviewable confidence update records.
+- Adds CLI support for `brain-chat-research-hypothesis-confidence-update-packet`.
+- Keeps confidence updates fail-closed: no direct hypothesis mutation, selected-hypothesis mutation, investigation-plan mutation, persistent research-state mutation, execution, evidence collection, report submission, or vulnerability confirmation.
+- Adds deterministic core and CLI regression coverage.
+
+
 ## v1.17.0 - Human Hypothesis Feedback Decision Pipeline
 
 - Added local-only human decision template generation for hypothesis feedback proposals.
