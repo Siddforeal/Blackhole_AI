@@ -3064,7 +3064,7 @@ These commands remain local and planning-only. They do not collect evidence, exe
 
 ## v1.17.0 Human Hypothesis Feedback Decision Commands
 
-Version 1.17.0 adds two local-only CLI commands for human hypothesis feedback decisions.
+Version 1.18.0 adds two local-only CLI commands for human hypothesis feedback decisions.
 
 ### Build a feedback decision template
 
@@ -3079,3 +3079,19 @@ blackhole brain-chat-research-hypothesis-feedback-decision-packet --feedback-fil
 ```
 
 Both commands are local-only and planning-only. They do not update hypothesis confidence, mutate selection, alter plans, mutate research state, execute tools, collect evidence, submit reports, or confirm vulnerabilities.
+
+
+## v1.18.0 Hypothesis Confidence Update Command
+
+`brain-chat-research-hypothesis-confidence-update-packet`
+
+Required inputs:
+
+- `--hypothesis-file` / `--hypothesis-packet`
+- `--decision-file` / `--decision-packet`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a local proposed confidence update packet only. It does not apply updates or execute tools.

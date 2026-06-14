@@ -10,7 +10,7 @@ It helps researchers turn fragmented notes, endpoints, hypotheses, evidence, and
 
 > **Current state:** Blackhole is a planning-oriented, human-controlled research workbench. Its long-term roadmap is an agentic security research, vulnerability validation, and controlled exploitation framework with scope-gated command-line, browser, Burp Suite, Kali/tooling, evidence, proof-of-concept generation, and autonomous research-loop capabilities.
 
-**Current release:** `v1.17.0`
+**Current release:** `v1.18.0`
 
 **Project status:** active research prototype
 
@@ -184,7 +184,7 @@ The action proposal review gate validates structure, action IDs, tool-family map
 The v1.15.0 typed tool-request review gate verifies request and manifest digests, deterministic identities and ordering, action profiles, adapter contracts, focus-endpoint requirements, fail-closed execution flags, and execution-gate preview consistency before a future exact-action runtime approval template may be created.
 
 The v1.16.0 observation feedback pipeline imports user-provided research observations, normalizes and digests each observation, verifies packet and observation integrity, validates source linkage, redaction, scope, controlled assets, human review, and preliminary hypothesis-impact calculations, and then creates deterministic proposed confidence feedback against the original hypothesis packet.
-The v1.17.0 human hypothesis feedback decision pipeline adds an explicit human decision boundary after proposed hypothesis feedback. It creates a local decision template, records accepted/rejected/changes-requested/deferred decisions, and produces a deterministic feedback decision packet. Accepted decisions only enable a later confidence-update packet stage; they do not directly mutate hypothesis confidence or persistent research state.
+The v1.18.0 human hypothesis feedback decision pipeline adds an explicit human decision boundary after proposed hypothesis feedback. It creates a local decision template, records accepted/rejected/changes-requested/deferred decisions, and produces a deterministic feedback decision packet. Accepted decisions only enable a later confidence-update packet stage; they do not directly mutate hypothesis confidence or persistent research state.
 
 
 The feedback packet may propose retaining, promoting, or demoting categorical hypothesis confidence, but it never changes the source hypothesis packet, hypothesis selection, investigation plans, or persistent research state.
@@ -264,7 +264,7 @@ call providers, execute tools, or confirm a vulnerability.
 
 ## Release History
 
-The current release is `v1.17.0`.
+The current release is `v1.18.0`.
 
 Full release notes and historical versions are available on the [GitHub releases page](https://github.com/Siddforeal/Blackhole_AI/releases).
 
