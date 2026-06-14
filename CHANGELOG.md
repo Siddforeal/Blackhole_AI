@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.17.0 - Human Hypothesis Feedback Decision Pipeline
+
+- Added local-only human decision template generation for hypothesis feedback proposals.
+- Added local-only human feedback decision packet generation.
+- Added `brain-chat-research-hypothesis-feedback-decision-template` CLI command.
+- Added `brain-chat-research-hypothesis-feedback-decision-packet` CLI command.
+- Added deterministic validation for accepted, rejected, changes-requested, deferred, missing, duplicate, unsafe, and incomplete feedback decisions.
+- Accepted feedback only marks a later confidence-update packet as ready; it does not mutate hypothesis confidence, selection, plans, state, targets, reports, or vulnerability status.
+- Added core and CLI regression coverage for the hypothesis feedback decision workflow.
+
 ## Unreleased
 
 ### Added

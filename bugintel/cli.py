@@ -147,6 +147,14 @@ from bugintel.integrations.har_importer import load_har
 from bugintel.core.brain_chat_research_hypothesis_feedback_packet import (
     build_feedback_packet_from_files as build_research_hypothesis_feedback_packet_from_files,
 )
+from bugintel.core.brain_chat_research_hypothesis_feedback_decision_packet import (
+    build_decision_packet_from_files as build_research_hypothesis_feedback_decision_packet_from_files,
+)
+from bugintel.core.brain_chat_research_hypothesis_feedback_decision_template import (
+    build_research_hypothesis_feedback_decision_template,
+    load_json_object as load_research_hypothesis_feedback_decision_template_json,
+    write_json as write_research_hypothesis_feedback_decision_template_json,
+)
 from bugintel.core.brain_chat_research_observation_review_gate import (
     build_review_gate_from_file as build_research_observation_review_gate_from_file,
 )
@@ -294,7 +302,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.16.0",
+                version="1.17.0",
                 force=True,
             )
         )
@@ -306,7 +314,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.16.0",
+            version="1.17.0",
             force=True,
         )
     )
@@ -315,7 +323,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.16.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.17.0")
 
 
 @app.command("scope-check")
@@ -12786,6 +12794,180 @@ def brain_chat_research_approved_action_packet_command(
         "A typed tool-request manifest and separate execution "
         "gate are still required."
     )
+
+@app.command("brain-chat-research-hypothesis-feedback-decision-template")
+def brain_chat_research_hypothesis_feedback_decision_template_command(
+    feedback_file: Path = typer.Option(
+        ...,
+        "--feedback-file",
+        "--feedback-packet",
+        help="Local JSON file containing a hypothesis feedback packet.",
+    ),
+    output_file: Path = typer.Option(
+        ...,
+        "--output-file",
+        "--output",
+        help="Required output path for the local human feedback-decision template JSON.",
+    ),
+):
+    """Build a local human decision template for hypothesis feedback."""
+    if not feedback_file.exists():
+        console.print(
+            "[bold red]Hypothesis feedback packet JSON not found:"
+            f"[/bold red] {feedback_file}"
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        feedback_packet = load_research_hypothesis_feedback_decision_template_json(
+            feedback_file
+        )
+        decision_template = build_research_hypothesis_feedback_decision_template(
+            feedback_packet
+        )
+        write_research_hypothesis_feedback_decision_template_json(
+            output_file,
+            decision_template,
+        )
+    except json.JSONDecodeError as exc:
+        console.print(
+            "[bold red]Invalid hypothesis feedback packet JSON:"
+            f"[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+    except ValueError as exc:
+        console.print(
+            "[bold red]Invalid hypothesis feedback decision-template input:"
+            f"[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+
+    decisions = decision_template.get("decisions")
+    decision_count = len(decisions) if isinstance(decisions, list) else 0
+
+    table = Table(title="Hypothesis Feedback Decision Template")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Feedback file", str(feedback_file))
+    table.add_row("Output file", str(output_file))
+    table.add_row("Target", str(decision_template.get("target_name") or "unknown-target"))
+    table.add_row("Decision input kind", str(decision_template.get("kind") or "unknown"))
+    table.add_row("Feedback decisions", str(decision_count))
+    table.add_row("Default decision", "deferred")
+    table.add_row("Planning only", str(bool(decision_template.get("planning_only"))))
+    table.add_row("Execution state", str(decision_template.get("execution_state") or "unknown"))
+
+    console.print(table)
+    console.print(
+        "[bold green]Saved hypothesis feedback decision template JSON:"
+        f"[/bold green] {output_file}"
+    )
+    console.print(
+        "[bold yellow]Next step:[/bold yellow] Set a reviewer and record exactly one accepted, rejected, changes-requested, or deferred decision for every feedback proposal before building the feedback decision packet."
+    )
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only creates a local feedback decision template. It does not accept feedback, update hypothesis confidence, mutate selection, alter investigation plans, mutate research state, execute tools, collect evidence, validate findings, submit reports, or confirm vulnerabilities."
+    )
+
+
+@app.command("brain-chat-research-hypothesis-feedback-decision-packet")
+def brain_chat_research_hypothesis_feedback_decision_packet_command(
+    feedback_file: Path = typer.Option(
+        ...,
+        "--feedback-file",
+        "--feedback-packet",
+        help="Local JSON file containing a hypothesis feedback packet.",
+    ),
+    decision_file: Path = typer.Option(
+        ...,
+        "--decision-file",
+        "--decisions",
+        help="Local JSON file containing completed human feedback decisions.",
+    ),
+    json_output: Path = typer.Option(
+        ...,
+        "--json-output",
+        "--output",
+        help="Required output path for the feedback decision-packet JSON.",
+    ),
+):
+    """Build a human decision packet for hypothesis feedback."""
+    if not feedback_file.exists():
+        console.print(
+            "[bold red]Hypothesis feedback packet JSON not found:"
+            f"[/bold red] {feedback_file}"
+        )
+        raise typer.Exit(code=1)
+
+    if not decision_file.exists():
+        console.print(
+            "[bold red]Hypothesis feedback decision JSON not found:"
+            f"[/bold red] {decision_file}"
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        packet = build_research_hypothesis_feedback_decision_packet_from_files(
+            feedback_file,
+            decision_file,
+            json_output,
+        )
+    except json.JSONDecodeError as exc:
+        console.print(
+            "[bold red]Invalid hypothesis feedback decision input JSON:"
+            f"[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+    except ValueError as exc:
+        console.print(
+            "[bold red]Invalid hypothesis feedback decision packet input:"
+            f"[/bold red] {exc}"
+        )
+        raise typer.Exit(code=2) from exc
+
+    table = Table(title="Hypothesis Feedback Decision Packet")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Feedback file", str(feedback_file))
+    table.add_row("Decision file", str(decision_file))
+    table.add_row("JSON output", str(json_output))
+    table.add_row("Target", str(packet.get("target_name") or "unknown-target"))
+    table.add_row("Decision status", str(packet.get("decision_status") or "unknown"))
+    table.add_row("Decision ready", str(bool(packet.get("decision_ready"))))
+    table.add_row(
+        "Confidence update packet ready",
+        str(bool(packet.get("hypothesis_confidence_update_packet_ready"))),
+    )
+    table.add_row("Accepted feedback", str(packet.get("accepted_feedback_count", 0)))
+    table.add_row("Rejected feedback", str(packet.get("rejected_feedback_count", 0)))
+    table.add_row(
+        "Changes requested",
+        str(packet.get("changes_requested_feedback_count", 0)),
+    )
+    table.add_row("Deferred feedback", str(packet.get("deferred_feedback_count", 0)))
+    table.add_row("Missing decisions", str(packet.get("missing_decision_count", 0)))
+    table.add_row("Decision digest", str(packet.get("decision_digest") or ""))
+
+    console.print(table)
+
+    console.print(
+        "[bold green]Saved hypothesis feedback decision packet JSON:"
+        f"[/bold green] {json_output}"
+    )
+
+    console.print(
+        "[bold yellow]Next step:[/bold yellow] If the packet is ready, build a "
+        "separate confidence-update packet from accepted feedback decisions. "
+        "Do not mutate hypothesis confidence directly from this packet."
+    )
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only records local "
+        "human feedback decisions. It does not update confidence, mutate "
+        "selection, alter investigation plans, mutate research state, execute "
+        "tools, collect evidence, submit reports, or confirm vulnerabilities."
+    )
+
 
 @app.command("brain-chat-research-action-decision-template")
 def brain_chat_research_action_decision_template_command(

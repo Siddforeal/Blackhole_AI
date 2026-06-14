@@ -289,3 +289,9 @@ Observation import accepts user-provided facts and artifacts but performs no col
 Hypothesis feedback joins verified impacts to the original hypothesis packet and records current confidence, proposed confidence, evidence direction, aggregate confidence delta, linked observation IDs, required human review, and deterministic proposal digests.
 
 A ready feedback packet means only that a human feedback-review artifact may be created. It does not update hypothesis confidence, reorder selected hypotheses, alter investigation plans, authorize execution, collect additional evidence, validate a vulnerability, or mutate persistent research state.
+
+## v1.17.0 Human Feedback Decision Boundary
+
+Version 1.17.0 adds a human decision boundary after proposed hypothesis feedback. The boundary converts proposal-only feedback into explicit local human decisions, then emits a deterministic decision packet. Accepted decisions are still not state mutation; they only allow a later confidence-update packet to be prepared and reviewed by a future transition gate.
+
+This preserves the local-first architecture: no command generation, no runtime execution, no target interaction, no evidence collection, no report submission, and no vulnerability confirmation occur in this stage.
