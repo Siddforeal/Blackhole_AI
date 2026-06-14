@@ -3064,7 +3064,7 @@ These commands remain local and planning-only. They do not collect evidence, exe
 
 ## v1.17.0 Human Hypothesis Feedback Decision Commands
 
-Version 1.18.0 adds two local-only CLI commands for human hypothesis feedback decisions.
+Version 1.19.0 adds two local-only CLI commands for human hypothesis feedback decisions.
 
 ### Build a feedback decision template
 
@@ -3095,3 +3095,17 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a local proposed confidence update packet only. It does not apply updates or execute tools.
+
+## v1.19.0 Research-State Transition Review Command
+
+`brain-chat-research-state-transition-review-gate`
+
+Required input:
+
+- `--update-file` / `--confidence-update-packet`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a local transition review gate only. It does not apply confidence updates or mutate persistent research state.
