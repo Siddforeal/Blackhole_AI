@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.19.0 - Research-State Transition Review Gate
+
+- Adds a local-only research-state transition review gate for proposed hypothesis confidence updates.
+- Converts ready confidence update packets into pending transition candidates.
+- Adds CLI support for `brain-chat-research-state-transition-review-gate`.
+- Keeps transition review fail-closed: no direct hypothesis confidence mutation, selected-hypothesis mutation, investigation-plan mutation, persistent research-state mutation, execution, evidence collection, report submission, or vulnerability confirmation.
+- Adds deterministic core and CLI regression coverage.
+
+
 ## v1.18.0 - Hypothesis Confidence Update Packet
 
 - Adds a local-only proposed hypothesis confidence update packet.
