@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.16.0
+Current version: 1.17.0
 
 ## Research Goal
 
@@ -1745,3 +1745,17 @@ The hypothesis feedback packet joins verified observation impacts to the origina
 Version 1.16.0 does not modify hypothesis packets, hypothesis selection, investigation plans, approved actions, persistent research state, targets, reports, or vulnerability status.
 
 Command generation, payload generation, package installation, tool execution, browser execution, Burp Suite execution, Kali execution, network interaction, evidence collection, vulnerability validation, report submission, and vulnerability confirmation remain disabled.
+
+## v1.17.0 Human Hypothesis Feedback Decision Pipeline
+
+Version 1.17.0 adds a local-only human decision boundary for proposed hypothesis feedback.
+
+The pipeline adds:
+
+- hypothesis feedback decision template
+- hypothesis feedback decision packet
+- accepted/rejected/changes-requested/deferred decision handling
+- deterministic decision digests
+- fail-closed safety fields for confidence, selection, plan, state, runtime, target, report, and vulnerability mutation
+
+Accepted feedback decisions only mark a later confidence-update packet as ready. They do not directly change hypothesis confidence, hypothesis selection, investigation plans, approved actions, persistent research state, targets, reports, or vulnerability status.

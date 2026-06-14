@@ -3061,3 +3061,21 @@ Aliases are available: --hypothesis-packet, --observation-packet, --observation-
 The feedback packet verifies that the hypothesis packet, observation packet, and observation review belong to the same deterministic feedback chain.
 
 These commands remain local and planning-only. They do not collect evidence, execute tools, interact with targets, change hypothesis confidence, alter hypothesis selection, modify investigation plans, mutate research state, submit reports, or confirm vulnerabilities.
+
+## v1.17.0 Human Hypothesis Feedback Decision Commands
+
+Version 1.17.0 adds two local-only CLI commands for human hypothesis feedback decisions.
+
+### Build a feedback decision template
+
+```bash
+blackhole brain-chat-research-hypothesis-feedback-decision-template --feedback-file /tmp/research-hypothesis-feedback.json --output-file /tmp/research-hypothesis-feedback-decisions.json
+```
+
+### Build a feedback decision packet
+
+```bash
+blackhole brain-chat-research-hypothesis-feedback-decision-packet --feedback-file /tmp/research-hypothesis-feedback.json --decision-file /tmp/research-hypothesis-feedback-decisions.json --json-output /tmp/research-hypothesis-feedback-decision-packet.json
+```
+
+Both commands are local-only and planning-only. They do not update hypothesis confidence, mutate selection, alter plans, mutate research state, execute tools, collect evidence, submit reports, or confirm vulnerabilities.
