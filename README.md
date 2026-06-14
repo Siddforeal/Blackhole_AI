@@ -4,192 +4,189 @@
 [![Latest release](https://img.shields.io/github/v/release/Siddforeal/Blackhole_AI?label=release)](https://github.com/Siddforeal/Blackhole_AI/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Blackhole AI Workbench** is a local-first, human-in-the-loop security research workbench for authorized vulnerability research, bug bounty investigation, endpoint intelligence, evidence planning, and report-readiness review.
+**Blackhole AI Workbench** is an in-progress agentic security research system for authorized vulnerability research, bug bounty investigation, evidence planning, browser-assisted analysis, Burp Suite workflows, command-line research, and human-reviewed proof-of-concept development.
 
-It helps researchers turn fragmented notes, endpoints, hypotheses, evidence, and review decisions into a structured local case workflow.
+Blackhole is being built as a local-first AI research brain: it breaks a target into hypotheses, plans investigation steps, reviews evidence, decides what is safe to do next, and routes work through small task-focused agents.
 
-> **Current state:** Blackhole is a planning-oriented, human-controlled research workbench. Its long-term roadmap is an agentic security research, vulnerability validation, and controlled exploitation framework with scope-gated command-line, browser, Burp Suite, Kali/tooling, evidence, proof-of-concept generation, and autonomous research-loop capabilities.
-
-**Current release:** `v1.18.0`
-
-**Project status:** active research prototype
+> **Current release:** `v1.18.0`
+> **Project status:** active research prototype
+> **Current mode:** local-first, planning-first, human-in-the-loop
+> **Long-term direction:** scope-gated AI agents that can interact with browsers, Burp Suite, curl, local tools, structured case memory, and controlled proof-of-concept workflows.
 
 ---
 
-## What Blackhole Does
+## What Blackhole Is
 
-Blackhole organizes security research into safe, reviewable local artifacts:
+Blackhole is not just a scanner. It is a research workbench designed to think through security work like a disciplined human researcher:
 
 ```text
-endpoints / notes / evidence
-→ local research state
-→ deterministic planning
-→ case chat
-→ session memory
-→ dashboard
-→ review packet
-→ report-readiness support
+target context
+→ endpoint and surface discovery
+→ hypothesis generation
+→ hypothesis selection
+→ investigation planning
+→ action proposal
+→ human decision
+→ approved tool request
+→ observation import
+→ observation review
+→ hypothesis feedback
+→ confidence update proposal
+→ research-state transition review
 ```
 
-It helps answer practical workflow questions:
+The goal is to help a researcher answer:
 
-- Which endpoint should I focus on first?
-- What is blocking validation?
+- What should I test first?
+- Why is this hypothesis worth pursuing?
+- What evidence do I already have?
 - What evidence is missing?
-- Is this reportable yet?
-- What should I not do yet?
+- What action is safe to take next?
+- What should not be executed yet?
+- Is this ready for validation, reporting, or more research?
+- Which assumptions are weak, stale, or unsupported?
 
 ---
 
-## Core Capabilities
+## The Vision
 
-| Area | What Blackhole Provides |
+Blackhole is being developed toward a controlled agentic security workflow where specialized agents can assist with:
+
+| Agent Area | Intended Role |
 |---|---|
-| Endpoint intelligence | Endpoint grouping, prioritization, investigation profiles, and validation planning |
-| Case memory | Local research state, saved chat sessions, summaries, dashboards, and review packets |
-| Brain chat | Deterministic local answers about focus, blockers, approvals, evidence, safety, and reportability |
-| Evidence planning | Required evidence lists, redaction needs, controlled-object matrices, and blocker tracking |
-| Review gates | Provider review, apply-preview review, export-bundle review, dashboard review, and report-readiness checks |
-| Report support | Human-reviewed skeletons, finding draft packets, and report-readiness packets |
+| Browser agent | Navigate scoped applications, observe UI behavior, and capture browser-side evidence |
+| Burp Suite agent | Help organize proxy history, requests, responses, repeater-style test plans, and evidence packets |
+| Command-line agent | Prepare reviewed curl/tool commands for approved, scoped testing |
+| Android/iOS static agent | Analyze mobile application artifacts, manifests, endpoints, deep links, and exposed components |
+| Endpoint intelligence agent | Mine, group, rank, and prioritize endpoints |
+| Hypothesis agent | Generate and refine vulnerability hypotheses |
+| Evidence agent | Track what evidence is required, missing, weak, or report-ready |
+| Review-gate agent | Decide whether an action is safe to continue, blocked, or requires human review |
+| Report-readiness agent | Help structure human-reviewed findings without automatically submitting reports |
+| PoC planning agent | Draft controlled proof-of-concept plans or code only after explicit authorization, scope checks, and human approval |
+
+The intended future system is a live research assistant that can interact with tools, but only through explicit scope, approval, and safety gates.
 
 ---
 
-## Core Principles
+## Current Safety Boundary
 
-- Authorized research only
-- Local-first by default
-- Planning-first by default; controlled execution only through explicit scope, approval, and safety gates
-- Human approval before risky actions
-- Provider output is untrusted until reviewed
-- No automatic vulnerability confirmation
-- No automatic report submission
-- No target mutation by default
-- Evidence before severity or impact claims
+Blackhole currently remains fail-closed by design.
 
----
+It does **not** automatically:
 
-## Current Safety Model
-
-Blackhole currently does **not** automatically:
-
-- call LLM providers
-- execute curl commands
+- exploit targets
+- bypass authorization
 - launch browsers
+- execute curl commands
 - run Kali tools
 - mutate targets
-- bypass authorization
-- confirm vulnerabilities
 - submit reports
+- confirm vulnerabilities
+- collect live evidence without approval
+- generate or run proof-of-concept logic without a future explicit gate
 
-Every provider/tool/browser/execution-oriented workflow is represented as a reviewable plan,
-gate, packet, or checklist until a human explicitly validates the next step.
+Every risky step is represented as a local artifact first:
+
+```text
+proposal
+→ review gate
+→ human decision
+→ approved packet
+→ later execution gate
+```
+
+This makes the system suitable for building toward live automation without skipping human control.
 
 ---
 
-## Current Workflow Highlights
+## Current Capabilities
 
-### Endpoint and Evidence Planning
+### Research Planning
 
-Blackhole can organize endpoints and evidence into structured research artifacts:
-
-```text
-endpoint list
-→ orchestration
-→ research state
-→ endpoint priority
-→ attack surface groups
-→ validation runbooks
-→ evidence requirements
-```
-
-### Case Chat and Provider Review Pipeline
-
-Blackhole supports a safety-gated case-chat workflow that treats external or provider-generated
-text as untrusted planning input:
+Blackhole can turn rough research inputs into structured planning artifacts:
 
 ```text
-case-chat-prompt-package
-→ case-chat-provider-gate
-→ case-chat-provider-dry-run
-→ case-chat-provider-result-import
-→ case-chat-provider-result-review
-→ case-chat-suggestion-action-plan
-→ case-chat-action-plan-apply-preview
-→ case-chat-action-plan-apply-preview-review
-→ case-chat-reviewed-apply-packet
-→ case-chat-reviewed-apply-packet-export-bundle
-→ case-chat-export-bundle-review-gate
-→ case-chat-export-bundle-report-readiness-review
-```
-
-### Report Readiness
-
-The current release can review whether a gated export bundle is ready to support a human-written
-report draft.
-
-It separates report-ready support notes, blockers, missing evidence, unsafe items, artifact
-problems, overclaim risks, safety blockers, final checklist items, and report guardrails.
-
-It still does **not** generate or submit reports automatically.
-
----
-
-### Case Intelligence and Approval Chain
-
-The latest release line adds a local case-intelligence layer on top of the evidence and approval chain.
-
-Chain:
-
-- evidence checklist
-- evidence status import
-- evidence review gate
-- approval request
-- approval decision import
-- approved validation plan
-- validation step review gate
-- validation step approval request
-- validation step approval decision import
-- execution gate proposal
-- execution gate proposal review
-- case intelligence status summary
-
-This layer explains the current case stage, blockers, missing evidence, safest next action, and whether validation, runtime execution, report submission, or vulnerability confirmation are allowed.
-
-## Research Planning and Action Review Chain
-
-```text
-research source packet
+notes / endpoints / source material
+→ research source packet
 → hypothesis packet
-→ hypothesis selection
+→ selected hypothesis
 → investigation plan
-→ investigation plan review gate
+```
+
+### Human-Gated Action Chain
+
+Blackhole can model action decisions before anything is executed:
+
+```text
+investigation plan
 → action proposal packet
 → action proposal review gate
 → human action decision template
 → human action decision packet
-→ approved-action packet
+→ approved action packet
 → typed tool-request manifest
 → typed tool-request review gate
-→ future exact-action runtime approval template
-→ fail-closed execution-gate compatibility preview
-→ imported research observation packet
-→ observation integrity and safety review gate
-→ proposed hypothesis feedback packet
-→ future human feedback decision
-→ future research-state transition gate
 ```
 
-The action proposal review gate validates structure, action IDs, tool-family mappings, approval and scope requirements, blockers, ordering, and fail-closed execution flags. The v1.14.0 pipeline then records explicit human decisions, selects effectively approved actions, normalizes typed adapter requests, assigns deterministic digests, and builds a compatibility preview for the existing execution gate.
+### Observation and Feedback Chain
 
-The v1.15.0 typed tool-request review gate verifies request and manifest digests, deterministic identities and ordering, action profiles, adapter contracts, focus-endpoint requirements, fail-closed execution flags, and execution-gate preview consistency before a future exact-action runtime approval template may be created.
+Blackhole supports a research loop where observations can influence hypothesis confidence without directly mutating state:
 
-The v1.16.0 observation feedback pipeline imports user-provided research observations, normalizes and digests each observation, verifies packet and observation integrity, validates source linkage, redaction, scope, controlled assets, human review, and preliminary hypothesis-impact calculations, and then creates deterministic proposed confidence feedback against the original hypothesis packet.
-The v1.18.0 human hypothesis feedback decision pipeline adds an explicit human decision boundary after proposed hypothesis feedback. It creates a local decision template, records accepted/rejected/changes-requested/deferred decisions, and produces a deterministic feedback decision packet. Accepted decisions only enable a later confidence-update packet stage; they do not directly mutate hypothesis confidence or persistent research state.
+```text
+research observation packet
+→ observation review gate
+→ hypothesis feedback packet
+→ human feedback decision packet
+→ hypothesis confidence update packet
+→ future research-state transition review gate
+```
 
+### Case Intelligence
 
-The feedback packet may propose retaining, promoting, or demoting categorical hypothesis confidence, but it never changes the source hypothesis packet, hypothesis selection, investigation plans, or persistent research state.
+Blackhole can summarize local case state, blockers, missing evidence, next safe actions, and whether validation or reporting is currently allowed.
 
-Human approval in this chain authorizes only the next planning artifact. It does not authorize command or payload generation, package installation, tool execution, network or target interaction, evidence collection, vulnerability validation, state mutation, report submission, or vulnerability confirmation.
+### Report Readiness
+
+Blackhole can organize evidence, blockers, guardrails, and report-readiness notes for human-reviewed vulnerability reports.
+
+---
+
+## What v1.18.0 Adds
+
+`v1.18.0` adds the **Hypothesis Confidence Update Packet** stage.
+
+Accepted human feedback decisions can now be converted into proposed confidence update records:
+
+```text
+accepted feedback decision packet
+→ proposed hypothesis confidence update packet
+→ future research-state transition review gate
+```
+
+This still does **not** mutate persistent research state directly. It creates a reviewable intermediate packet that a later gate must approve.
+
+---
+
+## Example Workflow Shape
+
+```text
+1. Load target notes, endpoints, HAR data, mobile artifacts, or research context.
+2. Build a research source packet.
+3. Generate hypotheses.
+4. Select one hypothesis.
+5. Build an investigation plan.
+6. Review proposed actions.
+7. Record human decisions.
+8. Build typed tool-request manifests.
+9. Review whether tool requests are safe.
+10. Import observations.
+11. Review observations.
+12. Generate hypothesis feedback.
+13. Record human feedback decisions.
+14. Build proposed confidence updates.
+15. Prepare for a later research-state transition review.
+```
 
 ---
 
@@ -206,78 +203,91 @@ pip install -e .
 blackhole --help
 ```
 
-The legacy CLI name is also kept for compatibility:
+Legacy CLI alias:
 
 ```bash
 bugintel --help
 ```
 
----
-
-## Minimal Demo
+Check version:
 
 ```bash
-cat > /tmp/blackhole-endpoints.txt <<'EOF'
-/api/accounts/123/users/{id}/permissions
-/api/files/{id}/download
-/api/status
-EOF
-
-blackhole orchestrate /tmp/blackhole-endpoints.txt \
-  --target demo \
-  --json-output /tmp/orchestration.json
-
-blackhole research-state /tmp/orchestration.json \
-  --output-file /tmp/research-state.md \
-  --json-output /tmp/research-state.json
+blackhole version
 ```
 
 ---
 
-## Example: Report-Readiness Review
+## Example Commands
 
 ```bash
-blackhole case-chat-export-bundle-report-readiness-review \
-  --review-gate /tmp/export-bundle-review-gate.json \
-  --output /tmp/report-readiness.md \
-  --json-output /tmp/report-readiness.json
+blackhole version
+blackhole --help
 ```
 
-This produces a planning-only readiness review. It does not generate a report, submit a report,
-call providers, execute tools, or confirm a vulnerability.
+Build a hypothesis confidence update packet:
+
+```bash
+blackhole brain-chat-research-hypothesis-confidence-update-packet \
+  --hypothesis-file hypothesis.json \
+  --decision-file feedback-decision.json \
+  --json-output confidence-update.json
+```
+
+The command creates a local proposed confidence update packet only. It does not apply updates or execute tools.
 
 ---
 
-## Documentation
+## Design Principles
 
-| Document | Purpose |
-|---|---|
-| [CLI Reference](docs/cli-reference.md) | Commands and examples |
-| [Feature Reference](docs/feature-reference.md) | Full feature list |
-| [Methodology](docs/methodology.md) | Research workflow and methodology |
-| [Safety Model](docs/safety-model.md) | Safety guarantees and boundaries |
-| [Architecture](docs/architecture.md) | Internal design |
-| [Threat Model](docs/threat_model.md) | Misuse and risk analysis |
-| [Limitations](docs/limitations.md) | Current limitations |
-
----
-
-## Release History
-
-The current release is `v1.18.0`.
-
-Full release notes and historical versions are available on the [GitHub releases page](https://github.com/Siddforeal/Blackhole_AI/releases).
-
-## Ethical Use
-
-Use Blackhole only on systems you own, local labs, CTFs, written-scope penetration tests, or
-explicitly authorized bug bounty programs.
-
-Do not use it for unauthorized scanning, exploitation, credential theft, persistence, stealth,
-denial-of-service activity, destructive testing, or accessing private data.
+- Authorized research only
+- Local-first by default
+- Human-in-the-loop by default
+- Planning before execution
+- Evidence before claims
+- Review gates before risky actions
+- Scope checks before tool interaction
+- No automatic vulnerability confirmation
+- No automatic report submission
+- No target mutation by default
+- Provider/tool output is untrusted until reviewed
+- PoC logic must be explicitly scoped, reviewed, and approved before use
 
 ---
 
-## License
+## Roadmap
 
-MIT License.
+Blackhole is being built in stages.
+
+Near-term:
+
+```text
+v1.19 — Research-state transition review gate
+v1.20 — Persistent research-state transition packet
+v1.21 — Case memory and running brain loop
+v1.22 — Browser/Burp/curl adapter approval templates
+v1.23 — Controlled live interaction gates
+v1.24 — Human-reviewed PoC planning and generation workflow
+```
+
+Long-term:
+
+```text
+scope-gated live browser interaction
+scope-gated Burp Suite workflow assistance
+scope-gated command-line/curl interaction
+multi-agent research planning
+case memory and self-review
+controlled proof-of-concept generation
+report-readiness automation
+human-approved validation workflows
+```
+
+---
+
+## Important Use Notice
+
+Blackhole AI Workbench is intended only for authorized security research, bug bounty work, private labs, internal assessments, and defensive testing.
+
+Do not use it against systems where you do not have permission.
+
+The project is intentionally designed around scope control, human review, safety gates, and evidence-based research decisions.
