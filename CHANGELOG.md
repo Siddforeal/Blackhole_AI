@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.26.0 - Human Persistence Write Decision Packet
+
+- Adds a human persistence write decision packet.
+- Adds CLI support for `brain-chat-research-state-persistence-write-decision-packet`.
+- Combines a persistence write review gate with explicit human persistence write decisions.
+- Prepares approved persistence write items for a later local write packet preview.
+- Keeps all persistence, confidence mutation, research-state mutation, execution, target interaction, evidence collection, report submission, and vulnerability confirmation disabled.
+
+
 ## v1.25.0 - Persistence Write Review Gate
 
 - Adds a local-only persistence write review gate.

@@ -3205,3 +3205,18 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a local persistence write review gate only. It does not apply confidence updates or write persistent research state.
+
+## v1.26.0 Human Persistence Write Decision Packet Command
+
+`brain-chat-research-state-persistence-write-decision-packet`
+
+Required inputs:
+
+- `--persistence-write-review-gate-file` / `--write-review-gate`
+- `--human-persistence-write-decisions-file` / `--write-decisions`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command records human persistence write decisions only. It does not apply confidence updates or write persistent research state.
