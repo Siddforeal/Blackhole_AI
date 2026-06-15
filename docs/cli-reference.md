@@ -3191,3 +3191,17 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a local apply preview only. It does not apply confidence updates or write persistent research state.
+
+## v1.25.0 Persistence Write Review Gate Command
+
+`brain-chat-research-state-persistence-write-review-gate`
+
+Required input:
+
+- `--apply-preview-file` / `--apply-preview`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a local persistence write review gate only. It does not apply confidence updates or write persistent research state.

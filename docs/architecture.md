@@ -338,3 +338,9 @@ All persistence, mutation, execution, network, evidence collection, report submi
 The local apply preview is a non-mutating stage between approved human apply decisions and any later persistence write review gate. It shows proposed before/after field changes only.
 
 All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.25.0 Persistence Write Review Gate Boundary
+
+The persistence write review gate is a non-mutating stage between local apply preview and any later explicit write decision packet. It converts previewed before/after field changes into human-reviewable records.
+
+All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.

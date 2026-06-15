@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.25.0 - Persistence Write Review Gate
+
+- Adds a local-only persistence write review gate.
+- Adds CLI support for `brain-chat-research-state-persistence-write-review-gate`.
+- Converts local apply preview items into human-reviewable persistence write review items.
+- Defines allowed human persistence write decisions for a later explicit write decision packet.
+- Keeps all persistence, confidence mutation, research-state mutation, execution, target interaction, evidence collection, report submission, and vulnerability confirmation disabled.
+
+
 ## v1.24.0 - Local Research-State Apply Preview
 
 - Adds a local-only research-state transition apply preview.
