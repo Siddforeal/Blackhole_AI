@@ -156,6 +156,12 @@ from bugintel.core.brain_chat_research_hypothesis_confidence_update_packet impor
 from bugintel.core.brain_chat_research_state_transition_review_gate import (
     build_review_gate_from_file as build_research_state_transition_review_gate_from_file,
 )
+from bugintel.core.brain_chat_research_state_transition_decision_template import (
+    build_decision_template_from_file as build_research_state_transition_decision_template_from_file,
+)
+from bugintel.core.brain_chat_research_state_transition_decision_packet import (
+    build_decision_packet_from_files as build_research_state_transition_decision_packet_from_files,
+)
 from bugintel.core.brain_chat_research_hypothesis_feedback_decision_template import (
     build_research_hypothesis_feedback_decision_template,
     load_json_object as load_research_hypothesis_feedback_decision_template_json,
@@ -308,7 +314,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.19.0",
+                version="1.20.0",
                 force=True,
             )
         )
@@ -320,7 +326,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.19.0",
+            version="1.20.0",
             force=True,
         )
     )
@@ -329,7 +335,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.19.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.20.0")
 
 
 @app.command("scope-check")
@@ -14286,6 +14292,132 @@ def brain_chat_research_state_transition_review_gate_command(
         "[bold yellow]Safety:[/bold yellow] This command only builds a local transition review gate. "
         "It does not mutate hypothesis confidence, persistent research state, selected hypotheses, investigation plans, "
         "targets, evidence, reports, or vulnerability status."
+    )
+
+@app.command("brain-chat-research-state-transition-decision-template")
+def brain_chat_research_state_transition_decision_template_command(
+    gate_file: Path = typer.Option(..., "--gate-file", "--transition-review-gate", help="Path to research-state transition review gate JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional JSON output path for transition decision template."),
+):
+    """Build a local-only human transition decision template."""
+    if not gate_file.exists():
+        console.print(f"[bold red]Research-state transition review gate JSON not found:[/bold red] {gate_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        template = build_research_state_transition_decision_template_from_file(
+            gate_file,
+            json_output,
+        )
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=2) from exc
+
+    table = Table(title="Research-State Transition Decision Template")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target", template["target_name"])
+    table.add_row("Status", template["template_status"])
+    table.add_row("Transition decisions", str(template["transition_decision_count"]))
+    table.add_row("Human decision required", str(template["human_transition_decision_required"]))
+    table.add_row("Human decision complete", str(template["human_transition_decision_complete"]))
+    table.add_row("State transition packet ready", str(template["research_state_transition_packet_ready"]))
+    table.add_row("Execution", "planning-only; no confidence mutation, state mutation, target interaction, or tool execution")
+    console.print(table)
+
+    if template["transition_decisions"]:
+        decisions = Table(title="Pending Transition Decisions")
+        decisions.add_column("Decision")
+        decisions.add_column("Transition")
+        decisions.add_column("Hypothesis")
+        decisions.add_column("Current")
+        decisions.add_column("Proposed")
+        decisions.add_column("Status")
+        for item in template["transition_decisions"]:
+            decisions.add_row(
+                item["decision_id"],
+                item["transition_id"],
+                item["hypothesis_id"],
+                item["current_confidence"],
+                item["proposed_confidence"],
+                item["decision"],
+            )
+        console.print(decisions)
+
+    if json_output:
+        console.print(f"[bold green]Saved research-state transition decision template JSON:[/bold green] {json_output}")
+    else:
+        console.print(json.dumps(template, indent=2, sort_keys=True))
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only builds a local human decision template. "
+        "It does not approve transitions, mutate hypothesis confidence, mutate persistent research state, "
+        "execute tools, interact with targets, collect evidence, submit reports, or confirm vulnerabilities."
+    )
+
+
+@app.command("brain-chat-research-state-transition-decision-packet")
+def brain_chat_research_state_transition_decision_packet_command(
+    gate_file: Path = typer.Option(..., "--gate-file", "--transition-review-gate", help="Path to research-state transition review gate JSON."),
+    template_file: Path = typer.Option(..., "--template-file", "--decision-template", help="Path to completed transition decision template JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional JSON output path for transition decision packet."),
+):
+    """Build a local-only human transition decision packet."""
+    if not gate_file.exists():
+        console.print(f"[bold red]Research-state transition review gate JSON not found:[/bold red] {gate_file}")
+        raise typer.Exit(code=1)
+    if not template_file.exists():
+        console.print(f"[bold red]Research-state transition decision template JSON not found:[/bold red] {template_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        packet = build_research_state_transition_decision_packet_from_files(
+            gate_file,
+            template_file,
+            json_output,
+        )
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=2) from exc
+
+    table = Table(title="Research-State Transition Decision Packet")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target", packet["target_name"])
+    table.add_row("Status", packet["decision_status"])
+    table.add_row("Transition decisions", str(packet["transition_decision_count"]))
+    table.add_row("Approved transitions", str(packet["approved_transition_count"]))
+    table.add_row("Decision complete", str(packet["human_transition_decision_complete"]))
+    table.add_row("Transition packet ready", str(packet["research_state_transition_packet_ready"]))
+    table.add_row("Execution", "planning-only; no confidence mutation, state mutation, target interaction, or tool execution")
+    console.print(table)
+
+    if packet["transition_decisions"]:
+        decisions = Table(title="Human Transition Decisions")
+        decisions.add_column("Decision")
+        decisions.add_column("Transition")
+        decisions.add_column("Hypothesis")
+        decisions.add_column("Choice")
+        decisions.add_column("Approved")
+        for item in packet["transition_decisions"]:
+            decisions.add_row(
+                item["decision_id"],
+                item["transition_id"],
+                item["hypothesis_id"],
+                item["decision"],
+                str(item["approved_for_state_transition_packet"]),
+            )
+        console.print(decisions)
+
+    if json_output:
+        console.print(f"[bold green]Saved research-state transition decision packet JSON:[/bold green] {json_output}")
+    else:
+        console.print(json.dumps(packet, indent=2, sort_keys=True))
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only builds a local human decision packet. "
+        "It does not apply confidence updates, mutate persistent research state, execute tools, interact with targets, "
+        "collect evidence, submit reports, or confirm vulnerabilities."
     )
 
 

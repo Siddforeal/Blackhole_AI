@@ -3109,3 +3109,28 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a local transition review gate only. It does not apply confidence updates or mutate persistent research state.
+
+## v1.20.0 Research-State Transition Decision Commands
+
+`brain-chat-research-state-transition-decision-template`
+
+Required input:
+
+- `--gate-file` / `--transition-review-gate`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+`brain-chat-research-state-transition-decision-packet`
+
+Required inputs:
+
+- `--gate-file` / `--transition-review-gate`
+- `--template-file` / `--decision-template`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+These commands create local decision artifacts only. They do not apply confidence updates or mutate persistent research state.
