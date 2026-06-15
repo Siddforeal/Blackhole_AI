@@ -165,6 +165,9 @@ from bugintel.core.brain_chat_research_state_transition_decision_packet import (
 from bugintel.core.brain_chat_research_state_transition_packet import (
     build_transition_packet_from_file as build_research_state_transition_packet_from_file,
 )
+from bugintel.core.brain_chat_research_state_transition_apply_review_gate import (
+    build_apply_review_gate_from_file as build_research_state_transition_apply_review_gate_from_file,
+)
 from bugintel.core.brain_chat_research_hypothesis_feedback_decision_template import (
     build_research_hypothesis_feedback_decision_template,
     load_json_object as load_research_hypothesis_feedback_decision_template_json,
@@ -317,7 +320,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.21.0",
+                version="1.22.0",
                 force=True,
             )
         )
@@ -329,7 +332,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.21.0",
+            version="1.22.0",
             force=True,
         )
     )
@@ -338,7 +341,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.21.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.22.0")
 
 
 @app.command("scope-check")
@@ -14482,6 +14485,71 @@ def brain_chat_research_state_transition_packet_command(
     console.print(
         "[bold yellow]Safety:[/bold yellow] This command only builds a local transition packet. "
         "It does not write persistent research state, mutate hypothesis confidence, execute tools, interact with targets, "
+        "collect evidence, submit reports, or confirm vulnerabilities."
+    )
+
+@app.command("brain-chat-research-state-transition-apply-review-gate")
+def brain_chat_research_state_transition_apply_review_gate_command(
+    transition_packet_file: Path = typer.Option(..., "--transition-packet-file", "--transition-packet", help="Path to local research-state transition packet JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional JSON output path for apply review gate."),
+):
+    """Build a local-only research-state transition apply review gate."""
+    if not transition_packet_file.exists():
+        console.print(f"[bold red]Research-state transition packet JSON not found:[/bold red] {transition_packet_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        gate = build_research_state_transition_apply_review_gate_from_file(
+            transition_packet_file,
+            json_output,
+        )
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=2) from exc
+
+    table = Table(title="Research-State Transition Apply Review Gate")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target", gate["target_name"])
+    table.add_row("Status", gate["gate_status"])
+    table.add_row("Transition operations", str(gate["transition_operation_count"]))
+    table.add_row("Apply review items", str(gate["apply_review_item_count"]))
+    table.add_row("Apply review ready", str(gate["apply_review_ready"]))
+    table.add_row("Human apply decision required", str(gate["human_apply_decision_required"]))
+    table.add_row("Persistent write ready", str(gate["persistent_research_state_write_ready"]))
+    table.add_row("Persistent write allowed", str(gate["persistent_research_state_write_allowed"]))
+    table.add_row("Execution", "planning-only; no persistence, confidence mutation, target interaction, or tool execution")
+    console.print(table)
+
+    if gate["apply_review_items"]:
+        items = Table(title="Apply Review Items")
+        items.add_column("Review Item")
+        items.add_column("Operation")
+        items.add_column("Hypothesis")
+        items.add_column("Field")
+        items.add_column("Current")
+        items.add_column("Proposed")
+        items.add_column("Decision Required")
+        for item in gate["apply_review_items"]:
+            items.add_row(
+                item["review_item_id"],
+                item["operation_id"],
+                item["hypothesis_id"],
+                item["field_path"],
+                item["current_value"],
+                item["proposed_value"],
+                str(item["human_apply_decision_required"]),
+            )
+        console.print(items)
+
+    if json_output:
+        console.print(f"[bold green]Saved research-state transition apply review gate JSON:[/bold green] {json_output}")
+    else:
+        console.print(json.dumps(gate, indent=2, sort_keys=True))
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only builds a local apply review gate. "
+        "It does not write persistent research state, apply confidence changes, execute tools, interact with targets, "
         "collect evidence, submit reports, or confirm vulnerabilities."
     )
 
