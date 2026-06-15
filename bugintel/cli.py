@@ -177,6 +177,9 @@ from bugintel.core.brain_chat_research_state_transition_apply_preview import (
 from bugintel.core.brain_chat_research_state_persistence_write_review_gate import (
     build_persistence_write_review_gate_from_file as build_research_state_persistence_write_review_gate_from_file,
 )
+from bugintel.core.brain_chat_research_state_persistence_write_decision_packet import (
+    build_persistence_write_decision_packet_from_files as build_research_state_persistence_write_decision_packet_from_files,
+)
 from bugintel.core.brain_chat_research_hypothesis_feedback_decision_template import (
     build_research_hypothesis_feedback_decision_template,
     load_json_object as load_research_hypothesis_feedback_decision_template_json,
@@ -329,7 +332,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.25.0",
+                version="1.26.0",
                 force=True,
             )
         )
@@ -341,7 +344,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.25.0",
+            version="1.26.0",
             force=True,
         )
     )
@@ -350,7 +353,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.25.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.26.0")
 
 
 @app.command("scope-check")
@@ -14763,6 +14766,80 @@ def brain_chat_research_state_persistence_write_review_gate_command(
 
     console.print(
         "[bold yellow]Safety:[/bold yellow] This command only builds a local review gate. "
+        "It does not write persistent research state, apply confidence changes, execute tools, interact with targets, "
+        "collect evidence, submit reports, or confirm vulnerabilities."
+    )
+
+@app.command("brain-chat-research-state-persistence-write-decision-packet")
+def brain_chat_research_state_persistence_write_decision_packet_command(
+    persistence_write_review_gate_file: Path = typer.Option(..., "--persistence-write-review-gate-file", "--write-review-gate", help="Path to persistence write review gate JSON."),
+    human_persistence_write_decisions_file: Path = typer.Option(..., "--human-persistence-write-decisions-file", "--write-decisions", help="Path to human persistence write decisions JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional JSON output path for human persistence write decision packet."),
+):
+    """Build a human persistence write decision packet."""
+    if not persistence_write_review_gate_file.exists():
+        console.print(f"[bold red]Persistence write review gate JSON not found:[/bold red] {persistence_write_review_gate_file}")
+        raise typer.Exit(code=1)
+
+    if not human_persistence_write_decisions_file.exists():
+        console.print(f"[bold red]Human persistence write decisions JSON not found:[/bold red] {human_persistence_write_decisions_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        packet = build_research_state_persistence_write_decision_packet_from_files(
+            persistence_write_review_gate_file,
+            human_persistence_write_decisions_file,
+            json_output,
+        )
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=2) from exc
+
+    table = Table(title="Human Persistence Write Decision Packet")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target", packet["target_name"])
+    table.add_row("Status", packet["decision_status"])
+    table.add_row("Review items", str(packet["persistence_write_review_item_count"]))
+    table.add_row("Decisions", str(packet["persistence_write_decision_count"]))
+    table.add_row("Approved decisions", str(packet["approved_persistence_write_decision_count"]))
+    table.add_row("Human decision required", str(packet["human_persistence_write_decision_required"]))
+    table.add_row("Human decision complete", str(packet["human_persistence_write_decision_complete"]))
+    table.add_row("Local write packet preview required", str(packet["local_write_packet_preview_required"]))
+    table.add_row("Local write packet preview ready", str(packet["local_write_packet_preview_ready"]))
+    table.add_row("Persistent write ready", str(packet["persistent_research_state_write_ready"]))
+    table.add_row("Persistent write allowed", str(packet["persistent_research_state_write_allowed"]))
+    table.add_row("Execution", "planning-only; no persistence, confidence mutation, target interaction, or tool execution")
+    console.print(table)
+
+    if packet["persistence_write_decisions"]:
+        items = Table(title="Persistence Write Decisions")
+        items.add_column("Decision")
+        items.add_column("Review")
+        items.add_column("Operation")
+        items.add_column("Hypothesis")
+        items.add_column("Field")
+        items.add_column("Decision value")
+        items.add_column("Approved")
+        for item in packet["persistence_write_decisions"]:
+            items.add_row(
+                item["persistence_write_decision_id"],
+                item["persistence_write_review_item_id"],
+                item["operation_id"],
+                item["hypothesis_id"],
+                item["field_path"],
+                item["decision"],
+                str(item["local_write_packet_preview_required"]),
+            )
+        console.print(items)
+
+    if json_output:
+        console.print(f"[bold green]Saved human persistence write decision packet JSON:[/bold green] {json_output}")
+    else:
+        console.print(json.dumps(packet, indent=2, sort_keys=True))
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only records human persistence write decisions. "
         "It does not write persistent research state, apply confidence changes, execute tools, interact with targets, "
         "collect evidence, submit reports, or confirm vulnerabilities."
     )

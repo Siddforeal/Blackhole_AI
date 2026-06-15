@@ -344,3 +344,9 @@ All persistence, mutation, execution, network, evidence collection, report submi
 The persistence write review gate is a non-mutating stage between local apply preview and any later explicit write decision packet. It converts previewed before/after field changes into human-reviewable records.
 
 All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.26.0 Human Persistence Write Decision Packet Boundary
+
+The human persistence write decision packet is a non-mutating stage between persistence write review gate and any later local write packet preview. It records explicit human decisions and keeps approved items reviewable.
+
+All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
