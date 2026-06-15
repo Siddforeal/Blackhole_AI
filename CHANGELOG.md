@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.20.0 - Human Research-State Transition Decision Packet
+
+- Adds a local-only human transition decision template for research-state transition review gates.
+- Adds a local-only human transition decision packet for completed transition decisions.
+- Adds CLI support for `brain-chat-research-state-transition-decision-template`.
+- Adds CLI support for `brain-chat-research-state-transition-decision-packet`.
+- Allows approved transition decisions to become ready for a later state-transition packet without directly mutating persistent research state.
+- Keeps all confidence mutation, research-state mutation, execution, target interaction, evidence collection, report submission, and vulnerability confirmation disabled.
+
+
 ## v1.19.0 - Research-State Transition Review Gate
 
 - Adds a local-only research-state transition review gate for proposed hypothesis confidence updates.

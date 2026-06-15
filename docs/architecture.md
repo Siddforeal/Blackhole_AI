@@ -308,3 +308,9 @@ All mutation, execution, network, evidence collection, report submission, and vu
 Proposed confidence updates do not directly modify persistent research state. The transition review gate is an intermediate review artifact that requires explicit human transition decision before any later state-transition packet.
 
 All mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.20.0 Human Transition Decision Boundary
+
+A transition review gate must be converted into a human transition decision template before a transition decision packet can be built. The decision packet can mark approved candidates as ready for a later state-transition packet, but still does not write persistent state.
+
+All mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
