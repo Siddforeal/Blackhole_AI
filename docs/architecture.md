@@ -320,3 +320,9 @@ All mutation, execution, network, evidence collection, report submission, and vu
 The local transition packet is the first artifact that describes concrete local transition operations, such as proposed hypothesis confidence field updates. It remains non-mutating and requires a later apply review gate before persistence can be considered.
 
 All mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.22.0 Apply Review Gate Boundary
+
+The apply review gate is a non-mutating review stage between local transition operations and any later persistence stage. It turns local transition operations into human apply review items.
+
+All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.

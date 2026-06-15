@@ -3148,3 +3148,17 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a local transition packet only. It does not apply confidence updates or write persistent research state.
+
+## v1.22.0 Research-State Transition Apply Review Gate Command
+
+`brain-chat-research-state-transition-apply-review-gate`
+
+Required input:
+
+- `--transition-packet-file` / `--transition-packet`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a local apply review gate only. It does not apply confidence updates or write persistent research state.
