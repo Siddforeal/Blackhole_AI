@@ -1,6 +1,6 @@
 # Roadmap
 
-> Historical note: the versioned sections below describe the original early roadmap. Many items listed as planned were later implemented. See **Current Direction After v1.23.0** for the active roadmap.
+> Historical note: the versioned sections below describe the original early roadmap. Many items listed as planned were later implemented. See **Current Direction After v1.24.0** for the active roadmap.
 
 BugIntel AI Workbench is being developed as a human-in-the-loop research prototype for AI-assisted vulnerability discovery and bug intelligence.
 
@@ -68,7 +68,7 @@ Goal:
 
 A full research workbench for authorized web, API, browser, and mobile vulnerability intelligence with structured evidence, AI-assisted planning, and report generation.
 
-## Current Direction After v1.23.0
+## Current Direction After v1.24.0
 
 Blackhole is moving from a structured planning workbench toward an interactive,
 human-controlled security research agent.
@@ -108,3 +108,7 @@ The current pipeline now has a local apply review gate for research-state transi
 ## v1.23.0 Current Direction
 
 The current pipeline now records explicit human apply decisions for local transition operations. The next stage is a local apply preview that can show the exact proposed stored-state changes before any persistent write path is introduced.
+
+## v1.24.0 Current Direction
+
+The current pipeline now has a local apply preview for approved human apply decisions. The next stage is a persistence write review gate that can inspect previewed changes before any stored-state write path is introduced.

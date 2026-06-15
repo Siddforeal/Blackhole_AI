@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.24.0 - Local Research-State Apply Preview
+
+- Adds a local-only research-state transition apply preview.
+- Adds CLI support for `brain-chat-research-state-transition-apply-preview`.
+- Converts approved human apply decisions into before/after preview items.
+- Prepares approved preview items for a later persistence write review gate.
+- Keeps all persistence, confidence mutation, research-state mutation, execution, target interaction, evidence collection, report submission, and vulnerability confirmation disabled.
+
+
 ## v1.23.0 - Human Apply Decision Packet
 
 - Adds a local-only human apply decision packet for research-state transition apply review gates.

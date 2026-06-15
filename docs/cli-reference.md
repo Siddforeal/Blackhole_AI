@@ -3177,3 +3177,17 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a local human apply decision packet only. It does not apply confidence updates or write persistent research state.
+
+## v1.24.0 Local Research-State Apply Preview Command
+
+`brain-chat-research-state-transition-apply-preview`
+
+Required input:
+
+- `--apply-decision-packet-file` / `--apply-decision-packet`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a local apply preview only. It does not apply confidence updates or write persistent research state.

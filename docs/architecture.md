@@ -332,3 +332,9 @@ All persistence, mutation, execution, network, evidence collection, report submi
 The human apply decision packet records explicit human decisions for apply review items. It prepares approved items for a later local apply preview.
 
 All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.24.0 Local Apply Preview Boundary
+
+The local apply preview is a non-mutating stage between approved human apply decisions and any later persistence write review gate. It shows proposed before/after field changes only.
+
+All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
