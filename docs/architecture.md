@@ -314,3 +314,9 @@ All mutation, execution, network, evidence collection, report submission, and vu
 A transition review gate must be converted into a human transition decision template before a transition decision packet can be built. The decision packet can mark approved candidates as ready for a later state-transition packet, but still does not write persistent state.
 
 All mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.21.0 Local Transition Packet Boundary
+
+The local transition packet is the first artifact that describes concrete local transition operations, such as proposed hypothesis confidence field updates. It remains non-mutating and requires a later apply review gate before persistence can be considered.
+
+All mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
