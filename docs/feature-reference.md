@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.22.0
+Current version: 1.23.0
 
 ## Research Goal
 
@@ -1786,3 +1786,9 @@ A later apply review gate is required before any persistence step can be conside
 The apply review gate converts local transition operations into human review items. It does not apply confidence changes or write persistent research state.
 
 A later human apply decision packet is required before any persistence stage can be considered.
+
+## v1.23.0 Human Apply Decision Packet
+
+The human apply decision packet combines an apply review gate with explicit human decisions. Approved apply decisions are prepared for a later local apply preview.
+
+This artifact does not apply confidence changes or write persistent research state.

@@ -326,3 +326,9 @@ All mutation, execution, network, evidence collection, report submission, and vu
 The apply review gate is a non-mutating review stage between local transition operations and any later persistence stage. It turns local transition operations into human apply review items.
 
 All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.23.0 Human Apply Decision Boundary
+
+The human apply decision packet records explicit human decisions for apply review items. It prepares approved items for a later local apply preview.
+
+All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.

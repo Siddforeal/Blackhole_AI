@@ -3162,3 +3162,18 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a local apply review gate only. It does not apply confidence updates or write persistent research state.
+
+## v1.23.0 Human Apply Decision Packet Command
+
+`brain-chat-research-state-transition-apply-decision-packet`
+
+Required inputs:
+
+- `--apply-review-gate-file` / `--apply-review-gate`
+- `--human-apply-decisions-file` / `--apply-decisions`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a local human apply decision packet only. It does not apply confidence updates or write persistent research state.
