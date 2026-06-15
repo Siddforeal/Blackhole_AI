@@ -3134,3 +3134,17 @@ Optional output:
 - `--json-output` / `--output`
 
 These commands create local decision artifacts only. They do not apply confidence updates or mutate persistent research state.
+
+## v1.21.0 Research-State Transition Packet Command
+
+`brain-chat-research-state-transition-packet`
+
+Required input:
+
+- `--decision-file` / `--transition-decision-packet`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a local transition packet only. It does not apply confidence updates or write persistent research state.

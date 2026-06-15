@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.20.0
+Current version: 1.21.0
 
 ## Research Goal
 
@@ -1774,3 +1774,9 @@ The research-state transition review gate converts ready hypothesis confidence u
 The transition decision template converts a ready research-state transition review gate into pending human decisions. The transition decision packet validates completed human decisions and marks approved candidates as ready for a later state-transition packet.
 
 This stage is local-only and non-mutating. It does not update hypothesis confidence or persistent research state.
+
+## v1.21.0 Local Research-State Transition Packet
+
+The local research-state transition packet converts approved human transition decisions into local transition operations. These operations describe proposed hypothesis confidence changes but do not write persistent research state.
+
+A later apply review gate is required before any persistence step can be considered.
