@@ -8,7 +8,7 @@
 
 Blackhole is being built as a local-first AI research brain: it breaks a target into hypotheses, plans investigation steps, reviews evidence, decides what is safe to do next, and routes work through small task-focused agents.
 
-> **Current release:** `v1.22.0`
+> **Current release:** `v1.23.0`
 > **Project status:** active research prototype
 > **Current mode:** local-first, planning-first, human-in-the-loop
 > **Long-term direction:** scope-gated AI agents that can interact with browsers, Burp Suite, curl, local tools, structured case memory, and controlled proof-of-concept workflows.
@@ -152,19 +152,19 @@ Blackhole can organize evidence, blockers, guardrails, and report-readiness note
 
 ---
 
-## What v1.22.0 Adds
+## What v1.23.0 Adds
 
-`v1.22.0` adds the **Research-State Transition Apply Review Gate** stage.
+`v1.23.0` adds the **Human Apply Decision Packet** stage.
 
 Accepted human feedback decisions can now be converted into proposed confidence update records:
 
 ```text
-local research-state transition packet
-→ apply review gate
-→ later human apply decision packet
+apply review gate
+→ human apply decision packet
+→ later local apply preview
 ```
 
-This still does **not** write persistent research state. It creates a local apply review gate that requires a later explicit human apply decision before persistence can be considered.
+This still does **not** write persistent research state. It records explicit human apply decisions and prepares approved items for a later local apply preview.
 
 ---
 

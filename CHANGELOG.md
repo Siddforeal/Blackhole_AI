@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.23.0 - Human Apply Decision Packet
+
+- Adds a local-only human apply decision packet for research-state transition apply review gates.
+- Adds CLI support for `brain-chat-research-state-transition-apply-decision-packet`.
+- Combines apply review items with explicit human decisions.
+- Prepares approved apply decisions for a later local apply preview.
+- Keeps all persistence, confidence mutation, research-state mutation, execution, target interaction, evidence collection, report submission, and vulnerability confirmation disabled.
+
+
 ## v1.22.0 - Research-State Transition Apply Review Gate
 
 - Adds a local-only apply review gate for research-state transition packets.
