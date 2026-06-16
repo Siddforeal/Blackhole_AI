@@ -180,6 +180,9 @@ from bugintel.core.brain_chat_research_state_persistence_write_review_gate impor
 from bugintel.core.brain_chat_research_state_persistence_write_decision_packet import (
     build_persistence_write_decision_packet_from_files as build_research_state_persistence_write_decision_packet_from_files,
 )
+from bugintel.core.brain_chat_research_state_local_write_packet_preview import (
+    build_local_write_packet_preview_from_file as build_research_state_local_write_packet_preview_from_file,
+)
 from bugintel.core.brain_chat_research_hypothesis_feedback_decision_template import (
     build_research_hypothesis_feedback_decision_template,
     load_json_object as load_research_hypothesis_feedback_decision_template_json,
@@ -332,7 +335,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.26.0",
+                version="1.27.0",
                 force=True,
             )
         )
@@ -344,7 +347,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.26.0",
+            version="1.27.0",
             force=True,
         )
     )
@@ -353,7 +356,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.26.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.27.0")
 
 
 @app.command("scope-check")
@@ -14840,6 +14843,72 @@ def brain_chat_research_state_persistence_write_decision_packet_command(
 
     console.print(
         "[bold yellow]Safety:[/bold yellow] This command only records human persistence write decisions. "
+        "It does not write persistent research state, apply confidence changes, execute tools, interact with targets, "
+        "collect evidence, submit reports, or confirm vulnerabilities."
+    )
+
+@app.command("brain-chat-research-state-local-write-packet-preview")
+def brain_chat_research_state_local_write_packet_preview_command(
+    persistence_write_decision_packet_file: Path = typer.Option(..., "--persistence-write-decision-packet-file", "--write-decision-packet", help="Path to persistence write decision packet JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional JSON output path for local write packet preview."),
+):
+    """Build a local-only write packet preview."""
+    if not persistence_write_decision_packet_file.exists():
+        console.print(f"[bold red]Persistence write decision packet JSON not found:[/bold red] {persistence_write_decision_packet_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        preview = build_research_state_local_write_packet_preview_from_file(
+            persistence_write_decision_packet_file,
+            json_output,
+        )
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=2) from exc
+
+    table = Table(title="Local Write Packet Preview")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target", preview["target_name"])
+    table.add_row("Status", preview["preview_status"])
+    table.add_row("Approved decisions", str(preview["approved_persistence_write_decision_count"]))
+    table.add_row("Preview items", str(preview["local_write_packet_preview_item_count"]))
+    table.add_row("Local write packet preview ready", str(preview["local_write_packet_preview_ready"]))
+    table.add_row("Write execution review required", str(preview["write_execution_review_gate_required"]))
+    table.add_row("Write execution review ready", str(preview["write_execution_review_gate_ready"]))
+    table.add_row("Persistent write ready", str(preview["persistent_research_state_write_ready"]))
+    table.add_row("Persistent write allowed", str(preview["persistent_research_state_write_allowed"]))
+    table.add_row("Execution", "planning-only; no persistence, confidence mutation, target interaction, or tool execution")
+    console.print(table)
+
+    if preview["preview_items"]:
+        items = Table(title="Local Write Packet Preview Items")
+        items.add_column("Preview")
+        items.add_column("Decision")
+        items.add_column("Operation")
+        items.add_column("Hypothesis")
+        items.add_column("Field")
+        items.add_column("Current")
+        items.add_column("Proposed")
+        for item in preview["preview_items"]:
+            items.add_row(
+                item["local_write_packet_preview_item_id"],
+                item["persistence_write_decision_id"],
+                item["operation_id"],
+                item["hypothesis_id"],
+                item["field_path"],
+                item["current_value"],
+                item["proposed_value"],
+            )
+        console.print(items)
+
+    if json_output:
+        console.print(f"[bold green]Saved local write packet preview JSON:[/bold green] {json_output}")
+    else:
+        console.print(json.dumps(preview, indent=2, sort_keys=True))
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only builds a local write packet preview. "
         "It does not write persistent research state, apply confidence changes, execute tools, interact with targets, "
         "collect evidence, submit reports, or confirm vulnerabilities."
     )
