@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.27.0 - Local Write Packet Preview
+
+- Adds a local-only write packet preview.
+- Adds CLI support for `brain-chat-research-state-local-write-packet-preview`.
+- Converts approved human persistence write decisions into previewed write packet items.
+- Prepares preview items for a later write execution review gate.
+- Keeps all persistence, confidence mutation, research-state mutation, execution, target interaction, evidence collection, report submission, and vulnerability confirmation disabled.
+
+
 ## v1.26.0 - Human Persistence Write Decision Packet
 
 - Adds a human persistence write decision packet.

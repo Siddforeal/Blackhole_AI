@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.26.0
+Current version: 1.27.0
 
 ## Research Goal
 
@@ -1808,5 +1808,11 @@ A later explicit write decision packet is still required before any stored-state
 ## v1.26.0 Human Persistence Write Decision Packet
 
 The human persistence write decision packet combines a persistence write review gate with explicit human decisions. Approved decisions are prepared for a later local write packet preview.
+
+This artifact does not write stored research state, apply confidence changes, or mutate research-state records.
+
+## v1.27.0 Local Write Packet Preview
+
+The local write packet preview converts approved human persistence write decisions into local preview items. It shows proposed stored-state field updates without applying them.
 
 This artifact does not write stored research state, apply confidence changes, or mutate research-state records.

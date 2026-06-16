@@ -350,3 +350,9 @@ All persistence, mutation, execution, network, evidence collection, report submi
 The human persistence write decision packet is a non-mutating stage between persistence write review gate and any later local write packet preview. It records explicit human decisions and keeps approved items reviewable.
 
 All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.27.0 Local Write Packet Preview Boundary
+
+The local write packet preview is a non-mutating stage between human persistence write decision packet and any later write execution review gate. It converts approved decision records into preview-only write packet records.
+
+All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.

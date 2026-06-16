@@ -3220,3 +3220,17 @@ Optional output:
 - `--json-output` / `--output`
 
 The command records human persistence write decisions only. It does not apply confidence updates or write persistent research state.
+
+## v1.27.0 Local Write Packet Preview Command
+
+`brain-chat-research-state-local-write-packet-preview`
+
+Required input:
+
+- `--persistence-write-decision-packet-file` / `--write-decision-packet`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a local write packet preview only. It does not apply confidence updates or write persistent research state.
