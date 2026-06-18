@@ -356,3 +356,9 @@ All persistence, mutation, execution, network, evidence collection, report submi
 The local write packet preview is a non-mutating stage between human persistence write decision packet and any later write execution review gate. It converts approved decision records into preview-only write packet records.
 
 All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.28.0 Write Execution Review Gate Boundary
+
+The write execution review gate is a non-mutating stage between local write packet preview and any later human write execution decision packet. It converts preview records into human-reviewable review records.
+
+All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.

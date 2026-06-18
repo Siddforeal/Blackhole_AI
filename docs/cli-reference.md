@@ -3234,3 +3234,17 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a local write packet preview only. It does not apply confidence updates or write persistent research state.
+
+## v1.28.0 Write Execution Review Gate Command
+
+`brain-chat-research-state-write-execution-review-gate`
+
+Required input:
+
+- `--local-write-packet-preview-file` / `--write-preview`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a write execution review gate only. It does not apply confidence updates or write persistent research state.
