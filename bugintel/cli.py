@@ -183,6 +183,9 @@ from bugintel.core.brain_chat_research_state_persistence_write_decision_packet i
 from bugintel.core.brain_chat_research_state_local_write_packet_preview import (
     build_local_write_packet_preview_from_file as build_research_state_local_write_packet_preview_from_file,
 )
+from bugintel.core.brain_chat_research_state_write_execution_review_gate import (
+    build_write_execution_review_gate_from_file as build_research_state_write_execution_review_gate_from_file,
+)
 from bugintel.core.brain_chat_research_hypothesis_feedback_decision_template import (
     build_research_hypothesis_feedback_decision_template,
     load_json_object as load_research_hypothesis_feedback_decision_template_json,
@@ -335,7 +338,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.27.0",
+                version="1.28.0",
                 force=True,
             )
         )
@@ -347,7 +350,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.27.0",
+            version="1.28.0",
             force=True,
         )
     )
@@ -356,7 +359,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.27.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.28.0")
 
 
 @app.command("scope-check")
@@ -14909,6 +14912,75 @@ def brain_chat_research_state_local_write_packet_preview_command(
 
     console.print(
         "[bold yellow]Safety:[/bold yellow] This command only builds a local write packet preview. "
+        "It does not write persistent research state, apply confidence changes, execute tools, interact with targets, "
+        "collect evidence, submit reports, or confirm vulnerabilities."
+    )
+
+@app.command("brain-chat-research-state-write-execution-review-gate")
+def brain_chat_research_state_write_execution_review_gate_command(
+    local_write_packet_preview_file: Path = typer.Option(..., "--local-write-packet-preview-file", "--write-preview", help="Path to local write packet preview JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional JSON output path for write execution review gate."),
+):
+    """Build a write execution review gate."""
+    if not local_write_packet_preview_file.exists():
+        console.print(f"[bold red]Local write packet preview JSON not found:[/bold red] {local_write_packet_preview_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        gate = build_research_state_write_execution_review_gate_from_file(
+            local_write_packet_preview_file,
+            json_output,
+        )
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=2) from exc
+
+    table = Table(title="Write Execution Review Gate")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target", gate["target_name"])
+    table.add_row("Status", gate["gate_status"])
+    table.add_row("Preview items", str(gate["local_write_packet_preview_item_count"]))
+    table.add_row("Review items", str(gate["write_execution_review_item_count"]))
+    table.add_row("Write execution review ready", str(gate["write_execution_review_ready"]))
+    table.add_row("Human review required", str(gate["human_write_execution_review_required"]))
+    table.add_row("Human review complete", str(gate["human_write_execution_review_complete"]))
+    table.add_row("Decision packet ready", str(gate["write_execution_decision_packet_ready"]))
+    table.add_row("Persistent write ready", str(gate["persistent_research_state_write_ready"]))
+    table.add_row("Persistent write allowed", str(gate["persistent_research_state_write_allowed"]))
+    table.add_row("Execution", "planning-only; no persistence, confidence mutation, target interaction, or tool execution")
+    console.print(table)
+
+    if gate["review_items"]:
+        items = Table(title="Write Execution Review Items")
+        items.add_column("Review")
+        items.add_column("Preview")
+        items.add_column("Decision")
+        items.add_column("Operation")
+        items.add_column("Hypothesis")
+        items.add_column("Field")
+        items.add_column("Current")
+        items.add_column("Proposed")
+        for item in gate["review_items"]:
+            items.add_row(
+                item["write_execution_review_item_id"],
+                item["local_write_packet_preview_item_id"],
+                item["persistence_write_decision_id"],
+                item["operation_id"],
+                item["hypothesis_id"],
+                item["field_path"],
+                item["current_value"],
+                item["proposed_value"],
+            )
+        console.print(items)
+
+    if json_output:
+        console.print(f"[bold green]Saved write execution review gate JSON:[/bold green] {json_output}")
+    else:
+        console.print(json.dumps(gate, indent=2, sort_keys=True))
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only builds a write execution review gate. "
         "It does not write persistent research state, apply confidence changes, execute tools, interact with targets, "
         "collect evidence, submit reports, or confirm vulnerabilities."
     )

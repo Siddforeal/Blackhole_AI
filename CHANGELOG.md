@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.28.0 - Write Execution Review Gate
+
+- Adds a local-only write execution review gate.
+- Adds CLI support for `brain-chat-research-state-write-execution-review-gate`.
+- Converts local write packet preview items into human-reviewable write execution review items.
+- Defines allowed human review decisions for the next decision packet stage.
+- Keeps all persistence, confidence mutation, research-state mutation, execution, target interaction, evidence collection, report submission, and vulnerability confirmation disabled.
+
+
 ## v1.27.0 - Local Write Packet Preview
 
 - Adds a local-only write packet preview.
