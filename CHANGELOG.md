@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.29.0 - Human Write Execution Decision Packet
+
+- Adds a local-only human write execution decision packet.
+- Adds CLI support for `brain-chat-research-state-write-execution-decision-packet`.
+- Combines write execution review gate items with explicit human write execution decisions.
+- Prepares approved decision records for a later local write execution packet.
+- Keeps all persistence, confidence mutation, research-state mutation, execution, target interaction, evidence collection, report submission, and vulnerability confirmation disabled.
+
+
 ## v1.28.0 - Write Execution Review Gate
 
 - Adds a local-only write execution review gate.
