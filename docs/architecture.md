@@ -362,3 +362,9 @@ All persistence, mutation, execution, network, evidence collection, report submi
 The write execution review gate is a non-mutating stage between local write packet preview and any later human write execution decision packet. It converts preview records into human-reviewable review records.
 
 All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.29.0 Human Write Execution Decision Packet Boundary
+
+The human write execution decision packet is a non-mutating stage between write execution review gate and any later local write execution packet. It records explicit human decisions and preserves source review context.
+
+All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.

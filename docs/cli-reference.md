@@ -3248,3 +3248,18 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a write execution review gate only. It does not apply confidence updates or write persistent research state.
+
+## v1.29.0 Human Write Execution Decision Packet Command
+
+`brain-chat-research-state-write-execution-decision-packet`
+
+Required inputs:
+
+- `--write-execution-review-gate-file` / `--execution-review-gate`
+- `--human-write-execution-decisions-file` / `--write-decisions`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a human write execution decision packet only. It does not apply confidence updates or write persistent research state.
