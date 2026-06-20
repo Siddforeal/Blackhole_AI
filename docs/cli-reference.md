@@ -3277,3 +3277,17 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a local write execution packet only. It does not apply confidence updates or write persistent research state.
+
+## v1.31.0 Final Persistence Apply Review Gate Command
+
+`brain-chat-research-state-final-persistence-apply-review-gate`
+
+Required input:
+
+- `--local-write-execution-packet-file` / `--local-write-packet`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a final persistence apply review gate only. It does not apply confidence updates or write persistent research state.

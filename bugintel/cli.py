@@ -192,6 +192,9 @@ from bugintel.core.brain_chat_research_state_write_execution_decision_packet imp
 from bugintel.core.brain_chat_research_state_local_write_execution_packet import (
     build_local_write_execution_packet_from_file as build_research_state_local_write_execution_packet_from_file,
 )
+from bugintel.core.brain_chat_research_state_final_persistence_apply_review_gate import (
+    build_final_persistence_apply_review_gate_from_file as build_research_state_final_persistence_apply_review_gate_from_file,
+)
 from bugintel.core.brain_chat_research_hypothesis_feedback_decision_template import (
     build_research_hypothesis_feedback_decision_template,
     load_json_object as load_research_hypothesis_feedback_decision_template_json,
@@ -344,7 +347,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.30.0",
+                version="1.31.0",
                 force=True,
             )
         )
@@ -356,7 +359,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.30.0",
+            version="1.31.0",
             force=True,
         )
     )
@@ -365,7 +368,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.30.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.31.0")
 
 
 @app.command("scope-check")
@@ -15131,6 +15134,75 @@ def brain_chat_research_state_local_write_execution_packet_command(
 
     console.print(
         "[bold yellow]Safety:[/bold yellow] This command only builds a local write execution packet. "
+        "It does not write persistent research state, apply confidence changes, execute tools, interact with targets, "
+        "collect evidence, submit reports, or confirm vulnerabilities."
+    )
+
+@app.command("brain-chat-research-state-final-persistence-apply-review-gate")
+def brain_chat_research_state_final_persistence_apply_review_gate_command(
+    local_write_execution_packet_file: Path = typer.Option(..., "--local-write-execution-packet-file", "--local-write-packet", help="Path to local write execution packet JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional JSON output path for final persistence apply review gate."),
+):
+    """Build a final persistence apply review gate."""
+    if not local_write_execution_packet_file.exists():
+        console.print(f"[bold red]Local write execution packet JSON not found:[/bold red] {local_write_execution_packet_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        gate = build_research_state_final_persistence_apply_review_gate_from_file(
+            local_write_execution_packet_file,
+            json_output,
+        )
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=2) from exc
+
+    table = Table(title="Final Persistence Apply Review Gate")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target", gate["target_name"])
+    table.add_row("Status", gate["gate_status"])
+    table.add_row("Local write items", str(gate["local_write_execution_packet_item_count"]))
+    table.add_row("Review items", str(gate["final_persistence_apply_review_item_count"]))
+    table.add_row("Human decision required", str(gate["human_final_persistence_apply_decision_required"]))
+    table.add_row("Human decision complete", str(gate["human_final_persistence_apply_decision_complete"]))
+    table.add_row("Decision packet required", str(gate["final_persistence_apply_decision_packet_required"]))
+    table.add_row("Decision packet ready", str(gate["final_persistence_apply_decision_packet_ready"]))
+    table.add_row("Persistent write ready", str(gate["persistent_research_state_write_ready"]))
+    table.add_row("Persistent write allowed", str(gate["persistent_research_state_write_allowed"]))
+    table.add_row("Execution", "planning-only; no persistence, confidence mutation, target interaction, or tool execution")
+    console.print(table)
+
+    if gate["final_persistence_apply_review_items"]:
+        items = Table(title="Final Persistence Apply Review Items")
+        items.add_column("Review")
+        items.add_column("Local")
+        items.add_column("Decision")
+        items.add_column("Operation")
+        items.add_column("Hypothesis")
+        items.add_column("Field")
+        items.add_column("Current")
+        items.add_column("Proposed")
+        for item in gate["final_persistence_apply_review_items"]:
+            items.add_row(
+                item["final_persistence_apply_review_item_id"],
+                item["local_write_execution_packet_item_id"],
+                item["write_execution_decision_id"],
+                item["operation_id"],
+                item["hypothesis_id"],
+                item["field_path"],
+                item["current_value"],
+                item["proposed_value"],
+            )
+        console.print(items)
+
+    if json_output:
+        console.print(f"[bold green]Saved final persistence apply review gate JSON:[/bold green] {json_output}")
+    else:
+        console.print(json.dumps(gate, indent=2, sort_keys=True))
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only builds a final persistence apply review gate. "
         "It does not write persistent research state, apply confidence changes, execute tools, interact with targets, "
         "collect evidence, submit reports, or confirm vulnerabilities."
     )

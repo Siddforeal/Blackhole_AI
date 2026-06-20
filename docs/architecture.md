@@ -374,3 +374,9 @@ All persistence, mutation, execution, network, evidence collection, report submi
 The local write execution packet is a non-mutating stage between the human write execution decision packet and any later final persistence apply review gate. It preserves approved human decisions as local write packet records.
 
 All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.31.0 Final Persistence Apply Review Gate Boundary
+
+The final persistence apply review gate is a non-mutating stage between the local write execution packet and any later human final apply decision packet. It preserves proposed stored-state field writes as review items.
+
+All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
