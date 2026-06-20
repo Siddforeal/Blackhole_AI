@@ -3306,3 +3306,17 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a human final apply decision packet only. It does not apply confidence updates or write persistent research state.
+
+## v1.33.0 Final Local Apply Preview Command
+
+`brain-chat-research-state-final-local-apply-preview`
+
+Required input:
+
+- `--human-final-apply-decision-packet-file` / `--final-apply-decision-packet`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a final local apply preview only. It does not apply confidence updates or write persistent research state.

@@ -4,7 +4,7 @@
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.
 
-Current version: 1.32.0
+Current version: 1.33.0
 
 ## Research Goal
 
@@ -1844,5 +1844,11 @@ This artifact does not write stored research state, apply confidence changes, or
 ## v1.32.0 Human Final Apply Decision Packet
 
 The human final apply decision packet combines final persistence apply review items with explicit human decisions. It prepares approved records for a later final local apply preview.
+
+This artifact does not write stored research state, apply confidence changes, or mutate research-state records.
+
+## v1.33.0 Final Local Apply Preview
+
+The final local apply preview converts approved human final apply decisions into final local apply preview records. It prepares records for a later final apply execution review gate.
 
 This artifact does not write stored research state, apply confidence changes, or mutate research-state records.
