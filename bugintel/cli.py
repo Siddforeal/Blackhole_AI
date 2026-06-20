@@ -201,6 +201,9 @@ from bugintel.core.brain_chat_research_state_human_final_apply_decision_packet i
 from bugintel.core.brain_chat_research_state_final_local_apply_preview import (
     build_final_local_apply_preview_from_file as build_research_state_final_local_apply_preview_from_file,
 )
+from bugintel.core.brain_chat_research_state_final_apply_execution_review_gate import (
+    build_final_apply_execution_review_gate_from_file as build_research_state_final_apply_execution_review_gate_from_file,
+)
 from bugintel.core.brain_chat_research_hypothesis_feedback_decision_template import (
     build_research_hypothesis_feedback_decision_template,
     load_json_object as load_research_hypothesis_feedback_decision_template_json,
@@ -353,7 +356,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.33.0",
+                version="1.34.0",
                 force=True,
             )
         )
@@ -365,7 +368,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.33.0",
+            version="1.34.0",
             force=True,
         )
     )
@@ -374,7 +377,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.33.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.34.0")
 
 
 @app.command("scope-check")
@@ -15351,6 +15354,74 @@ def brain_chat_research_state_final_local_apply_preview_command(
 
     console.print(
         "[bold yellow]Safety:[/bold yellow] This command only builds a final local apply preview. "
+        "It does not write persistent research state, apply confidence changes, execute tools, interact with targets, "
+        "collect evidence, submit reports, or confirm vulnerabilities."
+    )
+
+@app.command("brain-chat-research-state-final-apply-execution-review-gate")
+def brain_chat_research_state_final_apply_execution_review_gate_command(
+    final_local_apply_preview_file: Path = typer.Option(..., "--final-local-apply-preview-file", "--final-local-apply-preview", help="Path to final local apply preview JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional JSON output path for final apply execution review gate."),
+):
+    """Build a final apply execution review gate."""
+    if not final_local_apply_preview_file.exists():
+        console.print(f"[bold red]Final local apply preview JSON not found:[/bold red] {final_local_apply_preview_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        gate = build_research_state_final_apply_execution_review_gate_from_file(
+            final_local_apply_preview_file,
+            json_output,
+        )
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=2) from exc
+
+    table = Table(title="Final Apply Execution Review Gate")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target", gate["target_name"])
+    table.add_row("Status", gate["review_status"])
+    table.add_row("Preview items", str(gate["final_local_apply_preview_item_count"]))
+    table.add_row("Review items", str(gate["final_apply_execution_review_item_count"]))
+    table.add_row("Final apply execution review ready", str(gate["final_apply_execution_review_ready"]))
+    table.add_row("Human final apply execution decision required", str(gate["human_final_apply_execution_decision_required"]))
+    table.add_row("Human final apply execution decision complete", str(gate["human_final_apply_execution_decision_complete"]))
+    table.add_row("Persistent write ready", str(gate["persistent_research_state_write_ready"]))
+    table.add_row("Persistent write allowed", str(gate["persistent_research_state_write_allowed"]))
+    table.add_row("Execution", "planning-only; no persistence, confidence mutation, target interaction, or tool execution")
+    console.print(table)
+
+    if gate["final_apply_execution_review_items"]:
+        items = Table(title="Final Apply Execution Review Items")
+        items.add_column("Review")
+        items.add_column("Preview")
+        items.add_column("Decision")
+        items.add_column("Operation")
+        items.add_column("Hypothesis")
+        items.add_column("Field")
+        items.add_column("Current")
+        items.add_column("Proposed")
+        for item in gate["final_apply_execution_review_items"]:
+            items.add_row(
+                item["final_apply_execution_review_item_id"],
+                item["final_local_apply_preview_item_id"],
+                item["human_final_apply_decision_id"],
+                item["operation_id"],
+                item["hypothesis_id"],
+                item["field_path"],
+                item["current_value"],
+                item["proposed_value"],
+            )
+        console.print(items)
+
+    if json_output:
+        console.print(f"[bold green]Saved final apply execution review gate JSON:[/bold green] {json_output}")
+    else:
+        console.print(json.dumps(gate, indent=2, sort_keys=True))
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only builds a final apply execution review gate. "
         "It does not write persistent research state, apply confidence changes, execute tools, interact with targets, "
         "collect evidence, submit reports, or confirm vulnerabilities."
     )

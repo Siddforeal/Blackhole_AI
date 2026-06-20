@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.34.0 - Final Apply Execution Review Gate
+
+- Adds a final apply execution review gate.
+- Adds CLI support for `brain-chat-research-state-final-apply-execution-review-gate`.
+- Converts final local apply preview records into human-reviewable final apply execution review items.
+- Defines allowed human final execution decisions: approve, reject, request changes, or defer.
+- Keeps all persistence, confidence mutation, research-state mutation, execution, target interaction, evidence collection, report submission, and vulnerability confirmation disabled.
+
+
 ## v1.33.0 - Final Local Apply Preview
 
 - Adds a final local apply preview.
