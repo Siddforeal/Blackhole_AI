@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.35.0 - Human Final Apply Execution Decision Packet
+
+- Adds a human final apply execution decision packet.
+- Adds CLI support for `brain-chat-research-state-human-final-apply-execution-decision-packet`.
+- Combines final apply execution review items with explicit human final apply execution decisions.
+- Prepares approved final apply execution decisions for a later final apply execution packet.
+- Keeps all persistence, confidence mutation, research-state mutation, execution, target interaction, evidence collection, report submission, and vulnerability confirmation disabled.
+
+
 ## v1.34.0 - Final Apply Execution Review Gate
 
 - Adds a final apply execution review gate.

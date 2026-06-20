@@ -204,6 +204,9 @@ from bugintel.core.brain_chat_research_state_final_local_apply_preview import (
 from bugintel.core.brain_chat_research_state_final_apply_execution_review_gate import (
     build_final_apply_execution_review_gate_from_file as build_research_state_final_apply_execution_review_gate_from_file,
 )
+from bugintel.core.brain_chat_research_state_human_final_apply_execution_decision_packet import (
+    build_human_final_apply_execution_decision_packet_from_files as build_research_state_human_final_apply_execution_decision_packet_from_files,
+)
 from bugintel.core.brain_chat_research_hypothesis_feedback_decision_template import (
     build_research_hypothesis_feedback_decision_template,
     load_json_object as load_research_hypothesis_feedback_decision_template_json,
@@ -356,7 +359,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.34.0",
+                version="1.35.0",
                 force=True,
             )
         )
@@ -368,7 +371,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.34.0",
+            version="1.35.0",
             force=True,
         )
     )
@@ -377,7 +380,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.34.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.35.0")
 
 
 @app.command("scope-check")
@@ -15423,6 +15426,81 @@ def brain_chat_research_state_final_apply_execution_review_gate_command(
     console.print(
         "[bold yellow]Safety:[/bold yellow] This command only builds a final apply execution review gate. "
         "It does not write persistent research state, apply confidence changes, execute tools, interact with targets, "
+        "collect evidence, submit reports, or confirm vulnerabilities."
+    )
+
+@app.command("brain-chat-research-state-human-final-apply-execution-decision-packet")
+def brain_chat_research_state_human_final_apply_execution_decision_packet_command(
+    final_apply_execution_review_gate_file: Path = typer.Option(..., "--final-apply-execution-review-gate-file", "--final-execution-review-gate", help="Path to final apply execution review gate JSON."),
+    human_final_apply_execution_decisions_file: Path = typer.Option(..., "--human-final-apply-execution-decisions-file", "--final-execution-decisions", help="Path to human final apply execution decisions JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional JSON output path for human final apply execution decision packet."),
+):
+    """Build a human final apply execution decision packet."""
+    if not final_apply_execution_review_gate_file.exists():
+        console.print(f"[bold red]Final apply execution review gate JSON not found:[/bold red] {final_apply_execution_review_gate_file}")
+        raise typer.Exit(code=1)
+
+    if not human_final_apply_execution_decisions_file.exists():
+        console.print(f"[bold red]Human final apply execution decisions JSON not found:[/bold red] {human_final_apply_execution_decisions_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        packet = build_research_state_human_final_apply_execution_decision_packet_from_files(
+            final_apply_execution_review_gate_file,
+            human_final_apply_execution_decisions_file,
+            json_output,
+        )
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=2) from exc
+
+    table = Table(title="Human Final Apply Execution Decision Packet")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target", packet["target_name"])
+    table.add_row("Status", packet["decision_status"])
+    table.add_row("Review items", str(packet["final_apply_execution_review_item_count"]))
+    table.add_row("Human decisions", str(packet["human_final_apply_execution_decision_count"]))
+    table.add_row("Approved decisions", str(packet["approved_final_apply_execution_decision_count"]))
+    table.add_row("Human decision complete", str(packet["human_final_apply_execution_decision_complete"]))
+    table.add_row("Final apply execution packet required", str(packet["final_apply_execution_packet_required"]))
+    table.add_row("Final apply execution packet ready", str(packet["final_apply_execution_packet_ready"]))
+    table.add_row("Persistent write ready", str(packet["persistent_research_state_write_ready"]))
+    table.add_row("Persistent write allowed", str(packet["persistent_research_state_write_allowed"]))
+    table.add_row("Execution", "planning-only; no persistence, confidence mutation, target interaction, or tool execution")
+    console.print(table)
+
+    if packet["human_final_apply_execution_decisions"]:
+        items = Table(title="Human Final Apply Execution Decisions")
+        items.add_column("Decision")
+        items.add_column("Review")
+        items.add_column("Action")
+        items.add_column("Valid")
+        items.add_column("Approved")
+        items.add_column("Operation")
+        items.add_column("Hypothesis")
+        items.add_column("Field")
+        for item in packet["human_final_apply_execution_decisions"]:
+            items.add_row(
+                item["human_final_apply_execution_decision_id"],
+                item["final_apply_execution_review_item_id"],
+                item["decision"],
+                str(item["decision_valid"]),
+                str(item["final_apply_execution_approved"]),
+                item["operation_id"],
+                item["hypothesis_id"],
+                item["field_path"],
+            )
+        console.print(items)
+
+    if json_output:
+        console.print(f"[bold green]Saved human final apply execution decision packet JSON:[/bold green] {json_output}")
+    else:
+        print(json.dumps(packet, indent=2, sort_keys=True))
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only builds a human final apply execution decision packet. "
+        "It does not execute a final apply path, write persistent research state, apply confidence changes, interact with targets, "
         "collect evidence, submit reports, or confirm vulnerabilities."
     )
 
