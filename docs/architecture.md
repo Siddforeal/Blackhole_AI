@@ -380,3 +380,9 @@ All persistence, mutation, execution, network, evidence collection, report submi
 The final persistence apply review gate is a non-mutating stage between the local write execution packet and any later human final apply decision packet. It preserves proposed stored-state field writes as review items.
 
 All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.32.0 Human Final Apply Decision Packet Boundary
+
+The human final apply decision packet is a non-mutating stage between the final persistence apply review gate and any later final local apply preview. It records explicit human decisions.
+
+All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.

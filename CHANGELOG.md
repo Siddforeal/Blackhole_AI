@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.32.0 - Human Final Apply Decision Packet
+
+- Adds a human final apply decision packet.
+- Adds CLI support for `brain-chat-research-state-human-final-apply-decision-packet`.
+- Combines final persistence apply review items with explicit human final apply decisions.
+- Prepares approved final apply decisions for a later final local apply preview.
+- Keeps all persistence, confidence mutation, research-state mutation, execution, target interaction, evidence collection, report submission, and vulnerability confirmation disabled.
+
+
 ## v1.31.0 - Final Persistence Apply Review Gate
 
 - Adds a final persistence apply review gate.
