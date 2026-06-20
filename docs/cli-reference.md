@@ -3334,3 +3334,18 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a final apply execution review gate only. It does not execute a final apply path or write persistent research state.
+
+## v1.35.0 Human Final Apply Execution Decision Packet Command
+
+`brain-chat-research-state-human-final-apply-execution-decision-packet`
+
+Required inputs:
+
+- `--final-apply-execution-review-gate-file` / `--final-execution-review-gate`
+- `--human-final-apply-execution-decisions-file` / `--final-execution-decisions`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a human final apply execution decision packet only. It does not execute a final apply path or write persistent research state.

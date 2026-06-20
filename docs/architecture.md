@@ -398,3 +398,9 @@ All persistence, mutation, execution, network, evidence collection, report submi
 The final apply execution review gate is a non-mutating stage between the final local apply preview and any later human final apply execution decision packet. It exposes final local preview records for explicit human execution review.
 
 All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.35.0 Human Final Apply Execution Decision Packet Boundary
+
+The human final apply execution decision packet is a non-mutating stage between the final apply execution review gate and any later final apply execution packet. It records explicit human final apply execution decisions.
+
+All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
