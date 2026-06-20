@@ -3263,3 +3263,17 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a human write execution decision packet only. It does not apply confidence updates or write persistent research state.
+
+## v1.30.0 Local Write Execution Packet Command
+
+`brain-chat-research-state-local-write-execution-packet`
+
+Required input:
+
+- `--write-execution-decision-packet-file` / `--execution-decision-packet`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a local write execution packet only. It does not apply confidence updates or write persistent research state.

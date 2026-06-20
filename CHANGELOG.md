@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.30.0 - Local Write Execution Packet
+
+- Adds a local-only write execution packet.
+- Adds CLI support for `brain-chat-research-state-local-write-execution-packet`.
+- Converts approved human write execution decisions into local packet records.
+- Prepares local packet records for a later final persistence apply review gate.
+- Keeps all persistence, confidence mutation, research-state mutation, execution, target interaction, evidence collection, report submission, and vulnerability confirmation disabled.
+
+
 ## v1.29.0 - Human Write Execution Decision Packet
 
 - Adds a local-only human write execution decision packet.

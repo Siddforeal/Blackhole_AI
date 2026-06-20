@@ -368,3 +368,9 @@ All persistence, mutation, execution, network, evidence collection, report submi
 The human write execution decision packet is a non-mutating stage between write execution review gate and any later local write execution packet. It records explicit human decisions and preserves source review context.
 
 All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.30.0 Local Write Execution Packet Boundary
+
+The local write execution packet is a non-mutating stage between the human write execution decision packet and any later final persistence apply review gate. It preserves approved human decisions as local write packet records.
+
+All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
