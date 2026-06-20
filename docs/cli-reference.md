@@ -3291,3 +3291,18 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a final persistence apply review gate only. It does not apply confidence updates or write persistent research state.
+
+## v1.32.0 Human Final Apply Decision Packet Command
+
+`brain-chat-research-state-human-final-apply-decision-packet`
+
+Required inputs:
+
+- `--final-persistence-apply-review-gate-file` / `--final-apply-review-gate`
+- `--human-final-apply-decisions-file` / `--final-apply-decisions`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a human final apply decision packet only. It does not apply confidence updates or write persistent research state.
