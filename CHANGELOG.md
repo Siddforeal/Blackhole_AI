@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.33.0 - Final Local Apply Preview
+
+- Adds a final local apply preview.
+- Adds CLI support for `brain-chat-research-state-final-local-apply-preview`.
+- Converts approved human final apply decisions into final local apply preview records.
+- Prepares final local preview records for a later final apply execution review gate.
+- Keeps all persistence, confidence mutation, research-state mutation, execution, target interaction, evidence collection, report submission, and vulnerability confirmation disabled.
+
+
 ## v1.32.0 - Human Final Apply Decision Packet
 
 - Adds a human final apply decision packet.

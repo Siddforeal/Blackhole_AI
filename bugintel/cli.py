@@ -198,6 +198,9 @@ from bugintel.core.brain_chat_research_state_final_persistence_apply_review_gate
 from bugintel.core.brain_chat_research_state_human_final_apply_decision_packet import (
     build_human_final_apply_decision_packet_from_files as build_research_state_human_final_apply_decision_packet_from_files,
 )
+from bugintel.core.brain_chat_research_state_final_local_apply_preview import (
+    build_final_local_apply_preview_from_file as build_research_state_final_local_apply_preview_from_file,
+)
 from bugintel.core.brain_chat_research_hypothesis_feedback_decision_template import (
     build_research_hypothesis_feedback_decision_template,
     load_json_object as load_research_hypothesis_feedback_decision_template_json,
@@ -350,7 +353,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.32.0",
+                version="1.33.0",
                 force=True,
             )
         )
@@ -362,7 +365,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.32.0",
+            version="1.33.0",
             force=True,
         )
     )
@@ -371,7 +374,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.32.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.33.0")
 
 
 @app.command("scope-check")
@@ -15280,6 +15283,74 @@ def brain_chat_research_state_human_final_apply_decision_packet_command(
 
     console.print(
         "[bold yellow]Safety:[/bold yellow] This command only builds a human final apply decision packet. "
+        "It does not write persistent research state, apply confidence changes, execute tools, interact with targets, "
+        "collect evidence, submit reports, or confirm vulnerabilities."
+    )
+
+@app.command("brain-chat-research-state-final-local-apply-preview")
+def brain_chat_research_state_final_local_apply_preview_command(
+    human_final_apply_decision_packet_file: Path = typer.Option(..., "--human-final-apply-decision-packet-file", "--final-apply-decision-packet", help="Path to human final apply decision packet JSON."),
+    json_output: Path | None = typer.Option(None, "--json-output", "--output", help="Optional JSON output path for final local apply preview."),
+):
+    """Build a final local apply preview."""
+    if not human_final_apply_decision_packet_file.exists():
+        console.print(f"[bold red]Human final apply decision packet JSON not found:[/bold red] {human_final_apply_decision_packet_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        preview = build_research_state_final_local_apply_preview_from_file(
+            human_final_apply_decision_packet_file,
+            json_output,
+        )
+    except ValueError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=2) from exc
+
+    table = Table(title="Final Local Apply Preview")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Target", preview["target_name"])
+    table.add_row("Status", preview["preview_status"])
+    table.add_row("Approved decisions", str(preview["approved_final_apply_decision_count"]))
+    table.add_row("Preview items", str(preview["final_local_apply_preview_item_count"]))
+    table.add_row("Final local apply preview ready", str(preview["final_local_apply_preview_ready"]))
+    table.add_row("Final apply execution review required", str(preview["final_apply_execution_review_gate_required"]))
+    table.add_row("Final apply execution review ready", str(preview["final_apply_execution_review_gate_ready"]))
+    table.add_row("Persistent write ready", str(preview["persistent_research_state_write_ready"]))
+    table.add_row("Persistent write allowed", str(preview["persistent_research_state_write_allowed"]))
+    table.add_row("Execution", "planning-only; no persistence, confidence mutation, target interaction, or tool execution")
+    console.print(table)
+
+    if preview["final_local_apply_preview_items"]:
+        items = Table(title="Final Local Apply Preview Items")
+        items.add_column("Preview")
+        items.add_column("Decision")
+        items.add_column("Review")
+        items.add_column("Operation")
+        items.add_column("Hypothesis")
+        items.add_column("Field")
+        items.add_column("Current")
+        items.add_column("Proposed")
+        for item in preview["final_local_apply_preview_items"]:
+            items.add_row(
+                item["final_local_apply_preview_item_id"],
+                item["human_final_apply_decision_id"],
+                item["final_persistence_apply_review_item_id"],
+                item["operation_id"],
+                item["hypothesis_id"],
+                item["field_path"],
+                item["current_value"],
+                item["proposed_value"],
+            )
+        console.print(items)
+
+    if json_output:
+        console.print(f"[bold green]Saved final local apply preview JSON:[/bold green] {json_output}")
+    else:
+        console.print(json.dumps(preview, indent=2, sort_keys=True))
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only builds a final local apply preview. "
         "It does not write persistent research state, apply confidence changes, execute tools, interact with targets, "
         "collect evidence, submit reports, or confirm vulnerabilities."
     )

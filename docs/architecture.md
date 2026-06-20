@@ -386,3 +386,9 @@ All persistence, mutation, execution, network, evidence collection, report submi
 The human final apply decision packet is a non-mutating stage between the final persistence apply review gate and any later final local apply preview. It records explicit human decisions.
 
 All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## v1.33.0 Final Local Apply Preview Boundary
+
+The final local apply preview is a non-mutating stage between the human final apply decision packet and any later final apply execution review gate. It preserves approved final apply decisions as final local preview records.
+
+All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
