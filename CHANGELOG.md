@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.31.0 - Final Persistence Apply Review Gate
+
+- Adds a final persistence apply review gate.
+- Adds CLI support for `brain-chat-research-state-final-persistence-apply-review-gate`.
+- Converts local write execution packet records into human-reviewable final persistence apply review items.
+- Defines allowed human decisions for a later final apply decision packet.
+- Keeps all persistence, confidence mutation, research-state mutation, execution, target interaction, evidence collection, report submission, and vulnerability confirmation disabled.
+
+
 ## v1.30.0 - Local Write Execution Packet
 
 - Adds a local-only write execution packet.
