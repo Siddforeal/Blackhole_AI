@@ -3320,3 +3320,17 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a final local apply preview only. It does not apply confidence updates or write persistent research state.
+
+## v1.34.0 Final Apply Execution Review Gate Command
+
+`brain-chat-research-state-final-apply-execution-review-gate`
+
+Required input:
+
+- `--final-local-apply-preview-file` / `--final-local-apply-preview`
+
+Optional output:
+
+- `--json-output` / `--output`
+
+The command creates a final apply execution review gate only. It does not execute a final apply path or write persistent research state.
