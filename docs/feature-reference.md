@@ -1,5 +1,12 @@
 # Blackhole AI Workbench
 
+## Case Intake Brain Handoff
+
+The case intake brain handoff converts a bug bounty intake workflow into a structured context packet for the Blackhole brain.
+
+It includes P1/P2 focus endpoints, reasons each endpoint deserves manual review, deferred low-signal endpoints, evidence gaps before report drafting, brain questions for the next reasoning step, and safety metadata showing no execution or target interaction.
+
+
 [![Tests](https://github.com/Siddforeal/Blackhole_AI/actions/workflows/tests.yml/badge.svg)](https://github.com/Siddforeal/Blackhole_AI/actions/workflows/tests.yml)
 
 Blackhole AI Workbench is a human-in-the-loop security research workbench for authorized vulnerability discovery, endpoint intelligence, response analysis, and structured evidence collection.

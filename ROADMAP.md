@@ -1,5 +1,12 @@
 # Roadmap
 
+## v1.37.0 Complete - Case Intake Brain Handoff
+
+The case intake output can now be converted into brain-readable context.
+
+Next practical brain milestone: question-answering over the handoff artifact.
+
+
 > Historical note: the versioned sections below describe the original early roadmap. Many items listed as planned were later implemented. See **Current Direction After v1.36.0** for the active roadmap.
 
 BugIntel AI Workbench is being developed as a human-in-the-loop research prototype for AI-assisted vulnerability discovery and bug intelligence.

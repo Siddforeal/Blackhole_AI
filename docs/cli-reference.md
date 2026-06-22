@@ -1,5 +1,16 @@
 # Blackhole CLI Reference
 
+## case-intake-brain-handoff
+
+Convert a bug-bounty-case-intake JSON artifact into brain-readable case context.
+
+Example:
+
+python -m bugintel.cli case-intake-brain-handoff intake.json --json-output brain-handoff.json
+
+Output includes focus endpoints, deferred endpoints, evidence gaps, brain questions, safety metadata, and a compact brain context summary. The command is local-only and planning-only.
+
+
 Blackhole supports two CLI names:
 
 - blackhole

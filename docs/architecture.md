@@ -1,5 +1,16 @@
 # Architecture
 
+## Case Intake Brain Handoff Layer
+
+The v1.37 brain handoff layer sits between bug bounty intake and brain reasoning.
+
+Flow:
+
+HAR / Burp / endpoint notes -> bug-bounty-case-intake -> intake.json -> case-intake-brain-handoff -> brain-readable case context
+
+The layer is planning-only. It does not perform live validation, network requests, browser automation, provider calls, target mutation, evidence collection, report submission, or vulnerability confirmation.
+
+
 Blackhole AI Workbench is designed as a human-in-the-loop, multi-agent security research platform for authorized vulnerability discovery and bug intelligence.
 
 ## Core Idea

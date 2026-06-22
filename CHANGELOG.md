@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.37.0 - Case Intake Brain Handoff
+
+- Added case-intake-brain-handoff, a planning-only command that converts bug-bounty-case-intake JSON into brain-readable case context.
+- Added P1/P2 focus endpoint extraction, deferred endpoint tracking, brain context summaries, brain questions, and evidence-gap extraction.
+- Preserved local-only safety guarantees: no network requests, browser execution, provider calls, tool execution, target mutation, evidence collection, report submission, or vulnerability confirmation.
+
+
 ## v1.36.0 - Bug Bounty Case Intake Workflow
 
 ### Added
