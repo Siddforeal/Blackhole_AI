@@ -39,6 +39,7 @@ from bugintel.core.endpoint_investigation import build_endpoint_investigation_pr
 from bugintel.core.endpoint_priority import prioritize_endpoints, score_endpoint
 from bugintel.core.attack_surface import build_attack_surface_map
 from bugintel.core.evidence_requirements import build_evidence_requirement_plan
+from bugintel.core.bug_bounty_case_intake import build_bug_bounty_case_intake_workflow
 from bugintel.core.evidence_workspace import build_evidence_workspace_manifest, materialize_evidence_workspace
 from bugintel.core.report_draft import build_report_draft, render_report_draft_markdown
 from bugintel.core.validation_runbook import build_validation_runbook, render_validation_runbook_markdown
@@ -359,7 +360,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.35.0",
+                version="1.36.0",
                 force=True,
             )
         )
@@ -371,7 +372,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.35.0",
+            version="1.36.0",
             force=True,
         )
     )
@@ -380,7 +381,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.35.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.36.0")
 
 
 @app.command("scope-check")
@@ -586,6 +587,80 @@ def endpoint_investigation_command(
 
 
 
+
+
+
+@app.command("bug-bounty-case-intake")
+def bug_bounty_case_intake_command(
+    input_file: Path = typer.Argument(..., help="HAR, Burp export, JS, endpoint list, or notes to intake."),
+    target_name: str = typer.Option("bug-bounty-target", "--target", "-t", help="Target or case name."),
+    top: int = typer.Option(10, "--top", help="Number of top endpoints to include."),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        "--output",
+        help="Optional path to save the intake workflow JSON.",
+    ),
+):
+    """Build a P1/P2-focused bug bounty case intake workflow."""
+    if not input_file.exists():
+        console.print(f"[bold red]Input file not found:[/bold red] {input_file}")
+        raise typer.Exit(code=1)
+
+    text = input_file.read_text(encoding="utf-8", errors="replace")
+    workflow = build_bug_bounty_case_intake_workflow(
+        text,
+        target_name=target_name,
+        top_n=top,
+    )
+    data = workflow.to_dict()
+
+    summary = Table(title="Bug Bounty Case Intake")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Target", workflow.target_name)
+    summary.add_row("Status", workflow.status)
+    summary.add_row("Endpoints discovered", str(workflow.endpoint_count))
+    summary.add_row("Endpoints selected", str(workflow.selected_endpoint_count))
+    summary.add_row("P1 potential", str(workflow.lane_counts.get("p1-potential-review", 0)))
+    summary.add_row("P2 potential", str(workflow.lane_counts.get("p2-potential-review", 0)))
+    summary.add_row("Execution", "planning-only; no requests, browser, provider, or tool execution")
+    console.print(summary)
+
+    endpoint_table = Table(title="P1/P2-Focused Endpoint Plan")
+    endpoint_table.add_column("#", justify="right")
+    endpoint_table.add_column("Endpoint")
+    endpoint_table.add_column("Lane")
+    endpoint_table.add_column("Score", justify="right")
+    endpoint_table.add_column("Band")
+    endpoint_table.add_column("Categories")
+
+    for index, endpoint in enumerate(workflow.top_endpoints, start=1):
+        endpoint_table.add_row(
+            str(index),
+            endpoint.endpoint,
+            endpoint.p1_p2_lane,
+            str(endpoint.priority_score),
+            endpoint.priority_band,
+            ", ".join(endpoint.categories),
+        )
+
+    console.print(endpoint_table)
+
+    console.print("[bold]Manual testing plan:[/bold]")
+    for index, step in enumerate(workflow.manual_testing_plan, start=1):
+        console.print(f"{index}. {step}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved bug bounty case intake JSON:[/bold green] {json_output}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only builds a local planning workflow. "
+        "It does not send requests, execute tools, launch browsers, call providers, collect evidence, "
+        "submit reports, or confirm vulnerabilities."
+    )
 
 
 @app.command("brain-chat-demo-flow")

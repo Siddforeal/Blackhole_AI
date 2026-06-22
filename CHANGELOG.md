@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.36.0 - Bug Bounty Case Intake Workflow
+
+### Added
+- Added `bug-bounty-case-intake`, a P1/P2-focused bug bounty intake workflow.
+- Connects endpoint mining, priority scoring, investigation planning, and evidence requirement planning.
+- Outputs selected endpoints, P1/P2 lanes, investigation tasks, evidence requirements, manual testing steps, and safety metadata.
+- Added targeted core and CLI tests.
+
+### Safety
+- Planning-only.
+- Does not send requests, execute tools, launch browsers, call providers, collect evidence, submit reports, mutate targets, or confirm vulnerabilities.
+
+
 ## v1.35.0 - Human Final Apply Execution Decision Packet
 
 - Adds a human final apply execution decision packet.

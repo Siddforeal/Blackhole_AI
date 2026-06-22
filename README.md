@@ -291,3 +291,13 @@ Blackhole AI Workbench is intended only for authorized security research, bug bo
 Do not use it against systems where you do not have permission.
 
 The project is intentionally designed around scope control, human review, safety gates, and evidence-based research decisions.
+
+## What v1.36.0 Adds
+
+Version 1.36.0 adds a practical bug bounty case intake workflow.
+
+The new `bug-bounty-case-intake` command connects endpoint mining, endpoint priority scoring, endpoint investigation planning, and evidence requirement planning into one P1/P2-focused human workflow.
+
+Input can be HAR text, Burp exports, JavaScript, endpoint lists, or notes. Output includes top endpoints, P1/P2 potential lanes, investigation tasks, evidence requirements, and a manual testing plan.
+
+This still does **not** send requests, execute tools, launch browsers, call providers, collect evidence, submit reports, mutate targets, or confirm vulnerabilities.
