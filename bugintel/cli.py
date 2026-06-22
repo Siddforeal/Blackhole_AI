@@ -40,6 +40,7 @@ from bugintel.core.endpoint_priority import prioritize_endpoints, score_endpoint
 from bugintel.core.attack_surface import build_attack_surface_map
 from bugintel.core.evidence_requirements import build_evidence_requirement_plan
 from bugintel.core.bug_bounty_case_intake import build_bug_bounty_case_intake_workflow
+from bugintel.core.bug_bounty_case_intake_brain_handoff import build_case_intake_brain_handoff
 from bugintel.core.evidence_workspace import build_evidence_workspace_manifest, materialize_evidence_workspace
 from bugintel.core.report_draft import build_report_draft, render_report_draft_markdown
 from bugintel.core.validation_runbook import build_validation_runbook, render_validation_runbook_markdown
@@ -360,7 +361,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.36.0",
+                version="1.37.0",
                 force=True,
             )
         )
@@ -372,7 +373,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.36.0",
+            version="1.37.0",
             force=True,
         )
     )
@@ -381,7 +382,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.36.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.37.0")
 
 
 @app.command("scope-check")
@@ -658,6 +659,71 @@ def bug_bounty_case_intake_command(
 
     console.print(
         "[bold yellow]Safety:[/bold yellow] This command only builds a local planning workflow. "
+        "It does not send requests, execute tools, launch browsers, call providers, collect evidence, "
+        "submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-handoff")
+def case_intake_brain_handoff_command(
+    intake_file: Path = typer.Argument(..., help="Path to bug-bounty-case-intake JSON output."),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        "--output",
+        help="Optional path to save brain handoff JSON.",
+    ),
+):
+    """Convert a bug bounty case intake workflow into brain-readable context."""
+    if not intake_file.exists():
+        console.print(f"[bold red]Input file not found:[/bold red] {intake_file}")
+        raise typer.Exit(code=1)
+
+    intake = json.loads(intake_file.read_text(encoding="utf-8"))
+    handoff = build_case_intake_brain_handoff(intake)
+    data = handoff.to_dict()
+
+    summary = Table(title="Case Intake Brain Handoff")
+    summary.add_column("Field", style="bold")
+    summary.add_column("Value")
+    summary.add_row("Target", handoff.target_name)
+    summary.add_row("Status", handoff.status)
+    summary.add_row("Focus endpoints", str(handoff.focus_endpoint_count))
+    summary.add_row("Deferred endpoints", str(handoff.deferred_endpoint_count))
+    summary.add_row("Evidence gaps", str(len(handoff.evidence_gaps)))
+    summary.add_row("Execution", "planning-only; no requests, browser, provider, or tool execution")
+    console.print(summary)
+
+    focus_table = Table(title="Brain Focus Endpoints")
+    focus_table.add_column("#", justify="right")
+    focus_table.add_column("Endpoint")
+    focus_table.add_column("Lane")
+    focus_table.add_column("Score", justify="right")
+    focus_table.add_column("Why focus")
+
+    for index, endpoint in enumerate(handoff.focus_endpoints, start=1):
+        focus_table.add_row(
+            str(index),
+            endpoint.endpoint,
+            endpoint.lane,
+            str(endpoint.priority_score),
+            "; ".join(endpoint.why_focus[:2]),
+        )
+
+    console.print(focus_table)
+
+    console.print("[bold]Brain questions:[/bold]")
+    for index, question in enumerate(handoff.brain_questions, start=1):
+        console.print(f"{index}. {question}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved case intake brain handoff JSON:[/bold green] {json_output}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only converts intake output into local brain context. "
         "It does not send requests, execute tools, launch browsers, call providers, collect evidence, "
         "submit reports, or confirm vulnerabilities."
     )
