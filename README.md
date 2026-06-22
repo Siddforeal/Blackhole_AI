@@ -1,16 +1,5 @@
 # Blackhole AI Workbench
 
-## v1.37.0 - Case Intake Brain Handoff
-
-Blackhole can now convert bug bounty intake output into brain-readable case context.
-
-Flow:
-
-HAR / Burp / endpoint notes -> bug-bounty-case-intake -> intake.json -> case-intake-brain-handoff -> brain-readable context
-
-The handoff highlights P1/P2 focus endpoints, deferred endpoints, evidence gaps, and the next questions the brain should answer. It remains planning-only and does not send requests or confirm vulnerabilities.
-
-
 [![Tests](https://github.com/Siddforeal/Blackhole_AI/actions/workflows/tests.yml/badge.svg)](https://github.com/Siddforeal/Blackhole_AI/actions/workflows/tests.yml)
 [![Latest release](https://img.shields.io/github/v/release/Siddforeal/Blackhole_AI?label=release)](https://github.com/Siddforeal/Blackhole_AI/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -19,7 +8,7 @@ The handoff highlights P1/P2 focus endpoints, deferred endpoints, evidence gaps,
 
 Blackhole is being built as a local-first AI research brain: it breaks a target into hypotheses, plans investigation steps, reviews evidence, decides what is safe to do next, and routes work through small task-focused agents.
 
-> **Current release:** `v1.35.0`
+> **Current release:** `v1.37.0`
 > **Project status:** active research prototype
 > **Current mode:** local-first, planning-first, human-in-the-loop
 > **Long-term direction:** scope-gated AI agents that can interact with browsers, Burp Suite, curl, local tools, structured case memory, and controlled proof-of-concept workflows.
