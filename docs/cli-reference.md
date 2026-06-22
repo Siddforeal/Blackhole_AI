@@ -3349,3 +3349,15 @@ Optional output:
 - `--json-output` / `--output`
 
 The command creates a human final apply execution decision packet only. It does not execute a final apply path or write persistent research state.
+
+## bug-bounty-case-intake
+
+Build a P1/P2-focused bug bounty case intake workflow.
+
+Example:
+
+bugintel bug-bounty-case-intake case.txt --target demo-program --top 10 --json-output intake.json
+
+Inputs can be HAR text, Burp exports, JavaScript, endpoint lists, or notes. The command outputs a local planning workflow with prioritized endpoints, P1/P2 potential lanes, investigation tasks, evidence requirements, and manual testing steps.
+
+Safety boundary: this command does not send requests, execute tools, launch browsers, call providers, collect evidence, submit reports, mutate targets, or confirm vulnerabilities.

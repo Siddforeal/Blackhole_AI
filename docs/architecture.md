@@ -404,3 +404,9 @@ All persistence, mutation, execution, network, evidence collection, report submi
 The human final apply execution decision packet is a non-mutating stage between the final apply execution review gate and any later final apply execution packet. It records explicit human final apply execution decisions.
 
 All persistence, mutation, execution, network, evidence collection, report submission, and vulnerability confirmation flags remain disabled.
+
+## Bug Bounty Case Intake Workflow
+
+Version 1.36.0 adds a hunter-facing intake layer above existing endpoint and evidence planning helpers. It converts provided local HAR text, Burp exports, JavaScript, endpoint lists, or notes into a P1/P2-focused workflow that a human researcher can review before manual testing.
+
+The workflow remains local-only and planning-only. It does not grant runtime authorization, send requests, execute tools, launch browsers, call providers, collect evidence, submit reports, mutate targets, or confirm vulnerabilities.
