@@ -41,6 +41,7 @@ from bugintel.core.attack_surface import build_attack_surface_map
 from bugintel.core.evidence_requirements import build_evidence_requirement_plan
 from bugintel.core.bug_bounty_case_intake import build_bug_bounty_case_intake_workflow
 from bugintel.core.bug_bounty_case_intake_brain_handoff import build_case_intake_brain_handoff
+from bugintel.core.case_intake_brain_handoff_answerer import answer_case_intake_brain_handoff_question
 from bugintel.core.evidence_workspace import build_evidence_workspace_manifest, materialize_evidence_workspace
 from bugintel.core.report_draft import build_report_draft, render_report_draft_markdown
 from bugintel.core.validation_runbook import build_validation_runbook, render_validation_runbook_markdown
@@ -361,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.37.0",
+                version="1.38.0",
                 force=True,
             )
         )
@@ -373,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.37.0",
+            version="1.38.0",
             force=True,
         )
     )
@@ -382,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.37.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.38.0")
 
 
 @app.command("scope-check")
@@ -725,6 +726,79 @@ def case_intake_brain_handoff_command(
     console.print(
         "[bold yellow]Safety:[/bold yellow] This command only converts intake output into local brain context. "
         "It does not send requests, execute tools, launch browsers, call providers, collect evidence, "
+        "submit reports, or confirm vulnerabilities."
+    )
+
+
+@app.command("case-intake-brain-answer")
+def case_intake_brain_answer_command(
+    handoff_file: Path = typer.Argument(..., help="Path to case-intake-brain-handoff JSON output."),
+    question: str = typer.Argument(..., help="Local question to answer from the brain handoff."),
+    output_file: Path | None = typer.Option(None, "--output-file", "--output", help="Optional Markdown output path."),
+    json_output: Path | None = typer.Option(None, "--json-output", help="Optional JSON output path."),
+):
+    """Answer a local deterministic question from a case intake brain handoff."""
+    if not handoff_file.exists():
+        console.print(f"[bold red]Handoff file not found:[/bold red] {handoff_file}")
+        raise typer.Exit(code=1)
+
+    try:
+        handoff = json.loads(handoff_file.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        console.print(f"[bold red]Invalid handoff JSON:[/bold red] {exc}")
+        raise typer.Exit(code=1) from exc
+
+    answer = answer_case_intake_brain_handoff_question(handoff, question)
+    markdown = answer.to_markdown()
+    data = answer.to_dict()
+
+    table = Table(title="Case Intake Brain Handoff Answer")
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Question", answer.question)
+    table.add_row("Route", answer.route)
+    table.add_row("Target", answer.target_name)
+    table.add_row("Focus endpoint", answer.focus_endpoint or "none")
+    table.add_row("Handoff status", answer.handoff_status)
+    table.add_row("Blocked", str(answer.blocked))
+    table.add_row("Focus endpoints", str(answer.focus_endpoint_count))
+    table.add_row("Deferred endpoints", str(answer.deferred_endpoint_count))
+    table.add_row("Evidence gaps", str(answer.evidence_gap_count))
+    table.add_row("Validation allowed", str(answer.validation_allowed))
+    table.add_row("Runtime execution allowed", str(answer.runtime_execution_allowed))
+    table.add_row("Report submission allowed", str(answer.report_submission_allowed))
+    table.add_row("Vulnerability confirmation allowed", str(answer.vulnerability_confirmation_allowed))
+    table.add_row("Tool execution", "false")
+    table.add_row("Evidence collection", "false")
+    table.add_row("Validation execution", "false")
+    table.add_row("Report submission", "false")
+    table.add_row("Vulnerability confirmation", "false")
+    console.print(table)
+
+    console.print("[bold yellow]Answer:[/bold yellow]")
+    console.print(answer.answer)
+
+    if answer.supporting_points:
+        console.print("[bold yellow]Supporting points:[/bold yellow]")
+        for item in answer.supporting_points:
+            console.print(f"- {item}")
+
+    console.print("[bold yellow]Recommended next action:[/bold yellow]")
+    console.print(answer.recommended_next_action)
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(markdown, encoding="utf-8")
+        console.print(f"[bold green]Saved case intake brain answer Markdown:[/bold green] {output_file}")
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        console.print(f"[bold green]Saved case intake brain answer JSON:[/bold green] {json_output}")
+
+    console.print(
+        "[bold yellow]Safety:[/bold yellow] This command only answers local deterministic handoff questions. "
+        "It does not send requests, execute tools, launch browsers, call providers, collect evidence, mutate targets, "
         "submit reports, or confirm vulnerabilities."
     )
 
