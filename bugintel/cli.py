@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.38.0",
+                version="1.39.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.38.0",
+            version="1.39.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.38.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.39.0")
 
 
 @app.command("scope-check")
@@ -15719,6 +15719,90 @@ def brain_chat_research_state_human_final_apply_execution_decision_packet_comman
         "collect evidence, submit reports, or confirm vulnerabilities."
     )
 
+
+
+
+@app.command("case-intake-brain-question-set")
+def case_intake_brain_question_set_command(
+    handoff_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-handoff JSON output.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown question-set output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON question-set output.",
+    ),
+) -> None:
+    """Run all standard deterministic brain questions over a case intake handoff."""
+    from bugintel.core.case_intake_brain_handoff_question_set_runner import (
+        run_case_intake_brain_handoff_question_set,
+    )
+
+    if not handoff_file.exists():
+        raise typer.BadParameter(f"handoff file does not exist: {handoff_file}")
+
+    handoff = json.loads(handoff_file.read_text())
+    question_set = run_case_intake_brain_handoff_question_set(handoff)
+
+    data = question_set.to_dict()
+
+    table = Table(title="Case Intake Brain Handoff Question Set")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Target", question_set.target_name)
+    table.add_row("Handoff status", question_set.handoff_status)
+    table.add_row("Questions answered", str(len(question_set.answers)))
+    table.add_row("Blocked", str(question_set.blocked))
+    table.add_row("Focus endpoints", str(question_set.focus_endpoint_count))
+    table.add_row("Deferred endpoints", str(question_set.deferred_endpoint_count))
+    table.add_row("Evidence gaps", str(question_set.evidence_gap_count))
+    table.add_row("Validation allowed", str(question_set.validation_allowed))
+    table.add_row("Runtime execution allowed", str(question_set.runtime_execution_allowed))
+    table.add_row("Report submission allowed", str(question_set.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(question_set.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    for index, answer in enumerate(question_set.answers, start=1):
+        console.print(f"\n[bold]Question {index}:[/bold] {answer.question}")
+        console.print(f"[bold]Route:[/bold] {answer.route}")
+        console.print(f"[bold]Focus endpoint:[/bold] {answer.focus_endpoint or 'none'}")
+        console.print(f"[bold]Answer:[/bold]\n{answer.answer}")
+        console.print("[bold]Recommended next action:[/bold]")
+        console.print(answer.recommended_next_action)
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain question-set JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(question_set.to_markdown())
+        console.print(f"Saved case intake brain question-set Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only answers local deterministic handoff questions. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
 
 
 if __name__ == "__main__":
