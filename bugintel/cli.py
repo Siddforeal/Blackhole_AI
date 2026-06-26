@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.41.0",
+                version="1.42.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.41.0",
+            version="1.42.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.41.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.42.0")
 
 
 @app.command("scope-check")
@@ -15973,6 +15973,106 @@ def case_intake_brain_manual_validation_plan_command(
 
     console.print(
         "Safety: This command only exports a local deterministic manual validation plan. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-approval-packet")
+def case_intake_brain_approval_packet_command(
+    manual_validation_plan_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-manual-validation-plan JSON output.",
+    ),
+    endpoint: str | None = typer.Option(
+        None,
+        "--endpoint",
+        help="Endpoint to export an approval packet for. Defaults to the first plan endpoint.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown approval packet output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON approval packet output.",
+    ),
+) -> None:
+    """Export a human approval packet from a manual validation plan."""
+    from bugintel.core.case_intake_brain_handoff_approval_packet_exporter import (
+        export_case_intake_brain_handoff_approval_packet,
+    )
+
+    if not manual_validation_plan_file.exists():
+        raise typer.BadParameter(f"manual validation plan file does not exist: {manual_validation_plan_file}")
+
+    manual_validation_plan = json.loads(manual_validation_plan_file.read_text())
+    packet = export_case_intake_brain_handoff_approval_packet(
+        manual_validation_plan,
+        endpoint=endpoint,
+    )
+    data = packet.to_dict()
+
+    table = Table(title="Case Intake Brain Approval Packet")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Approval ID", packet.approval_id)
+    table.add_row("Target", packet.target_name)
+    table.add_row("Endpoint", packet.endpoint)
+    table.add_row("Lane", packet.lane)
+    table.add_row("Score", str(packet.priority_score))
+    table.add_row("Proposed action", packet.proposed_action)
+    table.add_row("Human approval required", str(packet.human_approval_required))
+    table.add_row("Approved", str(packet.approved))
+    table.add_row("Approval status", packet.approval_status)
+    table.add_row("Read-only required", str(packet.read_only_required))
+    table.add_row("Blocked", str(packet.blocked))
+    table.add_row("Validation allowed", str(packet.validation_allowed))
+    table.add_row("Runtime execution allowed", str(packet.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(packet.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(packet.browser_execution_allowed))
+    table.add_row("Evidence collection allowed", str(packet.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(packet.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(packet.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(packet.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if packet.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {packet.block_reason}")
+    else:
+        console.print("\n[bold]Approval question:[/bold]")
+        console.print(packet.approval_question)
+        console.print("\n[bold]Proposed read-only steps preview:[/bold]")
+        for step in packet.validation_steps[:5]:
+            console.print(f"- {step}")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain approval packet JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(packet.to_markdown())
+        console.print(f"Saved case intake brain approval packet Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only exports a local deterministic approval packet. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
