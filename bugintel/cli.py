@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.55.0",
+                version="1.56.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.55.0",
+            version="1.56.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.55.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.56.0")
 
 
 @app.command("scope-check")
@@ -17614,6 +17614,130 @@ def case_intake_brain_scoped_adapter_execution_readiness_command(
 
     console.print(
         "Safety: This command only exports a local deterministic execution readiness review. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-scoped-adapter-implementation-blueprint")
+def case_intake_brain_scoped_adapter_implementation_blueprint_command(
+    scoped_adapter_execution_readiness_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-scoped-adapter-execution-readiness JSON output.",
+    ),
+    blueprinted_by: str = typer.Option(
+        "human-reviewer",
+        "--blueprinted-by",
+        help="Neutral reviewer label for the human who prepared the implementation blueprint.",
+    ),
+    blueprint_note: str = typer.Option(
+        ...,
+        "--blueprint-note",
+        help="Blueprint note for future scoped adapter implementation only.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown implementation blueprint output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON implementation blueprint output.",
+    ),
+) -> None:
+    """Export a scoped adapter implementation blueprint for future implementation only."""
+    from bugintel.core.case_intake_brain_handoff_scoped_adapter_implementation_blueprint import (
+        export_case_intake_brain_handoff_scoped_adapter_implementation_blueprint,
+    )
+
+    if not scoped_adapter_execution_readiness_file.exists():
+        raise typer.BadParameter(
+            f"scoped adapter execution readiness file does not exist: {scoped_adapter_execution_readiness_file}"
+        )
+
+    scoped_adapter_execution_readiness = json.loads(scoped_adapter_execution_readiness_file.read_text())
+    blueprint = export_case_intake_brain_handoff_scoped_adapter_implementation_blueprint(
+        scoped_adapter_execution_readiness,
+        blueprinted_by=blueprinted_by,
+        blueprint_note=blueprint_note,
+    )
+    data = blueprint.to_dict()
+
+    table = Table(title="Case Intake Brain Scoped Adapter Implementation Blueprint")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Implementation blueprint ID", blueprint.implementation_blueprint_id)
+    table.add_row("Readiness review ID", blueprint.readiness_review_id)
+    table.add_row("Execution plan ID", blueprint.execution_plan_id)
+    table.add_row("Runtime confirmation ID", blueprint.runtime_confirmation_id)
+    table.add_row("Final gate ID", blueprint.final_gate_id)
+    table.add_row("Safety review ID", blueprint.safety_review_id)
+    table.add_row("Runtime scope review ID", blueprint.runtime_scope_review_id)
+    table.add_row("Request ID", blueprint.request_id)
+    table.add_row("Target", blueprint.target_name)
+    table.add_row("Endpoint", blueprint.endpoint)
+    table.add_row("Adapter family", blueprint.adapter_family)
+    table.add_row("Command family", blueprint.command_family)
+    table.add_row("Planned by", blueprint.planned_by)
+    table.add_row("Reviewed by", blueprint.reviewed_by)
+    table.add_row("Blueprinted by", blueprint.blueprinted_by)
+    table.add_row("Readiness review status", blueprint.readiness_review_status)
+    table.add_row("Readiness review state", blueprint.readiness_review_state)
+    table.add_row("Implementation readiness", blueprint.implementation_readiness)
+    table.add_row("Implementation blueprint status", blueprint.implementation_blueprint_status)
+    table.add_row("Implementation blueprint state", blueprint.implementation_blueprint_state)
+    table.add_row("Adapter execution state", blueprint.adapter_execution_state)
+    table.add_row("Proposed module files", str(len(blueprint.proposed_module_files)))
+    table.add_row("Proposed interfaces", str(len(blueprint.proposed_interfaces)))
+    table.add_row("Proposed dataclasses", str(len(blueprint.proposed_dataclasses)))
+    table.add_row("Proposed validation guards", str(len(blueprint.proposed_validation_guards)))
+    table.add_row("Proposed test files", str(len(blueprint.proposed_test_files)))
+    table.add_row("Blueprint findings", str(len(blueprint.blueprint_findings)))
+    table.add_row("Blocking findings", str(len(blueprint.blocking_findings)))
+    table.add_row("Blocked", str(blueprint.blocked))
+    table.add_row("Dry-run only", str(blueprint.dry_run_only))
+    table.add_row("Can execute now", str(blueprint.can_execute_now))
+    table.add_row("Implementation blueprint allows execution", str(blueprint.implementation_blueprint_allows_execution))
+    table.add_row("Execution allowed", str(blueprint.execution_allowed))
+    table.add_row("Validation allowed", str(blueprint.validation_allowed))
+    table.add_row("Runtime execution allowed", str(blueprint.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(blueprint.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(blueprint.browser_execution_allowed))
+    table.add_row("Network requests allowed", str(blueprint.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(blueprint.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(blueprint.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(blueprint.report_submission_allowed))
+    table.add_row("Vulnerability confirmation allowed", str(blueprint.vulnerability_confirmation_allowed))
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row("Vulnerability confirmation", str(safety["vulnerability_confirmation"]).lower())
+    console.print(table)
+
+    if blueprint.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {blueprint.block_reason}")
+    else:
+        console.print("\n[bold]Proposed module files:[/bold]")
+        for item in blueprint.proposed_module_files:
+            console.print(f"- {item}")
+        console.print("\n[bold]Important:[/bold] No command was executed. This is a local implementation blueprint artifact only.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain scoped adapter implementation blueprint JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(blueprint.to_markdown())
+        console.print(f"Saved case intake brain scoped adapter implementation blueprint Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only exports a local deterministic implementation blueprint. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
