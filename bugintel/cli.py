@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.39.0",
+                version="1.40.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.39.0",
+            version="1.40.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.39.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.40.0")
 
 
 @app.command("scope-check")
@@ -15800,6 +15800,92 @@ def case_intake_brain_question_set_command(
 
     console.print(
         "Safety: This command only answers local deterministic handoff questions. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-evidence-checklist")
+def case_intake_brain_evidence_checklist_command(
+    handoff_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-handoff JSON output.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown evidence checklist output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON evidence checklist output.",
+    ),
+) -> None:
+    """Export evidence gaps from a case intake brain handoff as a manual checklist."""
+    from bugintel.core.case_intake_brain_handoff_evidence_checklist_exporter import (
+        export_case_intake_brain_handoff_evidence_checklist,
+    )
+
+    if not handoff_file.exists():
+        raise typer.BadParameter(f"handoff file does not exist: {handoff_file}")
+
+    handoff = json.loads(handoff_file.read_text())
+    checklist = export_case_intake_brain_handoff_evidence_checklist(handoff)
+    data = checklist.to_dict()
+
+    table = Table(title="Case Intake Brain Evidence Checklist")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Target", checklist.target_name)
+    table.add_row("Handoff status", checklist.handoff_status)
+    table.add_row("Checklist items", str(len(checklist.checklist_items)))
+    table.add_row("Endpoints with gaps", str(checklist.endpoint_count))
+    table.add_row("Evidence gaps", str(checklist.evidence_gap_count))
+    table.add_row("Required before report", str(checklist.required_before_report_count))
+    table.add_row("Blocked", str(checklist.blocked))
+    table.add_row("Validation allowed", str(checklist.validation_allowed))
+    table.add_row("Runtime execution allowed", str(checklist.runtime_execution_allowed))
+    table.add_row("Report submission allowed", str(checklist.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(checklist.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if checklist.checklist_items:
+        console.print("\n[bold]Checklist preview:[/bold]")
+        for item in checklist.checklist_items[:12]:
+            console.print(
+                f"- [ ] {item.checklist_id} `{item.endpoint}` / `{item.gap_type}`: {item.description}"
+            )
+        if len(checklist.checklist_items) > 12:
+            console.print(f"... {len(checklist.checklist_items) - 12} more item(s)")
+    else:
+        console.print("\nNo evidence gaps are recorded in this handoff.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain evidence checklist JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(checklist.to_markdown())
+        console.print(f"Saved case intake brain evidence checklist Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only exports local deterministic checklist text. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
