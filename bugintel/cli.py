@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.46.0",
+                version="1.47.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.46.0",
+            version="1.47.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.46.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.47.0")
 
 
 @app.command("scope-check")
@@ -16507,6 +16507,126 @@ def case_intake_brain_runtime_safety_manifest_command(
 
     console.print(
         "Safety: This command only exports a local deterministic runtime safety manifest. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-adapter-dry-run-preview")
+def case_intake_brain_adapter_dry_run_preview_command(
+    runtime_safety_manifest_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-runtime-safety-manifest JSON output.",
+    ),
+    target_base_url: str = typer.Option(
+        ...,
+        "--target-base-url",
+        help="Confirmed in-scope HTTPS target base URL to use in the dry-run preview.",
+    ),
+    controlled_account_token_placeholder: str = typer.Option(
+        ...,
+        "--controlled-account-token-placeholder",
+        help="Non-secret placeholder label for the controlled account token.",
+    ),
+    path_parameter: list[str] = typer.Option(
+        [],
+        "--path-parameter",
+        help="Path parameter replacement in key=value form. Can be repeated.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown adapter dry-run preview output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON adapter dry-run preview output.",
+    ),
+) -> None:
+    """Export a resolved adapter dry-run preview from a runtime safety manifest."""
+    from bugintel.core.case_intake_brain_handoff_adapter_dry_run_preview import (
+        export_case_intake_brain_handoff_adapter_dry_run_preview,
+    )
+
+    if not runtime_safety_manifest_file.exists():
+        raise typer.BadParameter(f"runtime safety manifest file does not exist: {runtime_safety_manifest_file}")
+
+    runtime_safety_manifest = json.loads(runtime_safety_manifest_file.read_text())
+    preview = export_case_intake_brain_handoff_adapter_dry_run_preview(
+        runtime_safety_manifest,
+        target_base_url=target_base_url,
+        controlled_account_token_placeholder=controlled_account_token_placeholder,
+        path_parameters=path_parameter,
+    )
+    data = preview.to_dict()
+
+    table = Table(title="Case Intake Brain Adapter Dry-Run Preview")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Preview ID", preview.preview_id)
+    table.add_row("Manifest ID", preview.manifest_id)
+    table.add_row("Gate ID", preview.gate_id)
+    table.add_row("Proposal ID", preview.proposal_id)
+    table.add_row("Decision ID", preview.decision_id)
+    table.add_row("Approval ID", preview.approval_id)
+    table.add_row("Target", preview.target_name)
+    table.add_row("Endpoint", preview.endpoint)
+    table.add_row("Adapter family", preview.adapter_family)
+    table.add_row("Command family", preview.command_family)
+    table.add_row("Target base URL", preview.target_base_url)
+    table.add_row("Resolved endpoint", preview.resolved_endpoint)
+    table.add_row("Resolved target URL", preview.resolved_target_url)
+    table.add_row("Dry-run preview status", preview.dry_run_preview_status)
+    table.add_row("Blocked", str(preview.blocked))
+    table.add_row("Dry-run only", str(preview.dry_run_only))
+    table.add_row("Preview ready", str(preview.preview_ready))
+    table.add_row("Can execute now", str(preview.can_execute_now))
+    table.add_row("Preview allows execution", str(preview.preview_allows_execution))
+    table.add_row("Execution allowed", str(preview.execution_allowed))
+    table.add_row("Validation allowed", str(preview.validation_allowed))
+    table.add_row("Runtime execution allowed", str(preview.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(preview.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(preview.browser_execution_allowed))
+    table.add_row("Network requests allowed", str(preview.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(preview.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(preview.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(preview.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(preview.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if preview.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {preview.block_reason}")
+    else:
+        console.print("\n[bold]Resolved dry-run command preview:[/bold]")
+        console.print(preview.resolved_command_preview)
+        console.print("\n[bold]Important:[/bold] No command was executed. This is a dry-run preview only.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain adapter dry-run preview JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(preview.to_markdown())
+        console.print(f"Saved case intake brain adapter dry-run preview Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only exports a local deterministic adapter dry-run preview. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
