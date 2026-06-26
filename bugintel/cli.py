@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.47.0",
+                version="1.48.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.47.0",
+            version="1.48.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.47.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.48.0")
 
 
 @app.command("scope-check")
@@ -16627,6 +16627,130 @@ def case_intake_brain_adapter_dry_run_preview_command(
 
     console.print(
         "Safety: This command only exports a local deterministic adapter dry-run preview. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-adapter-final-confirmation")
+def case_intake_brain_adapter_final_confirmation_command(
+    adapter_dry_run_preview_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-adapter-dry-run-preview JSON output.",
+    ),
+    decision: str = typer.Option(
+        ...,
+        "--decision",
+        help="Final confirmation decision to record: confirmed, denied, or blocked.",
+    ),
+    confirmed_by: str = typer.Option(
+        "human-reviewer",
+        "--confirmed-by",
+        help="Neutral reviewer label for the human who made the final confirmation decision.",
+    ),
+    reason: str = typer.Option(
+        "",
+        "--reason",
+        help="Reason or note explaining the final confirmation decision.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown adapter final confirmation output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON adapter final confirmation output.",
+    ),
+) -> None:
+    """Record final human confirmation over an adapter dry-run preview."""
+    from bugintel.core.case_intake_brain_handoff_adapter_final_confirmation_packet import (
+        record_case_intake_brain_handoff_adapter_final_confirmation,
+    )
+
+    if not adapter_dry_run_preview_file.exists():
+        raise typer.BadParameter(f"adapter dry-run preview file does not exist: {adapter_dry_run_preview_file}")
+
+    adapter_dry_run_preview = json.loads(adapter_dry_run_preview_file.read_text())
+    packet = record_case_intake_brain_handoff_adapter_final_confirmation(
+        adapter_dry_run_preview,
+        decision=decision,
+        confirmed_by=confirmed_by,
+        reason=reason,
+    )
+    data = packet.to_dict()
+
+    table = Table(title="Case Intake Brain Adapter Final Confirmation Packet")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Confirmation ID", packet.confirmation_id)
+    table.add_row("Preview ID", packet.preview_id)
+    table.add_row("Manifest ID", packet.manifest_id)
+    table.add_row("Gate ID", packet.gate_id)
+    table.add_row("Proposal ID", packet.proposal_id)
+    table.add_row("Decision ID", packet.decision_id)
+    table.add_row("Approval ID", packet.approval_id)
+    table.add_row("Target", packet.target_name)
+    table.add_row("Endpoint", packet.endpoint)
+    table.add_row("Adapter family", packet.adapter_family)
+    table.add_row("Command family", packet.command_family)
+    table.add_row("Resolved target URL", packet.resolved_target_url)
+    table.add_row("Final confirmation decision", packet.final_confirmation_decision)
+    table.add_row("Final confirmation status", packet.final_confirmation_status)
+    table.add_row("Confirmed by", packet.confirmed_by)
+    table.add_row("Confirmed", str(packet.confirmed))
+    table.add_row("Denied", str(packet.denied))
+    table.add_row("Blocked", str(packet.blocked))
+    table.add_row("Human final confirmation recorded", str(packet.human_final_confirmation_recorded))
+    table.add_row("Dry-run only", str(packet.dry_run_only))
+    table.add_row("Source preview ready", str(packet.source_preview_ready))
+    table.add_row("Can execute now", str(packet.can_execute_now))
+    table.add_row("Final confirmation allows execution", str(packet.final_confirmation_allows_execution))
+    table.add_row("Execution allowed", str(packet.execution_allowed))
+    table.add_row("Validation allowed", str(packet.validation_allowed))
+    table.add_row("Runtime execution allowed", str(packet.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(packet.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(packet.browser_execution_allowed))
+    table.add_row("Network requests allowed", str(packet.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(packet.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(packet.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(packet.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(packet.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if packet.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {packet.source_preview_block_reason}")
+    else:
+        console.print("\n[bold]Recorded final confirmation reason:[/bold]")
+        console.print(packet.reason or "No reason supplied.")
+        console.print("\n[bold]Important:[/bold] No command was executed. This is a final confirmation packet only.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain adapter final confirmation JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(packet.to_markdown())
+        console.print(f"Saved case intake brain adapter final confirmation Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only records a local deterministic adapter final confirmation packet. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
