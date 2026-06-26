@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.42.0",
+                version="1.43.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.42.0",
+            version="1.43.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.42.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.43.0")
 
 
 @app.command("scope-check")
@@ -16073,6 +16073,116 @@ def case_intake_brain_approval_packet_command(
 
     console.print(
         "Safety: This command only exports a local deterministic approval packet. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-approval-decision")
+def case_intake_brain_approval_decision_command(
+    approval_packet_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-approval-packet JSON output.",
+    ),
+    decision: str = typer.Option(
+        ...,
+        "--decision",
+        help="Human decision to record: approved, denied, or blocked.",
+    ),
+    decided_by: str = typer.Option(
+        ...,
+        "--decided-by",
+        help="Name or handle of the human who made the decision.",
+    ),
+    reason: str = typer.Option(
+        "",
+        "--reason",
+        help="Reason or note explaining the decision.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown approval decision output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON approval decision output.",
+    ),
+) -> None:
+    """Record a human decision over a case intake brain approval packet."""
+    from bugintel.core.case_intake_brain_handoff_approval_decision_recorder import (
+        record_case_intake_brain_handoff_approval_decision,
+    )
+
+    if not approval_packet_file.exists():
+        raise typer.BadParameter(f"approval packet file does not exist: {approval_packet_file}")
+
+    approval_packet = json.loads(approval_packet_file.read_text())
+    recorded = record_case_intake_brain_handoff_approval_decision(
+        approval_packet,
+        decision=decision,
+        decided_by=decided_by,
+        reason=reason,
+    )
+    data = recorded.to_dict()
+
+    table = Table(title="Case Intake Brain Approval Decision")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Decision ID", recorded.decision_id)
+    table.add_row("Approval ID", recorded.approval_id)
+    table.add_row("Target", recorded.target_name)
+    table.add_row("Endpoint", recorded.endpoint)
+    table.add_row("Decision", recorded.decision)
+    table.add_row("Decision status", recorded.decision_status)
+    table.add_row("Decided by", recorded.decided_by)
+    table.add_row("Approved", str(recorded.approved))
+    table.add_row("Denied", str(recorded.denied))
+    table.add_row("Blocked", str(recorded.blocked))
+    table.add_row("Can proceed to execution", str(recorded.can_proceed_to_execution))
+    table.add_row("Human approval recorded", str(recorded.human_approval_recorded))
+    table.add_row("Validation allowed", str(recorded.validation_allowed))
+    table.add_row("Runtime execution allowed", str(recorded.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(recorded.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(recorded.browser_execution_allowed))
+    table.add_row("Evidence collection allowed", str(recorded.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(recorded.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(recorded.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(recorded.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if recorded.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {recorded.packet_block_reason}")
+    else:
+        console.print("\n[bold]Recorded reason:[/bold]")
+        console.print(recorded.reason or "No reason supplied.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain approval decision JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(recorded.to_markdown())
+        console.print(f"Saved case intake brain approval decision Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only records a local deterministic approval decision. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
