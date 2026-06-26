@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.49.0",
+                version="1.50.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.49.0",
+            version="1.50.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.49.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.50.0")
 
 
 @app.command("scope-check")
@@ -16866,6 +16866,133 @@ def case_intake_brain_scoped_adapter_execution_request_command(
 
     console.print(
         "Safety: This command only exports a local deterministic scoped adapter execution request. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-scoped-adapter-runtime-scope-review")
+def case_intake_brain_scoped_adapter_runtime_scope_review_command(
+    scoped_adapter_execution_request_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-scoped-adapter-execution-request JSON output.",
+    ),
+    allowed_host: str = typer.Option(
+        ...,
+        "--allowed-host",
+        help="Explicitly allowed hostname for the local runtime scope review.",
+    ),
+    allowed_scheme: str = typer.Option(
+        "https",
+        "--allowed-scheme",
+        help="Explicitly allowed scheme. Only https is accepted.",
+    ),
+    allowed_method: str = typer.Option(
+        "GET",
+        "--allowed-method",
+        help="Explicitly allowed read-only method.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown runtime scope review output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON runtime scope review output.",
+    ),
+) -> None:
+    """Export a local runtime scope review for a scoped adapter request."""
+    from bugintel.core.case_intake_brain_handoff_scoped_adapter_runtime_scope_review import (
+        export_case_intake_brain_handoff_scoped_adapter_runtime_scope_review,
+    )
+
+    if not scoped_adapter_execution_request_file.exists():
+        raise typer.BadParameter(
+            f"scoped adapter execution request file does not exist: {scoped_adapter_execution_request_file}"
+        )
+
+    scoped_adapter_execution_request = json.loads(scoped_adapter_execution_request_file.read_text())
+    review = export_case_intake_brain_handoff_scoped_adapter_runtime_scope_review(
+        scoped_adapter_execution_request,
+        allowed_host=allowed_host,
+        allowed_scheme=allowed_scheme,
+        allowed_method=allowed_method,
+    )
+    data = review.to_dict()
+
+    table = Table(title="Case Intake Brain Scoped Adapter Runtime Scope Review")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Review ID", review.review_id)
+    table.add_row("Request ID", review.request_id)
+    table.add_row("Confirmation ID", review.confirmation_id)
+    table.add_row("Preview ID", review.preview_id)
+    table.add_row("Target", review.target_name)
+    table.add_row("Endpoint", review.endpoint)
+    table.add_row("Adapter family", review.adapter_family)
+    table.add_row("Command family", review.command_family)
+    table.add_row("Resolved target URL", review.resolved_target_url)
+    table.add_row("Reviewed scheme", review.reviewed_scheme)
+    table.add_row("Reviewed host", review.reviewed_host)
+    table.add_row("Reviewed path", review.reviewed_path)
+    table.add_row("Reviewed method", review.reviewed_method)
+    table.add_row("Allowed scheme", review.allowed_scheme)
+    table.add_row("Allowed host", review.allowed_host)
+    table.add_row("Allowed method", review.allowed_method)
+    table.add_row("Runtime scope review status", review.runtime_scope_review_status)
+    table.add_row("Scope validation state", review.scope_validation_state)
+    table.add_row("Adapter execution state", review.adapter_execution_state)
+    table.add_row("Blocked", str(review.blocked))
+    table.add_row("Dry-run only", str(review.dry_run_only))
+    table.add_row("Can execute now", str(review.can_execute_now))
+    table.add_row("Runtime scope review allows execution", str(review.runtime_scope_review_allows_execution))
+    table.add_row("Execution allowed", str(review.execution_allowed))
+    table.add_row("Validation allowed", str(review.validation_allowed))
+    table.add_row("Runtime execution allowed", str(review.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(review.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(review.browser_execution_allowed))
+    table.add_row("Network requests allowed", str(review.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(review.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(review.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(review.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(review.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if review.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {review.block_reason}")
+    else:
+        console.print("\n[bold]Runtime scope review findings:[/bold]")
+        for finding in review.review_findings:
+            console.print(f"- {finding}")
+        console.print("\n[bold]Important:[/bold] No command was executed. This is a local runtime scope review artifact only.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain scoped adapter runtime scope review JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(review.to_markdown())
+        console.print(f"Saved case intake brain scoped adapter runtime scope review Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only exports a local deterministic runtime scope review. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
