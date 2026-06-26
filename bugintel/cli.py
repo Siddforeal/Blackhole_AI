@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.43.0",
+                version="1.44.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.43.0",
+            version="1.44.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.43.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.44.0")
 
 
 @app.command("scope-check")
@@ -16183,6 +16183,105 @@ def case_intake_brain_approval_decision_command(
 
     console.print(
         "Safety: This command only records a local deterministic approval decision. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-read-only-command-proposal")
+def case_intake_brain_read_only_command_proposal_command(
+    approval_decision_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-approval-decision JSON output.",
+    ),
+    command_family: str = typer.Option(
+        "curl",
+        "--command-family",
+        help="Command family to propose. Currently supported: curl.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown command proposal output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON command proposal output.",
+    ),
+) -> None:
+    """Export a read-only command proposal from an approval decision."""
+    from bugintel.core.case_intake_brain_handoff_read_only_command_proposal_exporter import (
+        export_case_intake_brain_handoff_read_only_command_proposal,
+    )
+
+    if not approval_decision_file.exists():
+        raise typer.BadParameter(f"approval decision file does not exist: {approval_decision_file}")
+
+    approval_decision = json.loads(approval_decision_file.read_text())
+    proposal = export_case_intake_brain_handoff_read_only_command_proposal(
+        approval_decision,
+        command_family=command_family,
+    )
+    data = proposal.to_dict()
+
+    table = Table(title="Case Intake Brain Read-Only Command Proposal")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Proposal ID", proposal.proposal_id)
+    table.add_row("Decision ID", proposal.decision_id)
+    table.add_row("Approval ID", proposal.approval_id)
+    table.add_row("Target", proposal.target_name)
+    table.add_row("Endpoint", proposal.endpoint)
+    table.add_row("Command family", proposal.command_family)
+    table.add_row("Command purpose", proposal.command_purpose)
+    table.add_row("Blocked", str(proposal.blocked))
+    table.add_row("Human review required", str(proposal.human_review_required))
+    table.add_row("Separate execution approval required", str(proposal.requires_separate_execution_approval))
+    table.add_row("Execution allowed", str(proposal.execution_allowed))
+    table.add_row("Validation allowed", str(proposal.validation_allowed))
+    table.add_row("Runtime execution allowed", str(proposal.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(proposal.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(proposal.browser_execution_allowed))
+    table.add_row("Network requests allowed", str(proposal.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(proposal.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(proposal.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(proposal.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(proposal.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if proposal.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {proposal.block_reason}")
+    else:
+        console.print("\n[bold]Proposed command preview:[/bold]")
+        console.print(proposal.proposed_command)
+        console.print("\n[bold]Important:[/bold] This command is not executed and still requires separate execution approval.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain read-only command proposal JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(proposal.to_markdown())
+        console.print(f"Saved case intake brain read-only command proposal Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only exports a local deterministic command proposal. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
