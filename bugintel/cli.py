@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.50.0",
+                version="1.51.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.50.0",
+            version="1.51.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.50.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.51.0")
 
 
 @app.command("scope-check")
@@ -16993,6 +16993,115 @@ def case_intake_brain_scoped_adapter_runtime_scope_review_command(
 
     console.print(
         "Safety: This command only exports a local deterministic runtime scope review. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-scoped-adapter-safety-review")
+def case_intake_brain_scoped_adapter_safety_review_command(
+    scoped_adapter_runtime_scope_review_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-scoped-adapter-runtime-scope-review JSON output.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown adapter safety review output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON adapter safety review output.",
+    ),
+) -> None:
+    """Export a local adapter safety review for a scoped adapter request."""
+    from bugintel.core.case_intake_brain_handoff_scoped_adapter_safety_review import (
+        export_case_intake_brain_handoff_scoped_adapter_safety_review,
+    )
+
+    if not scoped_adapter_runtime_scope_review_file.exists():
+        raise typer.BadParameter(
+            f"scoped adapter runtime scope review file does not exist: {scoped_adapter_runtime_scope_review_file}"
+        )
+
+    scoped_adapter_runtime_scope_review = json.loads(scoped_adapter_runtime_scope_review_file.read_text())
+    review = export_case_intake_brain_handoff_scoped_adapter_safety_review(
+        scoped_adapter_runtime_scope_review,
+    )
+    data = review.to_dict()
+
+    table = Table(title="Case Intake Brain Scoped Adapter Safety Review")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Safety review ID", review.safety_review_id)
+    table.add_row("Runtime scope review ID", review.runtime_scope_review_id)
+    table.add_row("Request ID", review.request_id)
+    table.add_row("Confirmation ID", review.confirmation_id)
+    table.add_row("Preview ID", review.preview_id)
+    table.add_row("Target", review.target_name)
+    table.add_row("Endpoint", review.endpoint)
+    table.add_row("Adapter family", review.adapter_family)
+    table.add_row("Command family", review.command_family)
+    table.add_row("Resolved target URL", review.resolved_target_url)
+    table.add_row("Reviewed method", review.reviewed_method)
+    table.add_row("Reviewed host", review.reviewed_host)
+    table.add_row("Adapter safety review status", review.adapter_safety_review_status)
+    table.add_row("Adapter safety state", review.adapter_safety_state)
+    table.add_row("Adapter execution state", review.adapter_execution_state)
+    table.add_row("Present safe flags", ", ".join(review.present_safe_flags) or "none")
+    table.add_row("Missing safe flags", ", ".join(review.missing_safe_flags) or "none")
+    table.add_row("Blocked flags seen", ", ".join(review.blocked_flags_seen) or "none")
+    table.add_row("Shell control patterns seen", ", ".join(review.shell_control_patterns_seen) or "none")
+    table.add_row("Blocked", str(review.blocked))
+    table.add_row("Dry-run only", str(review.dry_run_only))
+    table.add_row("Can execute now", str(review.can_execute_now))
+    table.add_row("Adapter safety review allows execution", str(review.adapter_safety_review_allows_execution))
+    table.add_row("Execution allowed", str(review.execution_allowed))
+    table.add_row("Validation allowed", str(review.validation_allowed))
+    table.add_row("Runtime execution allowed", str(review.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(review.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(review.browser_execution_allowed))
+    table.add_row("Network requests allowed", str(review.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(review.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(review.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(review.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(review.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if review.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {review.block_reason}")
+    else:
+        console.print("\n[bold]Adapter safety review findings:[/bold]")
+        for finding in review.safe_command_findings:
+            console.print(f"- {finding}")
+        console.print("\n[bold]Important:[/bold] No command was executed. This is a local adapter safety review artifact only.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain scoped adapter safety review JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(review.to_markdown())
+        console.print(f"Saved case intake brain scoped adapter safety review Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only exports a local deterministic adapter safety review. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
