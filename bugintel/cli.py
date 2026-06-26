@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.51.0",
+                version="1.52.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.51.0",
+            version="1.52.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.51.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.52.0")
 
 
 @app.command("scope-check")
@@ -17102,6 +17102,135 @@ def case_intake_brain_scoped_adapter_safety_review_command(
 
     console.print(
         "Safety: This command only exports a local deterministic adapter safety review. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-scoped-adapter-final-execution-gate")
+def case_intake_brain_scoped_adapter_final_execution_gate_command(
+    scoped_adapter_safety_review_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-scoped-adapter-safety-review JSON output.",
+    ),
+    decision: str = typer.Option(
+        ...,
+        "--decision",
+        help="Final human gate decision: approved, denied, or blocked.",
+    ),
+    decided_by: str = typer.Option(
+        "human-reviewer",
+        "--decided-by",
+        help="Neutral reviewer label for the human who made the final gate decision.",
+    ),
+    reason: str = typer.Option(
+        ...,
+        "--reason",
+        help="Reason for the final human gate decision.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown final execution gate output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON final execution gate output.",
+    ),
+) -> None:
+    """Record a final local execution gate decision for a scoped adapter request."""
+    from bugintel.core.case_intake_brain_handoff_scoped_adapter_final_execution_gate import (
+        record_case_intake_brain_handoff_scoped_adapter_final_execution_gate,
+    )
+
+    if not scoped_adapter_safety_review_file.exists():
+        raise typer.BadParameter(
+            f"scoped adapter safety review file does not exist: {scoped_adapter_safety_review_file}"
+        )
+
+    scoped_adapter_safety_review = json.loads(scoped_adapter_safety_review_file.read_text())
+    gate = record_case_intake_brain_handoff_scoped_adapter_final_execution_gate(
+        scoped_adapter_safety_review,
+        decision=decision,
+        decided_by=decided_by,
+        reason=reason,
+    )
+    data = gate.to_dict()
+
+    table = Table(title="Case Intake Brain Scoped Adapter Final Execution Gate")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Final gate ID", gate.final_gate_id)
+    table.add_row("Safety review ID", gate.safety_review_id)
+    table.add_row("Runtime scope review ID", gate.runtime_scope_review_id)
+    table.add_row("Request ID", gate.request_id)
+    table.add_row("Confirmation ID", gate.confirmation_id)
+    table.add_row("Preview ID", gate.preview_id)
+    table.add_row("Target", gate.target_name)
+    table.add_row("Endpoint", gate.endpoint)
+    table.add_row("Adapter family", gate.adapter_family)
+    table.add_row("Command family", gate.command_family)
+    table.add_row("Resolved target URL", gate.resolved_target_url)
+    table.add_row("Reviewed method", gate.reviewed_method)
+    table.add_row("Reviewed host", gate.reviewed_host)
+    table.add_row("Adapter safety review status", gate.adapter_safety_review_status)
+    table.add_row("Adapter safety state", gate.adapter_safety_state)
+    table.add_row("Source adapter execution state", gate.source_adapter_execution_state)
+    table.add_row("Final execution gate decision", gate.final_execution_gate_decision)
+    table.add_row("Final execution gate status", gate.final_execution_gate_status)
+    table.add_row("Decided by", gate.decided_by)
+    table.add_row("Human final execution gate recorded", str(gate.human_final_execution_gate_recorded))
+    table.add_row("Final go/no-go", gate.final_go_no_go)
+    table.add_row("Adapter execution state", gate.adapter_execution_state)
+    table.add_row("Blocked", str(gate.blocked))
+    table.add_row("Dry-run only", str(gate.dry_run_only))
+    table.add_row("Can execute now", str(gate.can_execute_now))
+    table.add_row("Final execution gate allows execution", str(gate.final_execution_gate_allows_execution))
+    table.add_row("Execution allowed", str(gate.execution_allowed))
+    table.add_row("Validation allowed", str(gate.validation_allowed))
+    table.add_row("Runtime execution allowed", str(gate.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(gate.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(gate.browser_execution_allowed))
+    table.add_row("Network requests allowed", str(gate.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(gate.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(gate.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(gate.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(gate.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if gate.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {gate.block_reason}")
+    else:
+        console.print("\n[bold]Recorded final execution gate reason:[/bold]")
+        console.print(gate.decision_reason or "No reason supplied.")
+        console.print("\n[bold]Important:[/bold] No command was executed. This is a local final execution gate artifact only.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain scoped adapter final execution gate JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(gate.to_markdown())
+        console.print(f"Saved case intake brain scoped adapter final execution gate Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only records a local deterministic final execution gate artifact. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
