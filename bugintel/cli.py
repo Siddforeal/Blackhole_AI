@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.52.0",
+                version="1.53.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.52.0",
+            version="1.53.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.52.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.53.0")
 
 
 @app.command("scope-check")
@@ -17231,6 +17231,130 @@ def case_intake_brain_scoped_adapter_final_execution_gate_command(
 
     console.print(
         "Safety: This command only records a local deterministic final execution gate artifact. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-scoped-adapter-runtime-confirmation")
+def case_intake_brain_scoped_adapter_runtime_confirmation_command(
+    scoped_adapter_final_execution_gate_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-scoped-adapter-final-execution-gate JSON output.",
+    ),
+    confirmed_by: str = typer.Option(
+        "human-reviewer",
+        "--confirmed-by",
+        help="Neutral reviewer label for the human who confirmed the exact runtime context.",
+    ),
+    confirmation_text: str = typer.Option(
+        ...,
+        "--confirmation-text",
+        help="Human confirmation text for the exact scoped adapter runtime context.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown runtime confirmation output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON runtime confirmation output.",
+    ),
+) -> None:
+    """Record a runtime confirmation packet for a scoped adapter request."""
+    from bugintel.core.case_intake_brain_handoff_scoped_adapter_runtime_confirmation_packet import (
+        record_case_intake_brain_handoff_scoped_adapter_runtime_confirmation_packet,
+    )
+
+    if not scoped_adapter_final_execution_gate_file.exists():
+        raise typer.BadParameter(
+            f"scoped adapter final execution gate file does not exist: {scoped_adapter_final_execution_gate_file}"
+        )
+
+    scoped_adapter_final_execution_gate = json.loads(scoped_adapter_final_execution_gate_file.read_text())
+    packet = record_case_intake_brain_handoff_scoped_adapter_runtime_confirmation_packet(
+        scoped_adapter_final_execution_gate,
+        confirmed_by=confirmed_by,
+        confirmation_text=confirmation_text,
+    )
+    data = packet.to_dict()
+
+    table = Table(title="Case Intake Brain Scoped Adapter Runtime Confirmation Packet")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Runtime confirmation ID", packet.runtime_confirmation_id)
+    table.add_row("Final gate ID", packet.final_gate_id)
+    table.add_row("Safety review ID", packet.safety_review_id)
+    table.add_row("Runtime scope review ID", packet.runtime_scope_review_id)
+    table.add_row("Request ID", packet.request_id)
+    table.add_row("Confirmation ID", packet.confirmation_id)
+    table.add_row("Preview ID", packet.preview_id)
+    table.add_row("Target", packet.target_name)
+    table.add_row("Endpoint", packet.endpoint)
+    table.add_row("Adapter family", packet.adapter_family)
+    table.add_row("Command family", packet.command_family)
+    table.add_row("Resolved target URL", packet.resolved_target_url)
+    table.add_row("Reviewed method", packet.reviewed_method)
+    table.add_row("Reviewed host", packet.reviewed_host)
+    table.add_row("Final execution gate decision", packet.final_execution_gate_decision)
+    table.add_row("Final execution gate status", packet.final_execution_gate_status)
+    table.add_row("Final go/no-go", packet.final_go_no_go)
+    table.add_row("Runtime confirmation status", packet.runtime_confirmation_status)
+    table.add_row("Runtime confirmation state", packet.runtime_confirmation_state)
+    table.add_row("Confirmed by", packet.confirmed_by)
+    table.add_row("Human runtime confirmation recorded", str(packet.human_runtime_confirmation_recorded))
+    table.add_row("Exact context confirmed", str(packet.exact_context_confirmed))
+    table.add_row("Adapter execution state", packet.adapter_execution_state)
+    table.add_row("Blocked", str(packet.blocked))
+    table.add_row("Dry-run only", str(packet.dry_run_only))
+    table.add_row("Can execute now", str(packet.can_execute_now))
+    table.add_row("Runtime confirmation allows execution", str(packet.runtime_confirmation_allows_execution))
+    table.add_row("Execution allowed", str(packet.execution_allowed))
+    table.add_row("Validation allowed", str(packet.validation_allowed))
+    table.add_row("Runtime execution allowed", str(packet.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(packet.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(packet.browser_execution_allowed))
+    table.add_row("Network requests allowed", str(packet.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(packet.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(packet.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(packet.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(packet.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if packet.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {packet.block_reason}")
+    else:
+        console.print("\n[bold]Recorded runtime confirmation text:[/bold]")
+        console.print(packet.confirmation_text or "No confirmation text supplied.")
+        console.print("\n[bold]Important:[/bold] No command was executed. This is a local runtime confirmation artifact only.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain scoped adapter runtime confirmation JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(packet.to_markdown())
+        console.print(f"Saved case intake brain scoped adapter runtime confirmation Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only records a local deterministic runtime confirmation packet. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
