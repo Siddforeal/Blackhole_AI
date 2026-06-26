@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.54.0",
+                version="1.55.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.54.0",
+            version="1.55.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.54.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.55.0")
 
 
 @app.command("scope-check")
@@ -17483,6 +17483,137 @@ def case_intake_brain_scoped_adapter_execution_plan_command(
 
     console.print(
         "Safety: This command only exports a local deterministic execution plan packet. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-scoped-adapter-execution-readiness")
+def case_intake_brain_scoped_adapter_execution_readiness_command(
+    scoped_adapter_execution_plan_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-scoped-adapter-execution-plan JSON output.",
+    ),
+    reviewed_by: str = typer.Option(
+        "human-reviewer",
+        "--reviewed-by",
+        help="Neutral reviewer label for the human who reviewed execution readiness.",
+    ),
+    readiness_note: str = typer.Option(
+        ...,
+        "--readiness-note",
+        help="Readiness note for future scoped adapter implementation only.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown execution readiness review output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON execution readiness review output.",
+    ),
+) -> None:
+    """Review a scoped adapter execution plan for future implementation readiness."""
+    from bugintel.core.case_intake_brain_handoff_scoped_adapter_execution_readiness_review import (
+        review_case_intake_brain_handoff_scoped_adapter_execution_readiness,
+    )
+
+    if not scoped_adapter_execution_plan_file.exists():
+        raise typer.BadParameter(
+            f"scoped adapter execution plan file does not exist: {scoped_adapter_execution_plan_file}"
+        )
+
+    scoped_adapter_execution_plan = json.loads(scoped_adapter_execution_plan_file.read_text())
+    review = review_case_intake_brain_handoff_scoped_adapter_execution_readiness(
+        scoped_adapter_execution_plan,
+        reviewed_by=reviewed_by,
+        readiness_note=readiness_note,
+    )
+    data = review.to_dict()
+
+    table = Table(title="Case Intake Brain Scoped Adapter Execution Readiness Review")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Readiness review ID", review.readiness_review_id)
+    table.add_row("Execution plan ID", review.execution_plan_id)
+    table.add_row("Runtime confirmation ID", review.runtime_confirmation_id)
+    table.add_row("Final gate ID", review.final_gate_id)
+    table.add_row("Safety review ID", review.safety_review_id)
+    table.add_row("Runtime scope review ID", review.runtime_scope_review_id)
+    table.add_row("Request ID", review.request_id)
+    table.add_row("Confirmation ID", review.confirmation_id)
+    table.add_row("Preview ID", review.preview_id)
+    table.add_row("Target", review.target_name)
+    table.add_row("Endpoint", review.endpoint)
+    table.add_row("Adapter family", review.adapter_family)
+    table.add_row("Command family", review.command_family)
+    table.add_row("Planned by", review.planned_by)
+    table.add_row("Reviewed by", review.reviewed_by)
+    table.add_row("Resolved target URL", review.resolved_target_url)
+    table.add_row("Reviewed method", review.reviewed_method)
+    table.add_row("Reviewed host", review.reviewed_host)
+    table.add_row("Execution plan status", review.execution_plan_status)
+    table.add_row("Execution plan state", review.execution_plan_state)
+    table.add_row("Readiness review status", review.readiness_review_status)
+    table.add_row("Readiness review state", review.readiness_review_state)
+    table.add_row("Implementation readiness", review.implementation_readiness)
+    table.add_row("Adapter execution state", review.adapter_execution_state)
+    table.add_row("Readiness findings", str(len(review.readiness_findings)))
+    table.add_row("Blocking findings", str(len(review.blocking_findings)))
+    table.add_row("Execution plan steps", str(len(review.execution_plan_steps)))
+    table.add_row("Execution preflight checks", str(len(review.execution_preflight_checks)))
+    table.add_row("Execution stop conditions", str(len(review.execution_stop_conditions)))
+    table.add_row("Blocked", str(review.blocked))
+    table.add_row("Dry-run only", str(review.dry_run_only))
+    table.add_row("Can execute now", str(review.can_execute_now))
+    table.add_row("Readiness review allows execution", str(review.readiness_review_allows_execution))
+    table.add_row("Execution allowed", str(review.execution_allowed))
+    table.add_row("Validation allowed", str(review.validation_allowed))
+    table.add_row("Runtime execution allowed", str(review.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(review.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(review.browser_execution_allowed))
+    table.add_row("Network requests allowed", str(review.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(review.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(review.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(review.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(review.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if review.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {review.block_reason}")
+    else:
+        console.print("\n[bold]Readiness findings:[/bold]")
+        for finding in review.readiness_findings:
+            console.print(f"- {finding}")
+        console.print("\n[bold]Important:[/bold] No command was executed. This is a local readiness review artifact only.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain scoped adapter execution readiness JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(review.to_markdown())
+        console.print(f"Saved case intake brain scoped adapter execution readiness Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only exports a local deterministic execution readiness review. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
