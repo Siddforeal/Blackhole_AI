@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.40.0",
+                version="1.41.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.40.0",
+            version="1.41.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.40.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.41.0")
 
 
 @app.command("scope-check")
@@ -15886,6 +15886,93 @@ def case_intake_brain_evidence_checklist_command(
 
     console.print(
         "Safety: This command only exports local deterministic checklist text. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-manual-validation-plan")
+def case_intake_brain_manual_validation_plan_command(
+    handoff_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-handoff JSON output.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown manual validation plan output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON manual validation plan output.",
+    ),
+) -> None:
+    """Export a manual validation plan from a case intake brain handoff."""
+    from bugintel.core.case_intake_brain_handoff_manual_validation_plan_exporter import (
+        export_case_intake_brain_handoff_manual_validation_plan,
+    )
+
+    if not handoff_file.exists():
+        raise typer.BadParameter(f"handoff file does not exist: {handoff_file}")
+
+    handoff = json.loads(handoff_file.read_text())
+    plan = export_case_intake_brain_handoff_manual_validation_plan(handoff)
+    data = plan.to_dict()
+
+    table = Table(title="Case Intake Brain Manual Validation Plan")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Target", plan.target_name)
+    table.add_row("Handoff status", plan.handoff_status)
+    table.add_row("Plan endpoints", str(plan.plan_endpoint_count))
+    table.add_row("Deferred endpoints", str(plan.deferred_endpoint_count))
+    table.add_row("Evidence gaps", str(plan.evidence_gap_count))
+    table.add_row("Approval required", str(plan.approval_required))
+    table.add_row("Read-only required", str(plan.read_only_required))
+    table.add_row("Blocked", str(plan.blocked))
+    table.add_row("Validation allowed", str(plan.validation_allowed))
+    table.add_row("Runtime execution allowed", str(plan.runtime_execution_allowed))
+    table.add_row("Report submission allowed", str(plan.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(plan.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if plan.plan_endpoints:
+        console.print("\n[bold]Plan preview:[/bold]")
+        for endpoint in plan.plan_endpoints[:5]:
+            console.print(
+                f"- `{endpoint.endpoint}` / `{endpoint.lane}` / score `{endpoint.priority_score}`"
+            )
+            for step in endpoint.validation_steps[:4]:
+                console.print(f"  - {step}")
+    else:
+        console.print("\nNo focus endpoints are available for manual validation planning.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain manual validation plan JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(plan.to_markdown())
+        console.print(f"Saved case intake brain manual validation plan Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only exports a local deterministic manual validation plan. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
