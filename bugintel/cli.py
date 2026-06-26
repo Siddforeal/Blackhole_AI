@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.45.0",
+                version="1.46.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.45.0",
+            version="1.46.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.45.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.46.0")
 
 
 @app.command("scope-check")
@@ -16401,6 +16401,112 @@ def case_intake_brain_execution_approval_gate_command(
 
     console.print(
         "Safety: This command only records a local deterministic execution approval gate. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-runtime-safety-manifest")
+def case_intake_brain_runtime_safety_manifest_command(
+    execution_approval_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-execution-approval-gate JSON output.",
+    ),
+    adapter_family: str = typer.Option(
+        "curl",
+        "--adapter-family",
+        help="Adapter family to create a runtime safety manifest for. Currently supported: curl.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown runtime safety manifest output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON runtime safety manifest output.",
+    ),
+) -> None:
+    """Export a runtime safety manifest from an execution approval gate."""
+    from bugintel.core.case_intake_brain_handoff_runtime_safety_manifest import (
+        export_case_intake_brain_handoff_runtime_safety_manifest,
+    )
+
+    if not execution_approval_file.exists():
+        raise typer.BadParameter(f"execution approval gate file does not exist: {execution_approval_file}")
+
+    execution_approval_gate = json.loads(execution_approval_file.read_text())
+    manifest = export_case_intake_brain_handoff_runtime_safety_manifest(
+        execution_approval_gate,
+        adapter_family=adapter_family,
+    )
+    data = manifest.to_dict()
+
+    table = Table(title="Case Intake Brain Runtime Safety Manifest")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Manifest ID", manifest.manifest_id)
+    table.add_row("Gate ID", manifest.gate_id)
+    table.add_row("Proposal ID", manifest.proposal_id)
+    table.add_row("Decision ID", manifest.decision_id)
+    table.add_row("Approval ID", manifest.approval_id)
+    table.add_row("Target", manifest.target_name)
+    table.add_row("Endpoint", manifest.endpoint)
+    table.add_row("Adapter family", manifest.adapter_family)
+    table.add_row("Command family", manifest.command_family)
+    table.add_row("Runtime manifest status", manifest.runtime_manifest_status)
+    table.add_row("Execution decision", manifest.execution_decision)
+    table.add_row("Human execution approval recorded", str(manifest.human_execution_approval_recorded))
+    table.add_row("Blocked", str(manifest.blocked))
+    table.add_row("Can execute now", str(manifest.can_execute_now))
+    table.add_row("Manifest allows execution", str(manifest.manifest_allows_execution))
+    table.add_row("Requires runtime scope check", str(manifest.requires_runtime_scope_check))
+    table.add_row("Requires final human confirmation", str(manifest.requires_final_human_confirmation))
+    table.add_row("Requires adapter safety check", str(manifest.requires_adapter_safety_check))
+    table.add_row("Execution allowed", str(manifest.execution_allowed))
+    table.add_row("Validation allowed", str(manifest.validation_allowed))
+    table.add_row("Runtime execution allowed", str(manifest.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(manifest.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(manifest.browser_execution_allowed))
+    table.add_row("Network requests allowed", str(manifest.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(manifest.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(manifest.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(manifest.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(manifest.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if manifest.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {manifest.block_reason}")
+    else:
+        console.print("\n[bold]Runtime safety manifest created.[/bold]")
+        console.print("No command was executed. This manifest only defines checks a future adapter must satisfy.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain runtime safety manifest JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(manifest.to_markdown())
+        console.print(f"Saved case intake brain runtime safety manifest Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only exports a local deterministic runtime safety manifest. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
