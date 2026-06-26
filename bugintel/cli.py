@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.44.0",
+                version="1.45.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.44.0",
+            version="1.45.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.44.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.45.0")
 
 
 @app.command("scope-check")
@@ -16282,6 +16282,125 @@ def case_intake_brain_read_only_command_proposal_command(
 
     console.print(
         "Safety: This command only exports a local deterministic command proposal. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-execution-approval-gate")
+def case_intake_brain_execution_approval_gate_command(
+    command_proposal_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-read-only-command-proposal JSON output.",
+    ),
+    decision: str = typer.Option(
+        ...,
+        "--decision",
+        help="Execution approval decision to record: approved, denied, or blocked.",
+    ),
+    decided_by: str = typer.Option(
+        ...,
+        "--decided-by",
+        help="Name or handle of the human who made the execution approval decision.",
+    ),
+    reason: str = typer.Option(
+        "",
+        "--reason",
+        help="Reason or note explaining the execution approval decision.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown execution approval gate output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON execution approval gate output.",
+    ),
+) -> None:
+    """Record a separate execution approval decision over a command proposal."""
+    from bugintel.core.case_intake_brain_handoff_execution_approval_gate import (
+        record_case_intake_brain_handoff_execution_approval_gate,
+    )
+
+    if not command_proposal_file.exists():
+        raise typer.BadParameter(f"command proposal file does not exist: {command_proposal_file}")
+
+    command_proposal = json.loads(command_proposal_file.read_text())
+    gate = record_case_intake_brain_handoff_execution_approval_gate(
+        command_proposal,
+        decision=decision,
+        decided_by=decided_by,
+        reason=reason,
+    )
+    data = gate.to_dict()
+
+    table = Table(title="Case Intake Brain Execution Approval Gate")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Gate ID", gate.gate_id)
+    table.add_row("Proposal ID", gate.proposal_id)
+    table.add_row("Decision ID", gate.decision_id)
+    table.add_row("Approval ID", gate.approval_id)
+    table.add_row("Target", gate.target_name)
+    table.add_row("Endpoint", gate.endpoint)
+    table.add_row("Command family", gate.command_family)
+    table.add_row("Execution decision", gate.execution_decision)
+    table.add_row("Execution gate status", gate.execution_gate_status)
+    table.add_row("Decided by", gate.decided_by)
+    table.add_row("Approved", str(gate.approved))
+    table.add_row("Denied", str(gate.denied))
+    table.add_row("Blocked", str(gate.blocked))
+    table.add_row("Human execution approval recorded", str(gate.human_execution_approval_recorded))
+    table.add_row("Can execute now", str(gate.can_execute_now))
+    table.add_row("Requires runtime scope check", str(gate.requires_runtime_scope_check))
+    table.add_row("Requires final human confirmation", str(gate.requires_final_human_confirmation))
+    table.add_row("Requires adapter safety check", str(gate.requires_adapter_safety_check))
+    table.add_row("Execution allowed", str(gate.execution_allowed))
+    table.add_row("Validation allowed", str(gate.validation_allowed))
+    table.add_row("Runtime execution allowed", str(gate.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(gate.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(gate.browser_execution_allowed))
+    table.add_row("Network requests allowed", str(gate.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(gate.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(gate.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(gate.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(gate.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if gate.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {gate.original_proposal_block_reason}")
+    else:
+        console.print("\n[bold]Recorded execution approval reason:[/bold]")
+        console.print(gate.reason or "No reason supplied.")
+        console.print("\n[bold]Important:[/bold] No command was executed. A future adapter must still perform runtime scope and safety checks.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain execution approval gate JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(gate.to_markdown())
+        console.print(f"Saved case intake brain execution approval gate Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only records a local deterministic execution approval gate. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
