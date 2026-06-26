@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.53.0",
+                version="1.54.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.53.0",
+            version="1.54.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.53.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.54.0")
 
 
 @app.command("scope-check")
@@ -17355,6 +17355,134 @@ def case_intake_brain_scoped_adapter_runtime_confirmation_command(
 
     console.print(
         "Safety: This command only records a local deterministic runtime confirmation packet. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-scoped-adapter-execution-plan")
+def case_intake_brain_scoped_adapter_execution_plan_command(
+    scoped_adapter_runtime_confirmation_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-scoped-adapter-runtime-confirmation JSON output.",
+    ),
+    planned_by: str = typer.Option(
+        "human-reviewer",
+        "--planned-by",
+        help="Neutral reviewer label for the human who prepared the execution plan packet.",
+    ),
+    plan_purpose: str = typer.Option(
+        ...,
+        "--plan-purpose",
+        help="Purpose for the future scoped adapter execution plan.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown execution plan output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON execution plan output.",
+    ),
+) -> None:
+    """Export a local execution plan packet for a scoped adapter request."""
+    from bugintel.core.case_intake_brain_handoff_scoped_adapter_execution_plan_packet import (
+        export_case_intake_brain_handoff_scoped_adapter_execution_plan_packet,
+    )
+
+    if not scoped_adapter_runtime_confirmation_file.exists():
+        raise typer.BadParameter(
+            f"scoped adapter runtime confirmation file does not exist: {scoped_adapter_runtime_confirmation_file}"
+        )
+
+    scoped_adapter_runtime_confirmation = json.loads(scoped_adapter_runtime_confirmation_file.read_text())
+    plan = export_case_intake_brain_handoff_scoped_adapter_execution_plan_packet(
+        scoped_adapter_runtime_confirmation,
+        planned_by=planned_by,
+        plan_purpose=plan_purpose,
+    )
+    data = plan.to_dict()
+
+    table = Table(title="Case Intake Brain Scoped Adapter Execution Plan Packet")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Execution plan ID", plan.execution_plan_id)
+    table.add_row("Runtime confirmation ID", plan.runtime_confirmation_id)
+    table.add_row("Final gate ID", plan.final_gate_id)
+    table.add_row("Safety review ID", plan.safety_review_id)
+    table.add_row("Runtime scope review ID", plan.runtime_scope_review_id)
+    table.add_row("Request ID", plan.request_id)
+    table.add_row("Confirmation ID", plan.confirmation_id)
+    table.add_row("Preview ID", plan.preview_id)
+    table.add_row("Target", plan.target_name)
+    table.add_row("Endpoint", plan.endpoint)
+    table.add_row("Adapter family", plan.adapter_family)
+    table.add_row("Command family", plan.command_family)
+    table.add_row("Planned by", plan.planned_by)
+    table.add_row("Resolved target URL", plan.resolved_target_url)
+    table.add_row("Reviewed method", plan.reviewed_method)
+    table.add_row("Reviewed host", plan.reviewed_host)
+    table.add_row("Runtime confirmation status", plan.runtime_confirmation_status)
+    table.add_row("Runtime confirmation state", plan.runtime_confirmation_state)
+    table.add_row("Human runtime confirmation recorded", str(plan.human_runtime_confirmation_recorded))
+    table.add_row("Exact context confirmed", str(plan.exact_context_confirmed))
+    table.add_row("Execution plan status", plan.execution_plan_status)
+    table.add_row("Execution plan state", plan.execution_plan_state)
+    table.add_row("Adapter execution state", plan.adapter_execution_state)
+    table.add_row("Execution plan steps", str(len(plan.execution_plan_steps)))
+    table.add_row("Execution preflight checks", str(len(plan.execution_preflight_checks)))
+    table.add_row("Execution stop conditions", str(len(plan.execution_stop_conditions)))
+    table.add_row("Blocked", str(plan.blocked))
+    table.add_row("Dry-run only", str(plan.dry_run_only))
+    table.add_row("Can execute now", str(plan.can_execute_now))
+    table.add_row("Execution plan allows execution", str(plan.execution_plan_allows_execution))
+    table.add_row("Execution allowed", str(plan.execution_allowed))
+    table.add_row("Validation allowed", str(plan.validation_allowed))
+    table.add_row("Runtime execution allowed", str(plan.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(plan.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(plan.browser_execution_allowed))
+    table.add_row("Network requests allowed", str(plan.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(plan.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(plan.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(plan.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(plan.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if plan.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {plan.block_reason}")
+    else:
+        console.print("\n[bold]Execution plan steps:[/bold]")
+        for index, step in enumerate(plan.execution_plan_steps, start=1):
+            console.print(f"{index}. {step}")
+        console.print("\n[bold]Important:[/bold] No command was executed. This is a local execution plan artifact only.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain scoped adapter execution plan JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(plan.to_markdown())
+        console.print(f"Saved case intake brain scoped adapter execution plan Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only exports a local deterministic execution plan packet. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
