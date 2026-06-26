@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.48.0",
+                version="1.49.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.48.0",
+            version="1.49.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.48.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.49.0")
 
 
 @app.command("scope-check")
@@ -16751,6 +16751,121 @@ def case_intake_brain_adapter_final_confirmation_command(
 
     console.print(
         "Safety: This command only records a local deterministic adapter final confirmation packet. "
+        "It does not send requests, execute tools, launch browsers, call providers, "
+        "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+
+@app.command("case-intake-brain-scoped-adapter-execution-request")
+def case_intake_brain_scoped_adapter_execution_request_command(
+    adapter_final_confirmation_file: Path = typer.Argument(
+        ...,
+        help="Path to case-intake-brain-adapter-final-confirmation JSON output.",
+    ),
+    request_purpose: str = typer.Option(
+        "future-scoped-adapter-review",
+        "--request-purpose",
+        help="Purpose label for the scoped adapter execution request.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Markdown scoped adapter execution request output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write JSON scoped adapter execution request output.",
+    ),
+) -> None:
+    """Export a scoped adapter execution request from final confirmation."""
+    from bugintel.core.case_intake_brain_handoff_scoped_adapter_execution_request import (
+        export_case_intake_brain_handoff_scoped_adapter_execution_request,
+    )
+
+    if not adapter_final_confirmation_file.exists():
+        raise typer.BadParameter(f"adapter final confirmation file does not exist: {adapter_final_confirmation_file}")
+
+    adapter_final_confirmation = json.loads(adapter_final_confirmation_file.read_text())
+    request = export_case_intake_brain_handoff_scoped_adapter_execution_request(
+        adapter_final_confirmation,
+        request_purpose=request_purpose,
+    )
+    data = request.to_dict()
+
+    table = Table(title="Case Intake Brain Scoped Adapter Execution Request")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Request ID", request.request_id)
+    table.add_row("Confirmation ID", request.confirmation_id)
+    table.add_row("Preview ID", request.preview_id)
+    table.add_row("Manifest ID", request.manifest_id)
+    table.add_row("Gate ID", request.gate_id)
+    table.add_row("Proposal ID", request.proposal_id)
+    table.add_row("Decision ID", request.decision_id)
+    table.add_row("Approval ID", request.approval_id)
+    table.add_row("Target", request.target_name)
+    table.add_row("Endpoint", request.endpoint)
+    table.add_row("Adapter family", request.adapter_family)
+    table.add_row("Command family", request.command_family)
+    table.add_row("Request purpose", request.request_purpose)
+    table.add_row("Requested action", request.requested_action)
+    table.add_row("Resolved target URL", request.resolved_target_url)
+    table.add_row("Final confirmation decision", request.final_confirmation_decision)
+    table.add_row("Final confirmation status", request.final_confirmation_status)
+    table.add_row("Human final confirmation recorded", str(request.human_final_confirmation_recorded))
+    table.add_row("Confirmed by", request.confirmed_by)
+    table.add_row("Request status", request.request_status)
+    table.add_row("Scope validation state", request.scope_validation_state)
+    table.add_row("Adapter execution state", request.adapter_execution_state)
+    table.add_row("Blocked", str(request.blocked))
+    table.add_row("Dry-run only", str(request.dry_run_only))
+    table.add_row("Can execute now", str(request.can_execute_now))
+    table.add_row("Execution request allows execution", str(request.execution_request_allows_execution))
+    table.add_row("Execution allowed", str(request.execution_allowed))
+    table.add_row("Validation allowed", str(request.validation_allowed))
+    table.add_row("Runtime execution allowed", str(request.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(request.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(request.browser_execution_allowed))
+    table.add_row("Network requests allowed", str(request.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(request.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(request.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(request.report_submission_allowed))
+    table.add_row(
+        "Vulnerability confirmation allowed",
+        str(request.vulnerability_confirmation_allowed),
+    )
+
+    safety = data["safety"]
+    table.add_row("Tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Report submission", str(safety["report_submission"]).lower())
+    table.add_row(
+        "Vulnerability confirmation",
+        str(safety["vulnerability_confirmation"]).lower(),
+    )
+    console.print(table)
+
+    if request.blocked:
+        console.print(f"\n[bold]Blocked:[/bold] {request.block_reason}")
+    else:
+        console.print("\n[bold]Reviewed command packaged for future adapter:[/bold]")
+        console.print(request.reviewed_command)
+        console.print("\n[bold]Important:[/bold] No command was executed. This is a scoped execution request artifact only.")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved case intake brain scoped adapter execution request JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(request.to_markdown())
+        console.print(f"Saved case intake brain scoped adapter execution request Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only exports a local deterministic scoped adapter execution request. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
