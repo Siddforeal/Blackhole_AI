@@ -14,6 +14,10 @@ from bugintel.adapters.scoped_runtime.result_types import (
     ScopedAdapterScopeGuardResult,
 )
 from bugintel.adapters.scoped_runtime.scope_guard import validate_scoped_adapter_request
+from bugintel.adapters.scoped_runtime.preview_renderer import (
+    ScopedRuntimePreviewArtifact,
+    render_scoped_runtime_preview,
+)
 
 __all__ = [
     "ScopedAdapterPreparedCommand",
@@ -21,4 +25,6 @@ __all__ = [
     "ScopedAdapterResult",
     "ScopedAdapterScopeGuardResult",
     "validate_scoped_adapter_request",
+    "ScopedRuntimePreviewArtifact",
+    "render_scoped_runtime_preview",
 ]
