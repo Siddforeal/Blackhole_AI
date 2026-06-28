@@ -18,6 +18,11 @@ from bugintel.adapters.scoped_runtime.preview_renderer import (
     ScopedRuntimePreviewArtifact,
     render_scoped_runtime_preview,
 )
+from bugintel.adapters.scoped_runtime.curl_adapter import (
+    ScopedCurlAdapter,
+    ScopedCurlAdapterPreview,
+    render_scoped_curl_adapter_preview,
+)
 
 __all__ = [
     "ScopedAdapterPreparedCommand",
@@ -27,4 +32,7 @@ __all__ = [
     "validate_scoped_adapter_request",
     "ScopedRuntimePreviewArtifact",
     "render_scoped_runtime_preview",
+    "ScopedCurlAdapter",
+    "ScopedCurlAdapterPreview",
+    "render_scoped_curl_adapter_preview",
 ]
