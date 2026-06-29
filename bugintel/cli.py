@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.60.0",
+                version="1.61.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.60.0",
+            version="1.61.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.60.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.61.0")
 
 
 @app.command("scope-check")
@@ -17740,6 +17740,111 @@ def case_intake_brain_scoped_adapter_implementation_blueprint_command(
         "Safety: This command only exports a local deterministic implementation blueprint. "
         "It does not send requests, execute tools, launch browsers, call providers, "
         "collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+@app.command("scoped-runtime-execution-gate")
+def scoped_runtime_execution_gate_command(
+    request_file: Path = typer.Argument(
+        ...,
+        help="Path to scoped runtime adapter request or implementation blueprint JSON.",
+    ),
+    future_authorization_requested: bool = typer.Option(
+        False,
+        "--future-authorization-requested",
+        help="Record that future runtime authorization was requested. This still does not execute anything.",
+    ),
+    human_authorization_recorded: bool = typer.Option(
+        False,
+        "--human-authorization-recorded",
+        help="Record human authorization metadata for future runtime authorization.",
+    ),
+    controlled_account_recorded: bool = typer.Option(
+        False,
+        "--controlled-account-recorded",
+        help="Record controlled-account precondition metadata for future runtime authorization.",
+    ),
+    scope_review_recorded: bool = typer.Option(
+        False,
+        "--scope-review-recorded",
+        help="Record scope review confirmation metadata for future runtime authorization.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write scoped runtime execution gate JSON output.",
+    ),
+) -> None:
+    """Evaluate the scoped runtime execution gate without execution."""
+    from bugintel.adapters.scoped_runtime.contracts import ScopedAdapterRequest
+    from bugintel.adapters.scoped_runtime.execution_gate import (
+        evaluate_scoped_runtime_execution_gate,
+    )
+
+    if not request_file.exists():
+        raise typer.BadParameter(f"request file does not exist: {request_file}")
+
+    request_data = json.loads(request_file.read_text())
+    request = ScopedAdapterRequest.from_blueprint_artifact(request_data)
+    artifact = evaluate_scoped_runtime_execution_gate(
+        request,
+        future_authorization_requested=future_authorization_requested,
+        human_authorization_recorded=human_authorization_recorded,
+        controlled_account_recorded=controlled_account_recorded,
+        scope_review_recorded=scope_review_recorded,
+    )
+    data = artifact.to_dict()
+
+    table = Table(title="Scoped Runtime Execution Gate")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Gate ID", artifact.gate_id)
+    table.add_row("Request ID", artifact.request_id)
+    table.add_row("Implementation blueprint ID", artifact.implementation_blueprint_id)
+    table.add_row("Target", artifact.target_name)
+    table.add_row("Endpoint", artifact.endpoint)
+    table.add_row("Gate status", artifact.gate_status)
+    table.add_row("Gate mode", artifact.gate_mode)
+    table.add_row("Future authorization requested", str(artifact.future_authorization_requested))
+    table.add_row("Human authorization recorded", str(artifact.human_authorization_recorded))
+    table.add_row("Controlled account recorded", str(artifact.controlled_account_recorded))
+    table.add_row("Scope review recorded", str(artifact.scope_review_recorded))
+    table.add_row("Adapter execution state", artifact.adapter_execution_state)
+    table.add_row("Can execute now", str(artifact.can_execute_now))
+    table.add_row("Execution allowed", str(artifact.execution_allowed))
+    table.add_row("Runtime execution allowed", str(artifact.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(artifact.tool_execution_allowed))
+    table.add_row("Browser execution allowed", str(artifact.browser_execution_allowed))
+    table.add_row("Network requests allowed", str(artifact.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(artifact.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(artifact.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(artifact.report_submission_allowed))
+    table.add_row("Vulnerability confirmation allowed", str(artifact.vulnerability_confirmation_allowed))
+
+    safety = data["safety"]
+    table.add_row("Safety network requests", str(safety["network_requests"]).lower())
+    table.add_row("Safety tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Safety evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Safety validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Safety report submission", str(safety["report_submission"]).lower())
+    table.add_row("Safety vulnerability confirmation", str(safety["vulnerability_confirmation"]).lower())
+    console.print(table)
+
+    if artifact.blocking_findings:
+        console.print("\n[bold]Blocking findings:[/bold]")
+        for finding in artifact.blocking_findings:
+            console.print(f"- {finding}")
+    else:
+        console.print("\n[bold]Future runtime authorization recorded without execution.[/bold]")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved scoped runtime execution gate JSON: {json_output}")
+
+    console.print(
+        "Safety: This command only evaluates a local deterministic scoped runtime execution gate. "
+        "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
+        "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
 
 
