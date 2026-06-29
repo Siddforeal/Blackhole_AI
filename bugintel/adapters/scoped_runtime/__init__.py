@@ -23,6 +23,11 @@ from bugintel.adapters.scoped_runtime.curl_adapter import (
     ScopedCurlAdapterPreview,
     render_scoped_curl_adapter_preview,
 )
+from bugintel.adapters.scoped_runtime.execution_gate import (
+    ScopedRuntimeExecutionGate,
+    ScopedRuntimeExecutionGateArtifact,
+    evaluate_scoped_runtime_execution_gate,
+)
 
 __all__ = [
     "ScopedAdapterPreparedCommand",
@@ -35,4 +40,7 @@ __all__ = [
     "ScopedCurlAdapter",
     "ScopedCurlAdapterPreview",
     "render_scoped_curl_adapter_preview",
+    "ScopedRuntimeExecutionGate",
+    "ScopedRuntimeExecutionGateArtifact",
+    "evaluate_scoped_runtime_execution_gate",
 ]
