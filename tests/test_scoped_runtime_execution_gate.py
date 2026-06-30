@@ -1,3 +1,5 @@
+import json
+
 from dataclasses import replace
 
 from bugintel.adapters.scoped_runtime.contracts import (
@@ -8,6 +10,7 @@ from bugintel.adapters.scoped_runtime.contracts import (
 from bugintel.adapters.scoped_runtime.execution_gate import (
     ScopedRuntimeExecutionGate,
     evaluate_scoped_runtime_execution_gate,
+    verify_scoped_runtime_execution_gate_bundle,
 )
 
 
@@ -208,3 +211,71 @@ def test_execution_gate_bundle_manifest_is_local_only_and_safe() -> None:
     assert manifest["vulnerability_confirmation_allowed"] is False
     assert manifest["safety"]["network_requests"] is False
     assert manifest["safety"]["tool_execution"] is False
+
+
+
+def _write_bundle(tmp_path, *, include_markdown: bool = True):
+    artifact = evaluate_scoped_runtime_execution_gate(
+        _request(),
+        future_authorization_requested=True,
+        human_authorization_recorded=True,
+        controlled_account_recorded=True,
+        scope_review_recorded=True,
+    )
+    bundle_dir = tmp_path / "bundle"
+    bundle_dir.mkdir()
+    (bundle_dir / "gate.json").write_text(json.dumps(artifact.to_dict(), indent=2, sort_keys=True) + "\n")
+    if include_markdown:
+        (bundle_dir / "gate.md").write_text(artifact.to_markdown())
+    (bundle_dir / "manifest.json").write_text(json.dumps(artifact.to_bundle_manifest(), indent=2, sort_keys=True) + "\n")
+    return bundle_dir
+
+
+def test_execution_gate_bundle_verification_accepts_safe_bundle(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path)
+
+    verification = verify_scoped_runtime_execution_gate_bundle(bundle_dir)
+    data = verification.to_dict()
+
+    assert data["kind"] == "scoped_runtime_execution_gate_bundle_verification_artifact"
+    assert data["verification_status"] == "verified-local-bundle-no-execution"
+    assert data["bundle_mode"] == "local_files_only_no_execution"
+    assert data["missing_files"] == []
+    assert data["unexpected_files"] == []
+    assert data["artifact_files_declared"] == ["gate.json", "gate.md", "manifest.json"]
+    assert data["gate_status"] == "future-runtime-authorization-recorded-no-execution"
+    assert data["markdown_has_title"] is True
+    assert data["markdown_has_unredacted_secret"] is False
+    assert data["markdown_has_redacted_placeholder"] is True
+    assert data["adapter_execution_state"] == "not_executed"
+    assert data["can_execute_now"] is False
+    assert data["execution_allowed"] is False
+    assert data["runtime_execution_allowed"] is False
+    assert data["tool_execution_allowed"] is False
+    assert data["network_requests_allowed"] is False
+    assert data["evidence_collection_allowed"] is False
+    assert data["target_mutation_allowed"] is False
+    assert data["report_submission_allowed"] is False
+    assert data["vulnerability_confirmation_allowed"] is False
+
+
+def test_execution_gate_bundle_verification_blocks_missing_file(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path, include_markdown=False)
+
+    data = verify_scoped_runtime_execution_gate_bundle(bundle_dir).to_dict()
+
+    assert data["verification_status"] == "blocked-bundle-verification-failed"
+    assert data["missing_files"] == ["gate.md"]
+    assert any("missing expected files" in item for item in data["blocking_findings"])
+
+
+def test_execution_gate_bundle_verification_markdown_is_human_readable_and_safe(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path)
+
+    markdown = verify_scoped_runtime_execution_gate_bundle(bundle_dir).to_markdown()
+
+    assert "# Scoped Runtime Execution Gate Bundle Verification" in markdown
+    assert "Verification status: `verified-local-bundle-no-execution`" in markdown
+    assert "Network requests allowed: `false`" in markdown
+    assert "Tool execution allowed: `false`" in markdown
+    assert "does not execute curl" in markdown

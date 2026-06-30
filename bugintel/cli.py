@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.63.0",
+                version="1.64.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.63.0",
+            version="1.64.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.63.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.64.0")
 
 
 @app.command("scope-check")
@@ -17868,6 +17868,87 @@ def scoped_runtime_execution_gate_command(
 
     console.print(
         "Safety: This command only evaluates a local deterministic scoped runtime execution gate. "
+        "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
+        "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+@app.command("scoped-runtime-execution-gate-bundle-verify")
+def scoped_runtime_execution_gate_bundle_verify_command(
+    bundle_dir: Path = typer.Argument(
+        ...,
+        help="Path to a scoped runtime execution gate bundle directory.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write scoped runtime execution gate bundle verification Markdown output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write scoped runtime execution gate bundle verification JSON output.",
+    ),
+) -> None:
+    """Verify a scoped runtime execution gate bundle without execution."""
+    from bugintel.adapters.scoped_runtime.execution_gate import (
+        verify_scoped_runtime_execution_gate_bundle,
+    )
+
+    verification = verify_scoped_runtime_execution_gate_bundle(bundle_dir)
+    data = verification.to_dict()
+
+    table = Table(title="Scoped Runtime Execution Gate Bundle Verification")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Bundle directory", verification.bundle_dir)
+    table.add_row("Verification status", verification.verification_status)
+    table.add_row("Bundle mode", verification.bundle_mode or "unknown")
+    table.add_row("Gate ID", verification.gate_id or "unknown")
+    table.add_row("Request ID", verification.request_id or "unknown")
+    table.add_row("Gate status", verification.gate_status or "unknown")
+    table.add_row("Present files", ", ".join(verification.present_files) or "none")
+    table.add_row("Missing files", ", ".join(verification.missing_files) or "none")
+    table.add_row("Unexpected files", ", ".join(verification.unexpected_files) or "none")
+    table.add_row("Markdown has title", str(verification.markdown_has_title))
+    table.add_row("Markdown has unredacted secret", str(verification.markdown_has_unredacted_secret))
+    table.add_row("Markdown has redacted placeholder", str(verification.markdown_has_redacted_placeholder))
+    table.add_row("Adapter execution state", verification.adapter_execution_state)
+    table.add_row("Can execute now", str(verification.can_execute_now))
+    table.add_row("Execution allowed", str(verification.execution_allowed))
+    table.add_row("Runtime execution allowed", str(verification.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(verification.tool_execution_allowed))
+    table.add_row("Network requests allowed", str(verification.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(verification.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(verification.target_mutation_allowed))
+
+    safety = data["safety"]
+    table.add_row("Safety network requests", str(safety["network_requests"]).lower())
+    table.add_row("Safety tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Safety evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Safety validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Safety report submission", str(safety["report_submission"]).lower())
+    table.add_row("Safety vulnerability confirmation", str(safety["vulnerability_confirmation"]).lower())
+    console.print(table)
+
+    if verification.blocking_findings:
+        console.print("\n[bold]Blocking findings:[/bold]")
+        for finding in verification.blocking_findings:
+            console.print(f"- {finding}")
+    else:
+        console.print("\n[bold]Bundle verified without execution.[/bold]")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved scoped runtime execution gate bundle verification JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(verification.to_markdown())
+        console.print(f"Saved scoped runtime execution gate bundle verification Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only verifies local scoped runtime execution gate bundle files. "
         "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
         "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
