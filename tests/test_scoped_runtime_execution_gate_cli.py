@@ -183,3 +183,54 @@ def test_scoped_runtime_execution_gate_cli_writes_markdown_output(tmp_path) -> N
     assert "REDACTED_CONTROLLED_TOKEN" in markdown
     assert "CONTROLLED_TOKEN_ONLY" not in markdown
     assert "Saved scoped runtime execution gate Markdown" in result.stdout
+
+
+def test_scoped_runtime_execution_gate_cli_writes_bundle_output_dir(tmp_path) -> None:
+    input_file = tmp_path / "request.json"
+    bundle_dir = tmp_path / "bundle"
+    input_file.write_text(json.dumps(_blueprint()))
+
+    result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate",
+            str(input_file),
+            "--future-authorization-requested",
+            "--human-authorization-recorded",
+            "--controlled-account-recorded",
+            "--scope-review-recorded",
+            "--bundle-output-dir",
+            str(bundle_dir),
+        ],
+    )
+
+    assert result.exit_code == 0
+    gate_json = bundle_dir / "gate.json"
+    gate_markdown = bundle_dir / "gate.md"
+    manifest_json = bundle_dir / "manifest.json"
+    assert gate_json.exists()
+    assert gate_markdown.exists()
+    assert manifest_json.exists()
+
+    data = json.loads(gate_json.read_text())
+    markdown = gate_markdown.read_text()
+    manifest = json.loads(manifest_json.read_text())
+
+    assert data["kind"] == "scoped_runtime_execution_gate_artifact"
+    assert data["gate_status"] == "future-runtime-authorization-recorded-no-execution"
+    assert data["can_execute_now"] is False
+    assert data["network_requests_allowed"] is False
+    assert manifest["kind"] == "scoped_runtime_execution_gate_bundle_manifest"
+    assert manifest["bundle_mode"] == "local_files_only_no_execution"
+    assert [item["filename"] for item in manifest["artifact_files"]] == [
+        "gate.json",
+        "gate.md",
+        "manifest.json",
+    ]
+    assert manifest["can_execute_now"] is False
+    assert manifest["network_requests_allowed"] is False
+    assert manifest["tool_execution_allowed"] is False
+    assert "# Scoped Runtime Execution Gate" in markdown
+    assert "REDACTED_CONTROLLED_TOKEN" in markdown
+    assert "CONTROLLED_TOKEN_ONLY" not in markdown
+    assert "Saved scoped runtime execution gate bundle" in result.stdout
