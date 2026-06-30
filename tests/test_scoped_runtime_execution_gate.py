@@ -152,3 +152,25 @@ def test_execution_gate_function_wrapper() -> None:
     assert data["adapter_execution_state"] == "not_executed"
     assert data["can_execute_now"] is False
     assert data["network_requests_allowed"] is False
+
+
+def test_execution_gate_markdown_export_is_human_readable_and_safe() -> None:
+    artifact = evaluate_scoped_runtime_execution_gate(
+        _request(),
+        future_authorization_requested=True,
+        human_authorization_recorded=True,
+        controlled_account_recorded=True,
+        scope_review_recorded=True,
+    )
+
+    markdown = artifact.to_markdown()
+
+    assert "# Scoped Runtime Execution Gate" in markdown
+    assert "Gate status: `future-runtime-authorization-recorded-no-execution`" in markdown
+    assert "Can execute now: `false`" in markdown
+    assert "Network requests allowed: `false`" in markdown
+    assert "Tool execution allowed: `false`" in markdown
+    assert "Evidence collection allowed: `false`" in markdown
+    assert "REDACTED_CONTROLLED_TOKEN" in markdown
+    assert "CONTROLLED_TOKEN_ONLY" not in markdown
+    assert "does not execute curl" in markdown

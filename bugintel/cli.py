@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.61.0",
+                version="1.62.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.61.0",
+            version="1.62.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.61.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.62.0")
 
 
 @app.command("scope-check")
@@ -17769,6 +17769,12 @@ def scoped_runtime_execution_gate_command(
         "--scope-review-recorded",
         help="Record scope review confirmation metadata for future runtime authorization.",
     ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write scoped runtime execution gate Markdown output.",
+    ),
     json_output: Path | None = typer.Option(
         None,
         "--json-output",
@@ -17840,6 +17846,10 @@ def scoped_runtime_execution_gate_command(
     if json_output is not None:
         json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
         console.print(f"Saved scoped runtime execution gate JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(artifact.to_markdown())
+        console.print(f"Saved scoped runtime execution gate Markdown: {output_file}")
 
     console.print(
         "Safety: This command only evaluates a local deterministic scoped runtime execution gate. "
