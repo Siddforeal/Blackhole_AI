@@ -188,6 +188,56 @@ class ScopedRuntimeExecutionGateArtifact:
         )
         return "\n".join(lines)
 
+    def to_bundle_manifest(self) -> dict[str, Any]:
+        """Render a local bundle manifest for JSON and Markdown exports."""
+        return {
+            "kind": "scoped_runtime_execution_gate_bundle_manifest",
+            "source": "scoped-runtime-execution-gate-bundle-export",
+            "bundle_id": f"SREG-BUNDLE-{self.gate_id}",
+            "gate_id": self.gate_id,
+            "request_id": self.request_id,
+            "implementation_blueprint_id": self.implementation_blueprint_id,
+            "readiness_review_id": self.readiness_review_id,
+            "execution_plan_id": self.execution_plan_id,
+            "target_name": self.target_name,
+            "endpoint": self.endpoint,
+            "gate_status": self.gate_status,
+            "gate_mode": self.gate_mode,
+            "artifact_files": [
+                {
+                    "filename": "gate.json",
+                    "kind": "scoped_runtime_execution_gate_artifact_json",
+                    "description": "Machine-readable scoped runtime execution gate artifact.",
+                },
+                {
+                    "filename": "gate.md",
+                    "kind": "scoped_runtime_execution_gate_artifact_markdown",
+                    "description": "Human-readable scoped runtime execution gate artifact.",
+                },
+                {
+                    "filename": "manifest.json",
+                    "kind": "scoped_runtime_execution_gate_bundle_manifest",
+                    "description": "Machine-readable local bundle manifest.",
+                },
+            ],
+            "adapter_execution_state": self.adapter_execution_state,
+            "can_execute_now": self.can_execute_now,
+            "execution_allowed": self.execution_allowed,
+            "validation_allowed": self.validation_allowed,
+            "runtime_execution_allowed": self.runtime_execution_allowed,
+            "tool_execution_allowed": self.tool_execution_allowed,
+            "browser_execution_allowed": self.browser_execution_allowed,
+            "network_requests_allowed": self.network_requests_allowed,
+            "evidence_collection_allowed": self.evidence_collection_allowed,
+            "target_mutation_allowed": self.target_mutation_allowed,
+            "report_submission_allowed": self.report_submission_allowed,
+            "vulnerability_confirmation_allowed": self.vulnerability_confirmation_allowed,
+            "planning_only": self.planning_only,
+            "dry_run_only": self.dry_run_only,
+            "bundle_mode": "local_files_only_no_execution",
+            "safety": safety_metadata(),
+        }
+
 
 @dataclass(frozen=True)
 class ScopedRuntimeExecutionGate:

@@ -174,3 +174,37 @@ def test_execution_gate_markdown_export_is_human_readable_and_safe() -> None:
     assert "REDACTED_CONTROLLED_TOKEN" in markdown
     assert "CONTROLLED_TOKEN_ONLY" not in markdown
     assert "does not execute curl" in markdown
+
+
+def test_execution_gate_bundle_manifest_is_local_only_and_safe() -> None:
+    artifact = evaluate_scoped_runtime_execution_gate(
+        _request(),
+        future_authorization_requested=True,
+        human_authorization_recorded=True,
+        controlled_account_recorded=True,
+        scope_review_recorded=True,
+    )
+
+    manifest = artifact.to_bundle_manifest()
+
+    assert manifest["kind"] == "scoped_runtime_execution_gate_bundle_manifest"
+    assert manifest["bundle_id"] == "SREG-BUNDLE-SREG-SIB-ERR-SEP-RCP-FEG-ASR-RSR-SAER-AFC-ADP-RSM-EG-CP-AD-AP-001"
+    assert manifest["gate_status"] == "future-runtime-authorization-recorded-no-execution"
+    assert manifest["bundle_mode"] == "local_files_only_no_execution"
+    assert [item["filename"] for item in manifest["artifact_files"]] == [
+        "gate.json",
+        "gate.md",
+        "manifest.json",
+    ]
+    assert manifest["adapter_execution_state"] == "not_executed"
+    assert manifest["can_execute_now"] is False
+    assert manifest["execution_allowed"] is False
+    assert manifest["runtime_execution_allowed"] is False
+    assert manifest["tool_execution_allowed"] is False
+    assert manifest["network_requests_allowed"] is False
+    assert manifest["evidence_collection_allowed"] is False
+    assert manifest["target_mutation_allowed"] is False
+    assert manifest["report_submission_allowed"] is False
+    assert manifest["vulnerability_confirmation_allowed"] is False
+    assert manifest["safety"]["network_requests"] is False
+    assert manifest["safety"]["tool_execution"] is False

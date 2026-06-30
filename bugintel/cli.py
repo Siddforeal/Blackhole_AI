@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.62.0",
+                version="1.63.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.62.0",
+            version="1.63.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.62.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.63.0")
 
 
 @app.command("scope-check")
@@ -17780,6 +17780,11 @@ def scoped_runtime_execution_gate_command(
         "--json-output",
         help="Optional path to write scoped runtime execution gate JSON output.",
     ),
+    bundle_output_dir: Path | None = typer.Option(
+        None,
+        "--bundle-output-dir",
+        help="Optional directory to write gate.json, gate.md, and manifest.json bundle files.",
+    ),
 ) -> None:
     """Evaluate the scoped runtime execution gate without execution."""
     from bugintel.adapters.scoped_runtime.contracts import ScopedAdapterRequest
@@ -17850,6 +17855,16 @@ def scoped_runtime_execution_gate_command(
     if output_file is not None:
         output_file.write_text(artifact.to_markdown())
         console.print(f"Saved scoped runtime execution gate Markdown: {output_file}")
+
+    if bundle_output_dir is not None:
+        bundle_output_dir.mkdir(parents=True, exist_ok=True)
+        bundle_json = bundle_output_dir / "gate.json"
+        bundle_markdown = bundle_output_dir / "gate.md"
+        bundle_manifest = bundle_output_dir / "manifest.json"
+        bundle_json.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        bundle_markdown.write_text(artifact.to_markdown())
+        bundle_manifest.write_text(json.dumps(artifact.to_bundle_manifest(), indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved scoped runtime execution gate bundle: {bundle_output_dir}")
 
     console.print(
         "Safety: This command only evaluates a local deterministic scoped runtime execution gate. "
