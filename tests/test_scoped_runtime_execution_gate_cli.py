@@ -151,3 +151,35 @@ def test_scoped_runtime_execution_gate_cli_rejects_missing_file(tmp_path) -> Non
     combined_output = result.stdout + getattr(result, "stderr", "") + str(result.exception or "")
     assert result.exit_code != 0
     assert "request file does not exist" in combined_output
+
+
+def test_scoped_runtime_execution_gate_cli_writes_markdown_output(tmp_path) -> None:
+    input_file = tmp_path / "request.json"
+    output_file = tmp_path / "gate.md"
+    input_file.write_text(json.dumps(_blueprint()))
+
+    result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate",
+            str(input_file),
+            "--future-authorization-requested",
+            "--human-authorization-recorded",
+            "--controlled-account-recorded",
+            "--scope-review-recorded",
+            "--output-file",
+            str(output_file),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert output_file.exists()
+    markdown = output_file.read_text()
+    assert "# Scoped Runtime Execution Gate" in markdown
+    assert "Gate status: `future-runtime-authorization-recorded-no-execution`" in markdown
+    assert "Can execute now: `false`" in markdown
+    assert "Network requests allowed: `false`" in markdown
+    assert "Tool execution allowed: `false`" in markdown
+    assert "REDACTED_CONTROLLED_TOKEN" in markdown
+    assert "CONTROLLED_TOKEN_ONLY" not in markdown
+    assert "Saved scoped runtime execution gate Markdown" in result.stdout

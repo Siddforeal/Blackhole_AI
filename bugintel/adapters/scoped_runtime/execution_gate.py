@@ -94,6 +94,100 @@ class ScopedRuntimeExecutionGateArtifact:
             "safety": safety_metadata(),
         }
 
+    def to_markdown(self) -> str:
+        """Render a human-readable Markdown execution gate artifact."""
+        data = self.to_dict()
+        safety = data["safety"]
+
+        lines = [
+            "# Scoped Runtime Execution Gate",
+            "",
+            "## Summary",
+            "",
+            f"- Gate ID: `{self.gate_id}`",
+            f"- Request ID: `{self.request_id}`",
+            f"- Implementation blueprint ID: `{self.implementation_blueprint_id}`",
+            f"- Readiness review ID: `{self.readiness_review_id}`",
+            f"- Execution plan ID: `{self.execution_plan_id}`",
+            f"- Target: `{self.target_name}`",
+            f"- Endpoint: `{self.endpoint}`",
+            f"- Gate status: `{self.gate_status}`",
+            f"- Gate mode: `{self.gate_mode}`",
+            "",
+            "## Authorization metadata",
+            "",
+            f"- Future authorization requested: `{str(self.future_authorization_requested).lower()}`",
+            f"- Human authorization recorded: `{str(self.human_authorization_recorded).lower()}`",
+            f"- Controlled account recorded: `{str(self.controlled_account_recorded).lower()}`",
+            f"- Scope review recorded: `{str(self.scope_review_recorded).lower()}`",
+            "",
+            "## Execution state",
+            "",
+            f"- Adapter execution state: `{self.adapter_execution_state}`",
+            f"- Can execute now: `{str(self.can_execute_now).lower()}`",
+            f"- Execution allowed: `{str(self.execution_allowed).lower()}`",
+            f"- Validation allowed: `{str(self.validation_allowed).lower()}`",
+            f"- Runtime execution allowed: `{str(self.runtime_execution_allowed).lower()}`",
+            f"- Tool execution allowed: `{str(self.tool_execution_allowed).lower()}`",
+            f"- Browser execution allowed: `{str(self.browser_execution_allowed).lower()}`",
+            f"- Network requests allowed: `{str(self.network_requests_allowed).lower()}`",
+            f"- Evidence collection allowed: `{str(self.evidence_collection_allowed).lower()}`",
+            f"- Target mutation allowed: `{str(self.target_mutation_allowed).lower()}`",
+            f"- Report submission allowed: `{str(self.report_submission_allowed).lower()}`",
+            f"- Vulnerability confirmation allowed: `{str(self.vulnerability_confirmation_allowed).lower()}`",
+            f"- Planning only: `{str(self.planning_only).lower()}`",
+            f"- Dry-run only: `{str(self.dry_run_only).lower()}`",
+            "",
+            "## Safety",
+            "",
+            f"- Network requests: `{str(safety['network_requests']).lower()}`",
+            f"- Tool execution: `{str(safety['tool_execution']).lower()}`",
+            f"- Evidence collection: `{str(safety['evidence_collection']).lower()}`",
+            f"- Validation execution: `{str(safety['validation_execution']).lower()}`",
+            f"- Report submission: `{str(safety['report_submission']).lower()}`",
+            f"- Vulnerability confirmation: `{str(safety['vulnerability_confirmation']).lower()}`",
+            "",
+            "## Adapter preview",
+            "",
+            f"- Preview kind: `{self.adapter_preview.get('kind', 'unknown')}`",
+            f"- Preview status: `{self.adapter_preview.get('render_status', 'unknown')}`",
+            f"- Preview mode: `{self.adapter_preview.get('render_mode', 'unknown')}`",
+            f"- Adapter execution state: `{self.adapter_preview.get('adapter_execution_state', 'unknown')}`",
+            "",
+            "## Redacted preview command",
+            "",
+            "```bash",
+            self.redacted_preview_command,
+            "```",
+            "",
+            "## Gate findings",
+            "",
+        ]
+
+        if self.gate_findings:
+            lines.extend(f"- {finding}" for finding in self.gate_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Blocking findings", ""])
+        if self.blocking_findings:
+            lines.extend(f"- {finding}" for finding in self.blocking_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(
+            [
+                "",
+                "## Safety statement",
+                "",
+                "This artifact is local-only, deterministic, planning-only, and dry-run-only.",
+                "",
+                "It does not execute curl, call subprocess, send network requests, execute tools, launch browsers, call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities.",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+
 
 @dataclass(frozen=True)
 class ScopedRuntimeExecutionGate:
