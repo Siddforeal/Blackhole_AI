@@ -9,6 +9,7 @@ from bugintel.adapters.scoped_runtime.contracts import (
 )
 from bugintel.adapters.scoped_runtime.execution_gate import (
     ScopedRuntimeExecutionGate,
+    build_scoped_runtime_execution_gate_bundle_handoff_packet,
     evaluate_scoped_runtime_execution_gate,
     review_scoped_runtime_execution_gate_bundle_verification,
     verify_scoped_runtime_execution_gate_bundle,
@@ -345,6 +346,91 @@ def test_execution_gate_bundle_review_packet_markdown_is_human_readable_and_safe
     assert "# Scoped Runtime Execution Gate Bundle Review Packet" in markdown
     assert "Review status: `accepted-local-bundle-verification-no-execution`" in markdown
     assert "Reviewed by: `human-reviewer`" in markdown
+    assert "Network requests allowed: `false`" in markdown
+    assert "Tool execution allowed: `false`" in markdown
+    assert "does not execute curl" in markdown
+
+
+
+def test_execution_gate_bundle_handoff_packet_accepts_review_packet_without_execution(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path)
+    verification = verify_scoped_runtime_execution_gate_bundle(bundle_dir)
+    review_packet = review_scoped_runtime_execution_gate_bundle_verification(
+        verification.to_dict(),
+        reviewed_by="human-reviewer",
+        review_note="Reviewed local bundle verification artifact only; no execution authorized.",
+    )
+
+    handoff = build_scoped_runtime_execution_gate_bundle_handoff_packet(
+        review_packet.to_dict(),
+        handoff_to="future-reviewer",
+        handoff_note="Handoff for future local review only; no execution authorized.",
+    )
+    data = handoff.to_dict()
+
+    assert data["kind"] == "scoped_runtime_execution_gate_bundle_handoff_packet"
+    assert data["handoff_status"] == "ready-local-bundle-handoff-no-execution"
+    assert data["handoff_state"] == "handoff_local_only"
+    assert data["handoff_to"] == "future-reviewer"
+    assert data["review_status"] == "accepted-local-bundle-verification-no-execution"
+    assert data["verification_status"] == "verified-local-bundle-no-execution"
+    assert data["bundle_mode"] == "local_files_only_no_execution"
+    assert data["missing_files"] == []
+    assert data["unexpected_files"] == []
+    assert data["adapter_execution_state"] == "not_executed"
+    assert data["can_execute_now"] is False
+    assert data["execution_allowed"] is False
+    assert data["runtime_execution_allowed"] is False
+    assert data["tool_execution_allowed"] is False
+    assert data["network_requests_allowed"] is False
+    assert data["evidence_collection_allowed"] is False
+    assert data["target_mutation_allowed"] is False
+    assert data["report_submission_allowed"] is False
+    assert data["vulnerability_confirmation_allowed"] is False
+    assert data["blocking_findings"] == []
+
+
+def test_execution_gate_bundle_handoff_packet_blocks_failed_review_packet(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path, include_markdown=False)
+    verification = verify_scoped_runtime_execution_gate_bundle(bundle_dir)
+    review_packet = review_scoped_runtime_execution_gate_bundle_verification(
+        verification.to_dict(),
+        reviewed_by="human-reviewer",
+        review_note="Reviewed failed local bundle verification artifact only.",
+    )
+
+    data = build_scoped_runtime_execution_gate_bundle_handoff_packet(
+        review_packet.to_dict(),
+        handoff_to="future-reviewer",
+        handoff_note="Blocked handoff because review packet is blocked.",
+    ).to_dict()
+
+    assert data["handoff_status"] == "blocked-local-bundle-handoff"
+    assert data["review_status"] == "blocked-local-bundle-verification-review"
+    assert data["missing_files"] == ["gate.md"]
+    assert any("not accepted-local-bundle-verification-no-execution" in item for item in data["blocking_findings"])
+
+
+def test_execution_gate_bundle_handoff_packet_markdown_is_human_readable_and_safe(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path)
+    verification = verify_scoped_runtime_execution_gate_bundle(bundle_dir)
+    review_packet = review_scoped_runtime_execution_gate_bundle_verification(
+        verification.to_dict(),
+        reviewed_by="human-reviewer",
+        review_note="Reviewed local bundle verification artifact only; no execution authorized.",
+    )
+    handoff = build_scoped_runtime_execution_gate_bundle_handoff_packet(
+        review_packet.to_dict(),
+        handoff_to="future-reviewer",
+        handoff_note="Handoff for future local review only; no execution authorized.",
+    )
+
+    markdown = handoff.to_markdown()
+
+    assert "# Scoped Runtime Execution Gate Bundle Handoff Packet" in markdown
+    assert "Handoff status: `ready-local-bundle-handoff-no-execution`" in markdown
+    assert "Handoff state: `handoff_local_only`" in markdown
+    assert "Handoff to: `future-reviewer`" in markdown
     assert "Network requests allowed: `false`" in markdown
     assert "Tool execution allowed: `false`" in markdown
     assert "does not execute curl" in markdown
