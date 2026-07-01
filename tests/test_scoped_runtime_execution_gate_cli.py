@@ -234,3 +234,58 @@ def test_scoped_runtime_execution_gate_cli_writes_bundle_output_dir(tmp_path) ->
     assert "REDACTED_CONTROLLED_TOKEN" in markdown
     assert "CONTROLLED_TOKEN_ONLY" not in markdown
     assert "Saved scoped runtime execution gate bundle" in result.stdout
+
+
+def test_scoped_runtime_execution_gate_bundle_verify_cli_writes_json_and_markdown(tmp_path) -> None:
+    input_file = tmp_path / "request.json"
+    bundle_dir = tmp_path / "bundle"
+    verification_json = tmp_path / "verification.json"
+    verification_markdown = tmp_path / "verification.md"
+    input_file.write_text(json.dumps(_blueprint()))
+
+    bundle_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate",
+            str(input_file),
+            "--future-authorization-requested",
+            "--human-authorization-recorded",
+            "--controlled-account-recorded",
+            "--scope-review-recorded",
+            "--bundle-output-dir",
+            str(bundle_dir),
+        ],
+    )
+    assert bundle_result.exit_code == 0
+
+    verify_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-verify",
+            str(bundle_dir),
+            "--json-output",
+            str(verification_json),
+            "--output-file",
+            str(verification_markdown),
+        ],
+    )
+
+    assert verify_result.exit_code == 0
+    assert verification_json.exists()
+    assert verification_markdown.exists()
+
+    data = json.loads(verification_json.read_text())
+    markdown = verification_markdown.read_text()
+
+    assert data["kind"] == "scoped_runtime_execution_gate_bundle_verification_artifact"
+    assert data["verification_status"] == "verified-local-bundle-no-execution"
+    assert data["bundle_mode"] == "local_files_only_no_execution"
+    assert data["missing_files"] == []
+    assert data["unexpected_files"] == []
+    assert data["markdown_has_unredacted_secret"] is False
+    assert data["can_execute_now"] is False
+    assert data["network_requests_allowed"] is False
+    assert data["tool_execution_allowed"] is False
+    assert "# Scoped Runtime Execution Gate Bundle Verification" in markdown
+    assert "Saved scoped runtime execution gate bundle verification JSON" in verify_result.stdout
+    assert "Saved scoped runtime execution gate bundle verification Markdown" in verify_result.stdout

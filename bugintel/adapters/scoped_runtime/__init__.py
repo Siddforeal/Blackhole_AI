@@ -26,7 +26,9 @@ from bugintel.adapters.scoped_runtime.curl_adapter import (
 from bugintel.adapters.scoped_runtime.execution_gate import (
     ScopedRuntimeExecutionGate,
     ScopedRuntimeExecutionGateArtifact,
+    ScopedRuntimeExecutionGateBundleVerificationArtifact,
     evaluate_scoped_runtime_execution_gate,
+    verify_scoped_runtime_execution_gate_bundle,
 )
 
 __all__ = [
@@ -42,5 +44,7 @@ __all__ = [
     "render_scoped_curl_adapter_preview",
     "ScopedRuntimeExecutionGate",
     "ScopedRuntimeExecutionGateArtifact",
+    "ScopedRuntimeExecutionGateBundleVerificationArtifact",
     "evaluate_scoped_runtime_execution_gate",
+    "verify_scoped_runtime_execution_gate_bundle",
 ]
