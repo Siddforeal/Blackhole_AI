@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.65.0",
+                version="1.66.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.65.0",
+            version="1.66.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.65.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.66.0")
 
 
 @app.command("scope-check")
@@ -18049,6 +18049,109 @@ def scoped_runtime_execution_gate_bundle_review_packet_command(
 
     console.print(
         "Safety: This command only creates a local scoped runtime execution gate bundle review packet. "
+        "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
+        "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+@app.command("scoped-runtime-execution-gate-bundle-handoff-packet")
+def scoped_runtime_execution_gate_bundle_handoff_packet_command(
+    review_packet_file: Path = typer.Argument(
+        ...,
+        help="Path to scoped runtime execution gate bundle review packet JSON output.",
+    ),
+    handoff_to: str = typer.Option(
+        "future-reviewer",
+        "--handoff-to",
+        help="Neutral recipient label for the future reviewer or operator.",
+    ),
+    handoff_note: str = typer.Option(
+        ...,
+        "--handoff-note",
+        help="Human handoff note for the local bundle review packet.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write scoped runtime execution gate bundle handoff packet Markdown output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write scoped runtime execution gate bundle handoff packet JSON output.",
+    ),
+) -> None:
+    """Create a scoped runtime execution gate bundle handoff packet without execution."""
+    from bugintel.adapters.scoped_runtime.execution_gate import (
+        build_scoped_runtime_execution_gate_bundle_handoff_packet,
+    )
+
+    if not review_packet_file.exists():
+        raise typer.BadParameter(f"review packet file does not exist: {review_packet_file}")
+
+    review_packet_data = json.loads(review_packet_file.read_text())
+    packet = build_scoped_runtime_execution_gate_bundle_handoff_packet(
+        review_packet_data,
+        handoff_to=handoff_to,
+        handoff_note=handoff_note,
+    )
+    data = packet.to_dict()
+
+    table = Table(title="Scoped Runtime Execution Gate Bundle Handoff Packet")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Handoff packet ID", packet.handoff_packet_id)
+    table.add_row("Review packet ID", packet.review_packet_id)
+    table.add_row("Verification status", packet.verification_status)
+    table.add_row("Review status", packet.review_status)
+    table.add_row("Handoff status", packet.handoff_status)
+    table.add_row("Handoff state", packet.handoff_state)
+    table.add_row("Reviewed by", packet.reviewed_by)
+    table.add_row("Handoff to", packet.handoff_to)
+    table.add_row("Bundle directory", packet.bundle_dir)
+    table.add_row("Bundle mode", packet.bundle_mode)
+    table.add_row("Gate ID", packet.gate_id)
+    table.add_row("Request ID", packet.request_id)
+    table.add_row("Gate status", packet.gate_status)
+    table.add_row("Present files", ", ".join(packet.present_files) or "none")
+    table.add_row("Missing files", ", ".join(packet.missing_files) or "none")
+    table.add_row("Unexpected files", ", ".join(packet.unexpected_files) or "none")
+    table.add_row("Adapter execution state", packet.adapter_execution_state)
+    table.add_row("Can execute now", str(packet.can_execute_now))
+    table.add_row("Execution allowed", str(packet.execution_allowed))
+    table.add_row("Runtime execution allowed", str(packet.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(packet.tool_execution_allowed))
+    table.add_row("Network requests allowed", str(packet.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(packet.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(packet.target_mutation_allowed))
+
+    safety = data["safety"]
+    table.add_row("Safety network requests", str(safety["network_requests"]).lower())
+    table.add_row("Safety tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Safety evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Safety validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Safety report submission", str(safety["report_submission"]).lower())
+    table.add_row("Safety vulnerability confirmation", str(safety["vulnerability_confirmation"]).lower())
+    console.print(table)
+
+    if packet.blocking_findings:
+        console.print("\n[bold]Blocking findings:[/bold]")
+        for finding in packet.blocking_findings:
+            console.print(f"- {finding}")
+    else:
+        console.print("\n[bold]Bundle handoff packet ready without execution.[/bold]")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved scoped runtime execution gate bundle handoff packet JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(packet.to_markdown())
+        console.print(f"Saved scoped runtime execution gate bundle handoff packet Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only creates a local scoped runtime execution gate bundle handoff packet. "
         "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
         "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )

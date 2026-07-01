@@ -359,3 +359,89 @@ def test_scoped_runtime_execution_gate_bundle_review_packet_cli_writes_json_and_
     assert "# Scoped Runtime Execution Gate Bundle Review Packet" in markdown
     assert "Saved scoped runtime execution gate bundle review packet JSON" in review_result.stdout
     assert "Saved scoped runtime execution gate bundle review packet Markdown" in review_result.stdout
+
+
+def test_scoped_runtime_execution_gate_bundle_handoff_packet_cli_writes_json_and_markdown(tmp_path) -> None:
+    input_file = tmp_path / "request.json"
+    bundle_dir = tmp_path / "bundle"
+    verification_json = tmp_path / "verification.json"
+    review_json = tmp_path / "review.json"
+    handoff_json = tmp_path / "handoff.json"
+    handoff_markdown = tmp_path / "handoff.md"
+    input_file.write_text(json.dumps(_blueprint()))
+
+    bundle_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate",
+            str(input_file),
+            "--future-authorization-requested",
+            "--human-authorization-recorded",
+            "--controlled-account-recorded",
+            "--scope-review-recorded",
+            "--bundle-output-dir",
+            str(bundle_dir),
+        ],
+    )
+    assert bundle_result.exit_code == 0
+
+    verify_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-verify",
+            str(bundle_dir),
+            "--json-output",
+            str(verification_json),
+        ],
+    )
+    assert verify_result.exit_code == 0
+
+    review_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-review-packet",
+            str(verification_json),
+            "--reviewed-by",
+            "human-reviewer",
+            "--review-note",
+            "Reviewed local bundle verification artifact only; no execution authorized.",
+            "--json-output",
+            str(review_json),
+        ],
+    )
+    assert review_result.exit_code == 0
+
+    handoff_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-handoff-packet",
+            str(review_json),
+            "--handoff-to",
+            "future-reviewer",
+            "--handoff-note",
+            "Handoff for future local review only; no execution authorized.",
+            "--json-output",
+            str(handoff_json),
+            "--output-file",
+            str(handoff_markdown),
+        ],
+    )
+
+    assert handoff_result.exit_code == 0
+    assert handoff_json.exists()
+    assert handoff_markdown.exists()
+
+    data = json.loads(handoff_json.read_text())
+    markdown = handoff_markdown.read_text()
+
+    assert data["kind"] == "scoped_runtime_execution_gate_bundle_handoff_packet"
+    assert data["handoff_status"] == "ready-local-bundle-handoff-no-execution"
+    assert data["handoff_state"] == "handoff_local_only"
+    assert data["handoff_to"] == "future-reviewer"
+    assert data["can_execute_now"] is False
+    assert data["network_requests_allowed"] is False
+    assert data["tool_execution_allowed"] is False
+    assert data["evidence_collection_allowed"] is False
+    assert "# Scoped Runtime Execution Gate Bundle Handoff Packet" in markdown
+    assert "Saved scoped runtime execution gate bundle handoff packet JSON" in handoff_result.stdout
+    assert "Saved scoped runtime execution gate bundle handoff packet Markdown" in handoff_result.stdout

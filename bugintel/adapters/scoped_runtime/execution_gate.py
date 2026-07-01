@@ -831,6 +831,274 @@ def review_scoped_runtime_execution_gate_bundle_verification(
     )
 
 
+
+@dataclass(frozen=True)
+class ScopedRuntimeExecutionGateBundleHandoffPacket:
+    handoff_packet_id: str
+    review_packet_id: str
+    verification_status: str
+    review_status: str
+    handoff_status: str
+    handoff_state: str
+    reviewed_by: str
+    handoff_to: str
+    handoff_note: str
+    bundle_dir: str
+    bundle_mode: str
+    gate_id: str
+    request_id: str
+    gate_status: str
+    present_files: tuple[str, ...]
+    missing_files: tuple[str, ...]
+    unexpected_files: tuple[str, ...]
+    verification_findings: tuple[str, ...]
+    review_findings: tuple[str, ...]
+    handoff_findings: tuple[str, ...]
+    blocking_findings: tuple[str, ...]
+    adapter_execution_state: str = "not_executed"
+    can_execute_now: bool = False
+    execution_allowed: bool = False
+    validation_allowed: bool = False
+    runtime_execution_allowed: bool = False
+    tool_execution_allowed: bool = False
+    browser_execution_allowed: bool = False
+    network_requests_allowed: bool = False
+    evidence_collection_allowed: bool = False
+    target_mutation_allowed: bool = False
+    report_submission_allowed: bool = False
+    vulnerability_confirmation_allowed: bool = False
+    planning_only: bool = True
+    dry_run_only: bool = True
+    source: str = "scoped-runtime-execution-gate-bundle-handoff-packet"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "kind": "scoped_runtime_execution_gate_bundle_handoff_packet",
+            "source": self.source,
+            "handoff_packet_id": self.handoff_packet_id,
+            "review_packet_id": self.review_packet_id,
+            "verification_status": self.verification_status,
+            "review_status": self.review_status,
+            "handoff_status": self.handoff_status,
+            "handoff_state": self.handoff_state,
+            "reviewed_by": self.reviewed_by,
+            "handoff_to": self.handoff_to,
+            "handoff_note": self.handoff_note,
+            "bundle_dir": self.bundle_dir,
+            "bundle_mode": self.bundle_mode,
+            "gate_id": self.gate_id,
+            "request_id": self.request_id,
+            "gate_status": self.gate_status,
+            "present_files": list(self.present_files),
+            "missing_files": list(self.missing_files),
+            "unexpected_files": list(self.unexpected_files),
+            "verification_findings": list(self.verification_findings),
+            "review_findings": list(self.review_findings),
+            "handoff_findings": list(self.handoff_findings),
+            "blocking_findings": list(self.blocking_findings),
+            "adapter_execution_state": self.adapter_execution_state,
+            "can_execute_now": self.can_execute_now,
+            "execution_allowed": self.execution_allowed,
+            "validation_allowed": self.validation_allowed,
+            "runtime_execution_allowed": self.runtime_execution_allowed,
+            "tool_execution_allowed": self.tool_execution_allowed,
+            "browser_execution_allowed": self.browser_execution_allowed,
+            "network_requests_allowed": self.network_requests_allowed,
+            "evidence_collection_allowed": self.evidence_collection_allowed,
+            "target_mutation_allowed": self.target_mutation_allowed,
+            "report_submission_allowed": self.report_submission_allowed,
+            "vulnerability_confirmation_allowed": self.vulnerability_confirmation_allowed,
+            "planning_only": self.planning_only,
+            "dry_run_only": self.dry_run_only,
+            "safety": safety_metadata(),
+        }
+
+    def to_markdown(self) -> str:
+        lines = [
+            "# Scoped Runtime Execution Gate Bundle Handoff Packet",
+            "",
+            "## Summary",
+            "",
+            f"- Handoff packet ID: `{self.handoff_packet_id}`",
+            f"- Review packet ID: `{self.review_packet_id}`",
+            f"- Verification status: `{self.verification_status}`",
+            f"- Review status: `{self.review_status}`",
+            f"- Handoff status: `{self.handoff_status}`",
+            f"- Handoff state: `{self.handoff_state}`",
+            f"- Reviewed by: `{self.reviewed_by}`",
+            f"- Handoff to: `{self.handoff_to}`",
+            f"- Bundle directory: `{self.bundle_dir}`",
+            f"- Bundle mode: `{self.bundle_mode}`",
+            f"- Gate ID: `{self.gate_id}`",
+            f"- Request ID: `{self.request_id}`",
+            f"- Gate status: `{self.gate_status}`",
+            "",
+            "## Handoff note",
+            "",
+            self.handoff_note or "none",
+            "",
+            "## Files",
+            "",
+            f"- Present files: `{', '.join(self.present_files) or 'none'}`",
+            f"- Missing files: `{', '.join(self.missing_files) or 'none'}`",
+            f"- Unexpected files: `{', '.join(self.unexpected_files) or 'none'}`",
+            "",
+            "## Execution state",
+            "",
+            f"- Adapter execution state: `{self.adapter_execution_state}`",
+            f"- Can execute now: `{str(self.can_execute_now).lower()}`",
+            f"- Execution allowed: `{str(self.execution_allowed).lower()}`",
+            f"- Validation allowed: `{str(self.validation_allowed).lower()}`",
+            f"- Runtime execution allowed: `{str(self.runtime_execution_allowed).lower()}`",
+            f"- Tool execution allowed: `{str(self.tool_execution_allowed).lower()}`",
+            f"- Browser execution allowed: `{str(self.browser_execution_allowed).lower()}`",
+            f"- Network requests allowed: `{str(self.network_requests_allowed).lower()}`",
+            f"- Evidence collection allowed: `{str(self.evidence_collection_allowed).lower()}`",
+            f"- Target mutation allowed: `{str(self.target_mutation_allowed).lower()}`",
+            f"- Report submission allowed: `{str(self.report_submission_allowed).lower()}`",
+            f"- Vulnerability confirmation allowed: `{str(self.vulnerability_confirmation_allowed).lower()}`",
+            "",
+            "## Verification findings",
+            "",
+        ]
+
+        if self.verification_findings:
+            lines.extend(f"- {finding}" for finding in self.verification_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Review findings", ""])
+        if self.review_findings:
+            lines.extend(f"- {finding}" for finding in self.review_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Handoff findings", ""])
+        if self.handoff_findings:
+            lines.extend(f"- {finding}" for finding in self.handoff_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Blocking findings", ""])
+        if self.blocking_findings:
+            lines.extend(f"- {finding}" for finding in self.blocking_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(
+            [
+                "",
+                "## Safety statement",
+                "",
+                "This handoff packet is local-only, deterministic, planning-only, and dry-run-only.",
+                "",
+                "It does not execute curl, call subprocess, send network requests, execute tools, launch browsers, call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities.",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+
+
+def build_scoped_runtime_execution_gate_bundle_handoff_packet(
+    review_packet: dict[str, Any],
+    *,
+    handoff_to: str = "future-reviewer",
+    handoff_note: str = "",
+) -> ScopedRuntimeExecutionGateBundleHandoffPacket:
+    """Create a handoff packet from a bundle review packet without execution."""
+    blocking = list(review_packet.get("blocking_findings") or [])
+
+    if review_packet.get("kind") != "scoped_runtime_execution_gate_bundle_review_packet":
+        blocking.append("Review packet input has unexpected artifact kind.")
+
+    if review_packet.get("verification_status") != "verified-local-bundle-no-execution":
+        blocking.append("Review packet does not reference a verified local bundle verification artifact.")
+
+    if review_packet.get("review_status") != "accepted-local-bundle-verification-no-execution":
+        blocking.append("Review packet is not accepted-local-bundle-verification-no-execution.")
+
+    if review_packet.get("bundle_mode") != "local_files_only_no_execution":
+        blocking.append("Review packet does not record local_files_only_no_execution mode.")
+
+    if review_packet.get("missing_files"):
+        blocking.append("Review packet still reports missing files.")
+
+    if review_packet.get("unexpected_files"):
+        blocking.append("Review packet still reports unexpected files.")
+
+    execution_flags = (
+        "can_execute_now",
+        "execution_allowed",
+        "validation_allowed",
+        "runtime_execution_allowed",
+        "tool_execution_allowed",
+        "browser_execution_allowed",
+        "network_requests_allowed",
+        "evidence_collection_allowed",
+        "target_mutation_allowed",
+        "report_submission_allowed",
+        "vulnerability_confirmation_allowed",
+    )
+    for flag in execution_flags:
+        if review_packet.get(flag) is not False:
+            blocking.append(f"Review packet does not keep {flag} false.")
+
+    safety = review_packet.get("safety")
+    if isinstance(safety, dict):
+        for safety_key in (
+            "network_requests",
+            "tool_execution",
+            "evidence_collection",
+            "validation_execution",
+            "report_submission",
+            "vulnerability_confirmation",
+        ):
+            if safety.get(safety_key) is not False:
+                blocking.append(f"Review packet safety metadata does not keep {safety_key} false.")
+    else:
+        blocking.append("Review packet is missing safety metadata.")
+
+    handoff_status = (
+        "blocked-local-bundle-handoff"
+        if blocking
+        else "ready-local-bundle-handoff-no-execution"
+    )
+
+    gate_id = str(review_packet.get("gate_id") or "UNKNOWN")
+    review_packet_id = str(review_packet.get("review_packet_id") or "UNKNOWN")
+
+    handoff_findings = (
+        "Handoff packet inspected a local bundle review packet only.",
+        "Handoff packet summarizes verification, review, bundle, gate, and safety metadata for a future reviewer or operator.",
+        "Handoff packet preserves not_executed state and false execution flags.",
+        "Handoff packet does not call curl, subprocess, network, browser, provider, evidence, mutation, report, or vulnerability-confirmation paths.",
+    )
+
+    return ScopedRuntimeExecutionGateBundleHandoffPacket(
+        handoff_packet_id=f"SREG-BUNDLE-HANDOFF-{gate_id}",
+        review_packet_id=review_packet_id,
+        verification_status=str(review_packet.get("verification_status") or ""),
+        review_status=str(review_packet.get("review_status") or ""),
+        handoff_status=handoff_status,
+        handoff_state="handoff_local_only",
+        reviewed_by=str(review_packet.get("reviewed_by") or ""),
+        handoff_to=handoff_to,
+        handoff_note=handoff_note,
+        bundle_dir=str(review_packet.get("bundle_dir") or ""),
+        bundle_mode=str(review_packet.get("bundle_mode") or ""),
+        gate_id=gate_id,
+        request_id=str(review_packet.get("request_id") or ""),
+        gate_status=str(review_packet.get("gate_status") or ""),
+        present_files=tuple(review_packet.get("present_files") or ()),
+        missing_files=tuple(review_packet.get("missing_files") or ()),
+        unexpected_files=tuple(review_packet.get("unexpected_files") or ()),
+        verification_findings=tuple(review_packet.get("verification_findings") or ()),
+        review_findings=tuple(review_packet.get("review_findings") or ()),
+        handoff_findings=handoff_findings,
+        blocking_findings=tuple(blocking),
+    )
+
+
 @dataclass(frozen=True)
 class ScopedRuntimeExecutionGate:
     gate_name: str = "scoped-runtime-execution-gate"
