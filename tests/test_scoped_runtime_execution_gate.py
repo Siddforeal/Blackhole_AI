@@ -10,6 +10,7 @@ from bugintel.adapters.scoped_runtime.contracts import (
 from bugintel.adapters.scoped_runtime.execution_gate import (
     ScopedRuntimeExecutionGate,
     evaluate_scoped_runtime_execution_gate,
+    review_scoped_runtime_execution_gate_bundle_verification,
     verify_scoped_runtime_execution_gate_bundle,
 )
 
@@ -276,6 +277,74 @@ def test_execution_gate_bundle_verification_markdown_is_human_readable_and_safe(
 
     assert "# Scoped Runtime Execution Gate Bundle Verification" in markdown
     assert "Verification status: `verified-local-bundle-no-execution`" in markdown
+    assert "Network requests allowed: `false`" in markdown
+    assert "Tool execution allowed: `false`" in markdown
+    assert "does not execute curl" in markdown
+
+
+
+def test_execution_gate_bundle_review_packet_accepts_verified_bundle_without_execution(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path)
+    verification = verify_scoped_runtime_execution_gate_bundle(bundle_dir)
+
+    packet = review_scoped_runtime_execution_gate_bundle_verification(
+        verification.to_dict(),
+        reviewed_by="human-reviewer",
+        review_note="Reviewed local bundle verification artifact only; no execution authorized.",
+    )
+    data = packet.to_dict()
+
+    assert data["kind"] == "scoped_runtime_execution_gate_bundle_review_packet"
+    assert data["review_status"] == "accepted-local-bundle-verification-no-execution"
+    assert data["review_state"] == "reviewed_local_only"
+    assert data["reviewed_by"] == "human-reviewer"
+    assert data["verification_status"] == "verified-local-bundle-no-execution"
+    assert data["bundle_mode"] == "local_files_only_no_execution"
+    assert data["missing_files"] == []
+    assert data["unexpected_files"] == []
+    assert data["adapter_execution_state"] == "not_executed"
+    assert data["can_execute_now"] is False
+    assert data["execution_allowed"] is False
+    assert data["runtime_execution_allowed"] is False
+    assert data["tool_execution_allowed"] is False
+    assert data["network_requests_allowed"] is False
+    assert data["evidence_collection_allowed"] is False
+    assert data["target_mutation_allowed"] is False
+    assert data["report_submission_allowed"] is False
+    assert data["vulnerability_confirmation_allowed"] is False
+    assert data["blocking_findings"] == []
+
+
+def test_execution_gate_bundle_review_packet_blocks_failed_verification(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path, include_markdown=False)
+    verification = verify_scoped_runtime_execution_gate_bundle(bundle_dir)
+
+    data = review_scoped_runtime_execution_gate_bundle_verification(
+        verification.to_dict(),
+        reviewed_by="human-reviewer",
+        review_note="Reviewed failed local bundle verification artifact only.",
+    ).to_dict()
+
+    assert data["review_status"] == "blocked-local-bundle-verification-review"
+    assert data["verification_status"] == "blocked-bundle-verification-failed"
+    assert data["missing_files"] == ["gate.md"]
+    assert any("not in verified-local-bundle-no-execution" in item for item in data["blocking_findings"])
+
+
+def test_execution_gate_bundle_review_packet_markdown_is_human_readable_and_safe(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path)
+    verification = verify_scoped_runtime_execution_gate_bundle(bundle_dir)
+    packet = review_scoped_runtime_execution_gate_bundle_verification(
+        verification.to_dict(),
+        reviewed_by="human-reviewer",
+        review_note="Reviewed local bundle verification artifact only; no execution authorized.",
+    )
+
+    markdown = packet.to_markdown()
+
+    assert "# Scoped Runtime Execution Gate Bundle Review Packet" in markdown
+    assert "Review status: `accepted-local-bundle-verification-no-execution`" in markdown
+    assert "Reviewed by: `human-reviewer`" in markdown
     assert "Network requests allowed: `false`" in markdown
     assert "Tool execution allowed: `false`" in markdown
     assert "does not execute curl" in markdown

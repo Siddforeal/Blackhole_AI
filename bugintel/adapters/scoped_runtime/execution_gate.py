@@ -581,6 +581,256 @@ def _load_bundle_text(path: Path, blocking: list[str], label: str) -> str:
         return ""
 
 
+
+@dataclass(frozen=True)
+class ScopedRuntimeExecutionGateBundleReviewPacket:
+    review_packet_id: str
+    verification_status: str
+    review_status: str
+    review_state: str
+    reviewed_by: str
+    review_note: str
+    bundle_dir: str
+    bundle_mode: str
+    gate_id: str
+    request_id: str
+    gate_status: str
+    present_files: tuple[str, ...]
+    missing_files: tuple[str, ...]
+    unexpected_files: tuple[str, ...]
+    verification_findings: tuple[str, ...]
+    review_findings: tuple[str, ...]
+    blocking_findings: tuple[str, ...]
+    adapter_execution_state: str = "not_executed"
+    can_execute_now: bool = False
+    execution_allowed: bool = False
+    validation_allowed: bool = False
+    runtime_execution_allowed: bool = False
+    tool_execution_allowed: bool = False
+    browser_execution_allowed: bool = False
+    network_requests_allowed: bool = False
+    evidence_collection_allowed: bool = False
+    target_mutation_allowed: bool = False
+    report_submission_allowed: bool = False
+    vulnerability_confirmation_allowed: bool = False
+    planning_only: bool = True
+    dry_run_only: bool = True
+    source: str = "scoped-runtime-execution-gate-bundle-review-packet"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "kind": "scoped_runtime_execution_gate_bundle_review_packet",
+            "source": self.source,
+            "review_packet_id": self.review_packet_id,
+            "verification_status": self.verification_status,
+            "review_status": self.review_status,
+            "review_state": self.review_state,
+            "reviewed_by": self.reviewed_by,
+            "review_note": self.review_note,
+            "bundle_dir": self.bundle_dir,
+            "bundle_mode": self.bundle_mode,
+            "gate_id": self.gate_id,
+            "request_id": self.request_id,
+            "gate_status": self.gate_status,
+            "present_files": list(self.present_files),
+            "missing_files": list(self.missing_files),
+            "unexpected_files": list(self.unexpected_files),
+            "verification_findings": list(self.verification_findings),
+            "review_findings": list(self.review_findings),
+            "blocking_findings": list(self.blocking_findings),
+            "adapter_execution_state": self.adapter_execution_state,
+            "can_execute_now": self.can_execute_now,
+            "execution_allowed": self.execution_allowed,
+            "validation_allowed": self.validation_allowed,
+            "runtime_execution_allowed": self.runtime_execution_allowed,
+            "tool_execution_allowed": self.tool_execution_allowed,
+            "browser_execution_allowed": self.browser_execution_allowed,
+            "network_requests_allowed": self.network_requests_allowed,
+            "evidence_collection_allowed": self.evidence_collection_allowed,
+            "target_mutation_allowed": self.target_mutation_allowed,
+            "report_submission_allowed": self.report_submission_allowed,
+            "vulnerability_confirmation_allowed": self.vulnerability_confirmation_allowed,
+            "planning_only": self.planning_only,
+            "dry_run_only": self.dry_run_only,
+            "safety": safety_metadata(),
+        }
+
+    def to_markdown(self) -> str:
+        lines = [
+            "# Scoped Runtime Execution Gate Bundle Review Packet",
+            "",
+            "## Summary",
+            "",
+            f"- Review packet ID: `{self.review_packet_id}`",
+            f"- Verification status: `{self.verification_status}`",
+            f"- Review status: `{self.review_status}`",
+            f"- Review state: `{self.review_state}`",
+            f"- Reviewed by: `{self.reviewed_by}`",
+            f"- Bundle directory: `{self.bundle_dir}`",
+            f"- Bundle mode: `{self.bundle_mode}`",
+            f"- Gate ID: `{self.gate_id}`",
+            f"- Request ID: `{self.request_id}`",
+            f"- Gate status: `{self.gate_status}`",
+            "",
+            "## Review note",
+            "",
+            self.review_note or "none",
+            "",
+            "## Files",
+            "",
+            f"- Present files: `{', '.join(self.present_files) or 'none'}`",
+            f"- Missing files: `{', '.join(self.missing_files) or 'none'}`",
+            f"- Unexpected files: `{', '.join(self.unexpected_files) or 'none'}`",
+            "",
+            "## Execution state",
+            "",
+            f"- Adapter execution state: `{self.adapter_execution_state}`",
+            f"- Can execute now: `{str(self.can_execute_now).lower()}`",
+            f"- Execution allowed: `{str(self.execution_allowed).lower()}`",
+            f"- Validation allowed: `{str(self.validation_allowed).lower()}`",
+            f"- Runtime execution allowed: `{str(self.runtime_execution_allowed).lower()}`",
+            f"- Tool execution allowed: `{str(self.tool_execution_allowed).lower()}`",
+            f"- Browser execution allowed: `{str(self.browser_execution_allowed).lower()}`",
+            f"- Network requests allowed: `{str(self.network_requests_allowed).lower()}`",
+            f"- Evidence collection allowed: `{str(self.evidence_collection_allowed).lower()}`",
+            f"- Target mutation allowed: `{str(self.target_mutation_allowed).lower()}`",
+            f"- Report submission allowed: `{str(self.report_submission_allowed).lower()}`",
+            f"- Vulnerability confirmation allowed: `{str(self.vulnerability_confirmation_allowed).lower()}`",
+            "",
+            "## Verification findings",
+            "",
+        ]
+
+        if self.verification_findings:
+            lines.extend(f"- {finding}" for finding in self.verification_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Review findings", ""])
+        if self.review_findings:
+            lines.extend(f"- {finding}" for finding in self.review_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Blocking findings", ""])
+        if self.blocking_findings:
+            lines.extend(f"- {finding}" for finding in self.blocking_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(
+            [
+                "",
+                "## Safety statement",
+                "",
+                "This review packet is local-only, deterministic, planning-only, and dry-run-only.",
+                "",
+                "It does not execute curl, call subprocess, send network requests, execute tools, launch browsers, call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities.",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+
+
+def review_scoped_runtime_execution_gate_bundle_verification(
+    verification_artifact: dict[str, Any],
+    *,
+    reviewed_by: str = "human-reviewer",
+    review_note: str = "",
+) -> ScopedRuntimeExecutionGateBundleReviewPacket:
+    """Create a human-reviewable packet from a bundle verification artifact without execution."""
+    blocking = list(verification_artifact.get("blocking_findings") or [])
+
+    if verification_artifact.get("kind") != "scoped_runtime_execution_gate_bundle_verification_artifact":
+        blocking.append("Verification input has unexpected artifact kind.")
+
+    if verification_artifact.get("verification_status") != "verified-local-bundle-no-execution":
+        blocking.append("Bundle verification is not in verified-local-bundle-no-execution status.")
+
+    if verification_artifact.get("bundle_mode") != "local_files_only_no_execution":
+        blocking.append("Bundle verification does not record local_files_only_no_execution mode.")
+
+    if verification_artifact.get("missing_files"):
+        blocking.append("Bundle verification still reports missing files.")
+
+    if verification_artifact.get("unexpected_files"):
+        blocking.append("Bundle verification still reports unexpected files.")
+
+    if verification_artifact.get("markdown_has_unredacted_secret") is not False:
+        blocking.append("Bundle verification did not confirm absence of unredacted secret placeholder.")
+
+    if verification_artifact.get("markdown_has_redacted_placeholder") is not True:
+        blocking.append("Bundle verification did not confirm the redacted token placeholder.")
+
+    execution_flags = (
+        "can_execute_now",
+        "execution_allowed",
+        "validation_allowed",
+        "runtime_execution_allowed",
+        "tool_execution_allowed",
+        "browser_execution_allowed",
+        "network_requests_allowed",
+        "evidence_collection_allowed",
+        "target_mutation_allowed",
+        "report_submission_allowed",
+        "vulnerability_confirmation_allowed",
+    )
+    for flag in execution_flags:
+        if verification_artifact.get(flag) is not False:
+            blocking.append(f"Verification artifact does not keep {flag} false.")
+
+    safety = verification_artifact.get("safety")
+    if isinstance(safety, dict):
+        for safety_key in (
+            "network_requests",
+            "tool_execution",
+            "evidence_collection",
+            "validation_execution",
+            "report_submission",
+            "vulnerability_confirmation",
+        ):
+            if safety.get(safety_key) is not False:
+                blocking.append(f"Verification safety metadata does not keep {safety_key} false.")
+    else:
+        blocking.append("Verification artifact is missing safety metadata.")
+
+    review_status = (
+        "blocked-local-bundle-verification-review"
+        if blocking
+        else "accepted-local-bundle-verification-no-execution"
+    )
+
+    gate_id = str(verification_artifact.get("gate_id") or "UNKNOWN")
+    request_id = str(verification_artifact.get("request_id") or "UNKNOWN")
+
+    review_findings = (
+        "Review packet inspected a local bundle verification artifact only.",
+        "Review packet records human review metadata without allowing execution.",
+        "Review packet preserves not_executed state and false execution flags.",
+        "Review packet does not call curl, subprocess, network, browser, provider, evidence, mutation, report, or vulnerability-confirmation paths.",
+    )
+
+    return ScopedRuntimeExecutionGateBundleReviewPacket(
+        review_packet_id=f"SREG-BUNDLE-REVIEW-{gate_id}",
+        verification_status=str(verification_artifact.get("verification_status") or ""),
+        review_status=review_status,
+        review_state="reviewed_local_only",
+        reviewed_by=reviewed_by,
+        review_note=review_note,
+        bundle_dir=str(verification_artifact.get("bundle_dir") or ""),
+        bundle_mode=str(verification_artifact.get("bundle_mode") or ""),
+        gate_id=gate_id,
+        request_id=request_id,
+        gate_status=str(verification_artifact.get("gate_status") or ""),
+        present_files=tuple(verification_artifact.get("present_files") or ()),
+        missing_files=tuple(verification_artifact.get("missing_files") or ()),
+        unexpected_files=tuple(verification_artifact.get("unexpected_files") or ()),
+        verification_findings=tuple(verification_artifact.get("verification_findings") or ()),
+        review_findings=review_findings,
+        blocking_findings=tuple(blocking),
+    )
+
+
 @dataclass(frozen=True)
 class ScopedRuntimeExecutionGate:
     gate_name: str = "scoped-runtime-execution-gate"
