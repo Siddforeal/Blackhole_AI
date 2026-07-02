@@ -445,3 +445,107 @@ def test_scoped_runtime_execution_gate_bundle_handoff_packet_cli_writes_json_and
     assert "# Scoped Runtime Execution Gate Bundle Handoff Packet" in markdown
     assert "Saved scoped runtime execution gate bundle handoff packet JSON" in handoff_result.stdout
     assert "Saved scoped runtime execution gate bundle handoff packet Markdown" in handoff_result.stdout
+
+
+def test_scoped_runtime_execution_gate_bundle_handoff_checklist_cli_writes_json_and_markdown(tmp_path) -> None:
+    input_file = tmp_path / "request.json"
+    bundle_dir = tmp_path / "bundle"
+    verification_json = tmp_path / "verification.json"
+    review_json = tmp_path / "review.json"
+    handoff_json = tmp_path / "handoff.json"
+    checklist_json = tmp_path / "checklist.json"
+    checklist_markdown = tmp_path / "checklist.md"
+    input_file.write_text(json.dumps(_blueprint()))
+
+    bundle_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate",
+            str(input_file),
+            "--future-authorization-requested",
+            "--human-authorization-recorded",
+            "--controlled-account-recorded",
+            "--scope-review-recorded",
+            "--bundle-output-dir",
+            str(bundle_dir),
+        ],
+    )
+    assert bundle_result.exit_code == 0
+
+    verify_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-verify",
+            str(bundle_dir),
+            "--json-output",
+            str(verification_json),
+        ],
+    )
+    assert verify_result.exit_code == 0
+
+    review_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-review-packet",
+            str(verification_json),
+            "--reviewed-by",
+            "human-reviewer",
+            "--review-note",
+            "Reviewed local bundle verification artifact only; no execution authorized.",
+            "--json-output",
+            str(review_json),
+        ],
+    )
+    assert review_result.exit_code == 0
+
+    handoff_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-handoff-packet",
+            str(review_json),
+            "--handoff-to",
+            "future-reviewer",
+            "--handoff-note",
+            "Handoff for future local review only; no execution authorized.",
+            "--json-output",
+            str(handoff_json),
+        ],
+    )
+    assert handoff_result.exit_code == 0
+
+    checklist_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-handoff-checklist",
+            str(handoff_json),
+            "--checked-by",
+            "human-reviewer",
+            "--checklist-note",
+            "Checked local handoff packet only; no execution authorized.",
+            "--json-output",
+            str(checklist_json),
+            "--output-file",
+            str(checklist_markdown),
+        ],
+    )
+
+    assert checklist_result.exit_code == 0
+    assert checklist_json.exists()
+    assert checklist_markdown.exists()
+
+    data = json.loads(checklist_json.read_text())
+    markdown = checklist_markdown.read_text()
+
+    assert data["kind"] == "scoped_runtime_execution_gate_bundle_handoff_checklist"
+    assert data["checklist_status"] == "passed-local-bundle-handoff-checklist-no-execution"
+    assert data["checklist_state"] == "checked_local_only"
+    assert data["checked_by"] == "human-reviewer"
+    assert len(data["passed_checks"]) == len(data["required_checks"])
+    assert data["failed_checks"] == []
+    assert data["can_execute_now"] is False
+    assert data["network_requests_allowed"] is False
+    assert data["tool_execution_allowed"] is False
+    assert data["evidence_collection_allowed"] is False
+    assert "# Scoped Runtime Execution Gate Bundle Handoff Checklist" in markdown
+    assert "Saved scoped runtime execution gate bundle handoff checklist JSON" in checklist_result.stdout
+    assert "Saved scoped runtime execution gate bundle handoff checklist Markdown" in checklist_result.stdout

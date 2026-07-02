@@ -1099,6 +1099,337 @@ def build_scoped_runtime_execution_gate_bundle_handoff_packet(
     )
 
 
+
+@dataclass(frozen=True)
+class ScopedRuntimeExecutionGateBundleHandoffChecklist:
+    checklist_id: str
+    handoff_packet_id: str
+    handoff_status: str
+    checklist_status: str
+    checklist_state: str
+    checked_by: str
+    checklist_note: str
+    handoff_to: str
+    verification_status: str
+    review_status: str
+    bundle_dir: str
+    bundle_mode: str
+    gate_id: str
+    request_id: str
+    gate_status: str
+    required_checks: tuple[str, ...]
+    passed_checks: tuple[str, ...]
+    failed_checks: tuple[str, ...]
+    handoff_findings: tuple[str, ...]
+    checklist_findings: tuple[str, ...]
+    blocking_findings: tuple[str, ...]
+    adapter_execution_state: str = "not_executed"
+    can_execute_now: bool = False
+    execution_allowed: bool = False
+    validation_allowed: bool = False
+    runtime_execution_allowed: bool = False
+    tool_execution_allowed: bool = False
+    browser_execution_allowed: bool = False
+    network_requests_allowed: bool = False
+    evidence_collection_allowed: bool = False
+    target_mutation_allowed: bool = False
+    report_submission_allowed: bool = False
+    vulnerability_confirmation_allowed: bool = False
+    planning_only: bool = True
+    dry_run_only: bool = True
+    source: str = "scoped-runtime-execution-gate-bundle-handoff-checklist"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "kind": "scoped_runtime_execution_gate_bundle_handoff_checklist",
+            "source": self.source,
+            "checklist_id": self.checklist_id,
+            "handoff_packet_id": self.handoff_packet_id,
+            "handoff_status": self.handoff_status,
+            "checklist_status": self.checklist_status,
+            "checklist_state": self.checklist_state,
+            "checked_by": self.checked_by,
+            "checklist_note": self.checklist_note,
+            "handoff_to": self.handoff_to,
+            "verification_status": self.verification_status,
+            "review_status": self.review_status,
+            "bundle_dir": self.bundle_dir,
+            "bundle_mode": self.bundle_mode,
+            "gate_id": self.gate_id,
+            "request_id": self.request_id,
+            "gate_status": self.gate_status,
+            "required_checks": list(self.required_checks),
+            "passed_checks": list(self.passed_checks),
+            "failed_checks": list(self.failed_checks),
+            "handoff_findings": list(self.handoff_findings),
+            "checklist_findings": list(self.checklist_findings),
+            "blocking_findings": list(self.blocking_findings),
+            "adapter_execution_state": self.adapter_execution_state,
+            "can_execute_now": self.can_execute_now,
+            "execution_allowed": self.execution_allowed,
+            "validation_allowed": self.validation_allowed,
+            "runtime_execution_allowed": self.runtime_execution_allowed,
+            "tool_execution_allowed": self.tool_execution_allowed,
+            "browser_execution_allowed": self.browser_execution_allowed,
+            "network_requests_allowed": self.network_requests_allowed,
+            "evidence_collection_allowed": self.evidence_collection_allowed,
+            "target_mutation_allowed": self.target_mutation_allowed,
+            "report_submission_allowed": self.report_submission_allowed,
+            "vulnerability_confirmation_allowed": self.vulnerability_confirmation_allowed,
+            "planning_only": self.planning_only,
+            "dry_run_only": self.dry_run_only,
+            "safety": safety_metadata(),
+        }
+
+    def to_markdown(self) -> str:
+        lines = [
+            "# Scoped Runtime Execution Gate Bundle Handoff Checklist",
+            "",
+            "## Summary",
+            "",
+            f"- Checklist ID: `{self.checklist_id}`",
+            f"- Handoff packet ID: `{self.handoff_packet_id}`",
+            f"- Handoff status: `{self.handoff_status}`",
+            f"- Checklist status: `{self.checklist_status}`",
+            f"- Checklist state: `{self.checklist_state}`",
+            f"- Checked by: `{self.checked_by}`",
+            f"- Handoff to: `{self.handoff_to}`",
+            f"- Verification status: `{self.verification_status}`",
+            f"- Review status: `{self.review_status}`",
+            f"- Bundle directory: `{self.bundle_dir}`",
+            f"- Bundle mode: `{self.bundle_mode}`",
+            f"- Gate ID: `{self.gate_id}`",
+            f"- Request ID: `{self.request_id}`",
+            f"- Gate status: `{self.gate_status}`",
+            "",
+            "## Checklist note",
+            "",
+            self.checklist_note or "none",
+            "",
+            "## Execution state",
+            "",
+            f"- Adapter execution state: `{self.adapter_execution_state}`",
+            f"- Can execute now: `{str(self.can_execute_now).lower()}`",
+            f"- Execution allowed: `{str(self.execution_allowed).lower()}`",
+            f"- Validation allowed: `{str(self.validation_allowed).lower()}`",
+            f"- Runtime execution allowed: `{str(self.runtime_execution_allowed).lower()}`",
+            f"- Tool execution allowed: `{str(self.tool_execution_allowed).lower()}`",
+            f"- Browser execution allowed: `{str(self.browser_execution_allowed).lower()}`",
+            f"- Network requests allowed: `{str(self.network_requests_allowed).lower()}`",
+            f"- Evidence collection allowed: `{str(self.evidence_collection_allowed).lower()}`",
+            f"- Target mutation allowed: `{str(self.target_mutation_allowed).lower()}`",
+            f"- Report submission allowed: `{str(self.report_submission_allowed).lower()}`",
+            f"- Vulnerability confirmation allowed: `{str(self.vulnerability_confirmation_allowed).lower()}`",
+            "",
+            "## Required checks",
+            "",
+        ]
+
+        if self.required_checks:
+            lines.extend(f"- {item}" for item in self.required_checks)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Passed checks", ""])
+        if self.passed_checks:
+            lines.extend(f"- {item}" for item in self.passed_checks)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Failed checks", ""])
+        if self.failed_checks:
+            lines.extend(f"- {item}" for item in self.failed_checks)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Handoff findings", ""])
+        if self.handoff_findings:
+            lines.extend(f"- {finding}" for finding in self.handoff_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Checklist findings", ""])
+        if self.checklist_findings:
+            lines.extend(f"- {finding}" for finding in self.checklist_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Blocking findings", ""])
+        if self.blocking_findings:
+            lines.extend(f"- {finding}" for finding in self.blocking_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(
+            [
+                "",
+                "## Safety statement",
+                "",
+                "This checklist is local-only, deterministic, planning-only, and dry-run-only.",
+                "",
+                "It does not execute curl, call subprocess, send network requests, execute tools, launch browsers, call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities.",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+
+
+def build_scoped_runtime_execution_gate_bundle_handoff_checklist(
+    handoff_packet: dict[str, Any],
+    *,
+    checked_by: str = "human-reviewer",
+    checklist_note: str = "",
+) -> ScopedRuntimeExecutionGateBundleHandoffChecklist:
+    """Create a local checklist from a bundle handoff packet without execution."""
+    blocking = list(handoff_packet.get("blocking_findings") or [])
+
+    required_checks = (
+        "Input kind is scoped_runtime_execution_gate_bundle_handoff_packet.",
+        "Handoff status is ready-local-bundle-handoff-no-execution.",
+        "Handoff state is handoff_local_only.",
+        "Verification status is verified-local-bundle-no-execution.",
+        "Review status is accepted-local-bundle-verification-no-execution.",
+        "Bundle mode is local_files_only_no_execution.",
+        "Gate ID, request ID, and handoff packet ID are present.",
+        "No missing files are reported.",
+        "No unexpected files are reported.",
+        "Execution and runtime flags remain false.",
+        "Safety metadata keeps execution-like capabilities false.",
+    )
+
+    passed: list[str] = []
+    failed: list[str] = []
+
+    def record(condition: bool, check: str, finding: str) -> None:
+        if condition:
+            passed.append(check)
+        else:
+            failed.append(check)
+            blocking.append(finding)
+
+    record(
+        handoff_packet.get("kind") == "scoped_runtime_execution_gate_bundle_handoff_packet",
+        required_checks[0],
+        "Handoff checklist input has unexpected artifact kind.",
+    )
+    record(
+        handoff_packet.get("handoff_status") == "ready-local-bundle-handoff-no-execution",
+        required_checks[1],
+        "Handoff packet is not ready-local-bundle-handoff-no-execution.",
+    )
+    record(
+        handoff_packet.get("handoff_state") == "handoff_local_only",
+        required_checks[2],
+        "Handoff packet is not in handoff_local_only state.",
+    )
+    record(
+        handoff_packet.get("verification_status") == "verified-local-bundle-no-execution",
+        required_checks[3],
+        "Handoff packet does not reference a verified local bundle verification artifact.",
+    )
+    record(
+        handoff_packet.get("review_status") == "accepted-local-bundle-verification-no-execution",
+        required_checks[4],
+        "Handoff packet does not reference an accepted local bundle review packet.",
+    )
+    record(
+        handoff_packet.get("bundle_mode") == "local_files_only_no_execution",
+        required_checks[5],
+        "Handoff packet does not record local_files_only_no_execution mode.",
+    )
+    record(
+        bool(handoff_packet.get("gate_id")) and bool(handoff_packet.get("request_id")) and bool(handoff_packet.get("handoff_packet_id")),
+        required_checks[6],
+        "Handoff packet is missing gate_id, request_id, or handoff_packet_id.",
+    )
+    record(
+        not handoff_packet.get("missing_files"),
+        required_checks[7],
+        "Handoff packet still reports missing files.",
+    )
+    record(
+        not handoff_packet.get("unexpected_files"),
+        required_checks[8],
+        "Handoff packet still reports unexpected files.",
+    )
+
+    execution_flags = (
+        "can_execute_now",
+        "execution_allowed",
+        "validation_allowed",
+        "runtime_execution_allowed",
+        "tool_execution_allowed",
+        "browser_execution_allowed",
+        "network_requests_allowed",
+        "evidence_collection_allowed",
+        "target_mutation_allowed",
+        "report_submission_allowed",
+        "vulnerability_confirmation_allowed",
+    )
+    execution_flags_ok = all(handoff_packet.get(flag) is False for flag in execution_flags)
+    record(
+        execution_flags_ok,
+        required_checks[9],
+        "Handoff packet does not keep every execution and runtime flag false.",
+    )
+
+    safety = handoff_packet.get("safety")
+    safety_keys = (
+        "network_requests",
+        "tool_execution",
+        "evidence_collection",
+        "validation_execution",
+        "report_submission",
+        "vulnerability_confirmation",
+    )
+    safety_ok = isinstance(safety, dict) and all(safety.get(key) is False for key in safety_keys)
+    record(
+        safety_ok,
+        required_checks[10],
+        "Handoff packet safety metadata does not keep every execution-like capability false.",
+    )
+
+    checklist_status = (
+        "blocked-local-bundle-handoff-checklist"
+        if blocking
+        else "passed-local-bundle-handoff-checklist-no-execution"
+    )
+
+    gate_id = str(handoff_packet.get("gate_id") or "UNKNOWN")
+    handoff_packet_id = str(handoff_packet.get("handoff_packet_id") or "UNKNOWN")
+
+    checklist_findings = (
+        "Checklist inspected a local bundle handoff packet only.",
+        "Checklist confirmed required handoff, verification, review, bundle, gate, and safety metadata.",
+        "Checklist preserves not_executed state and false execution flags.",
+        "Checklist does not call curl, subprocess, network, browser, provider, evidence, mutation, report, or vulnerability-confirmation paths.",
+    )
+
+    return ScopedRuntimeExecutionGateBundleHandoffChecklist(
+        checklist_id=f"SREG-BUNDLE-HANDOFF-CHECKLIST-{gate_id}",
+        handoff_packet_id=handoff_packet_id,
+        handoff_status=str(handoff_packet.get("handoff_status") or ""),
+        checklist_status=checklist_status,
+        checklist_state="checked_local_only",
+        checked_by=checked_by,
+        checklist_note=checklist_note,
+        handoff_to=str(handoff_packet.get("handoff_to") or ""),
+        verification_status=str(handoff_packet.get("verification_status") or ""),
+        review_status=str(handoff_packet.get("review_status") or ""),
+        bundle_dir=str(handoff_packet.get("bundle_dir") or ""),
+        bundle_mode=str(handoff_packet.get("bundle_mode") or ""),
+        gate_id=gate_id,
+        request_id=str(handoff_packet.get("request_id") or ""),
+        gate_status=str(handoff_packet.get("gate_status") or ""),
+        required_checks=required_checks,
+        passed_checks=tuple(passed),
+        failed_checks=tuple(failed),
+        handoff_findings=tuple(handoff_packet.get("handoff_findings") or ()),
+        checklist_findings=checklist_findings,
+        blocking_findings=tuple(blocking),
+    )
+
+
 @dataclass(frozen=True)
 class ScopedRuntimeExecutionGate:
     gate_name: str = "scoped-runtime-execution-gate"
