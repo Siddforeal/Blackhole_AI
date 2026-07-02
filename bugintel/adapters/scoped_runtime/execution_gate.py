@@ -1430,6 +1430,300 @@ def build_scoped_runtime_execution_gate_bundle_handoff_checklist(
     )
 
 
+
+@dataclass(frozen=True)
+class ScopedRuntimeExecutionGateBundleHandoffChecklistSummary:
+    summary_id: str
+    checklist_id: str
+    handoff_packet_id: str
+    checklist_status: str
+    summary_status: str
+    summary_state: str
+    summarized_by: str
+    summary_note: str
+    checked_by: str
+    handoff_status: str
+    handoff_to: str
+    verification_status: str
+    review_status: str
+    bundle_dir: str
+    bundle_mode: str
+    gate_id: str
+    request_id: str
+    gate_status: str
+    required_check_count: int
+    passed_check_count: int
+    failed_check_count: int
+    failed_checks: tuple[str, ...]
+    checklist_findings: tuple[str, ...]
+    summary_findings: tuple[str, ...]
+    blocking_findings: tuple[str, ...]
+    adapter_execution_state: str = "not_executed"
+    can_execute_now: bool = False
+    execution_allowed: bool = False
+    validation_allowed: bool = False
+    runtime_execution_allowed: bool = False
+    tool_execution_allowed: bool = False
+    browser_execution_allowed: bool = False
+    network_requests_allowed: bool = False
+    evidence_collection_allowed: bool = False
+    target_mutation_allowed: bool = False
+    report_submission_allowed: bool = False
+    vulnerability_confirmation_allowed: bool = False
+    planning_only: bool = True
+    dry_run_only: bool = True
+    source: str = "scoped-runtime-execution-gate-bundle-handoff-checklist-summary"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "kind": "scoped_runtime_execution_gate_bundle_handoff_checklist_summary",
+            "source": self.source,
+            "summary_id": self.summary_id,
+            "checklist_id": self.checklist_id,
+            "handoff_packet_id": self.handoff_packet_id,
+            "checklist_status": self.checklist_status,
+            "summary_status": self.summary_status,
+            "summary_state": self.summary_state,
+            "summarized_by": self.summarized_by,
+            "summary_note": self.summary_note,
+            "checked_by": self.checked_by,
+            "handoff_status": self.handoff_status,
+            "handoff_to": self.handoff_to,
+            "verification_status": self.verification_status,
+            "review_status": self.review_status,
+            "bundle_dir": self.bundle_dir,
+            "bundle_mode": self.bundle_mode,
+            "gate_id": self.gate_id,
+            "request_id": self.request_id,
+            "gate_status": self.gate_status,
+            "required_check_count": self.required_check_count,
+            "passed_check_count": self.passed_check_count,
+            "failed_check_count": self.failed_check_count,
+            "failed_checks": list(self.failed_checks),
+            "checklist_findings": list(self.checklist_findings),
+            "summary_findings": list(self.summary_findings),
+            "blocking_findings": list(self.blocking_findings),
+            "adapter_execution_state": self.adapter_execution_state,
+            "can_execute_now": self.can_execute_now,
+            "execution_allowed": self.execution_allowed,
+            "validation_allowed": self.validation_allowed,
+            "runtime_execution_allowed": self.runtime_execution_allowed,
+            "tool_execution_allowed": self.tool_execution_allowed,
+            "browser_execution_allowed": self.browser_execution_allowed,
+            "network_requests_allowed": self.network_requests_allowed,
+            "evidence_collection_allowed": self.evidence_collection_allowed,
+            "target_mutation_allowed": self.target_mutation_allowed,
+            "report_submission_allowed": self.report_submission_allowed,
+            "vulnerability_confirmation_allowed": self.vulnerability_confirmation_allowed,
+            "planning_only": self.planning_only,
+            "dry_run_only": self.dry_run_only,
+            "safety": safety_metadata(),
+        }
+
+    def to_markdown(self) -> str:
+        lines = [
+            "# Scoped Runtime Execution Gate Bundle Handoff Checklist Summary",
+            "",
+            "## Summary",
+            "",
+            f"- Summary ID: `{self.summary_id}`",
+            f"- Checklist ID: `{self.checklist_id}`",
+            f"- Handoff packet ID: `{self.handoff_packet_id}`",
+            f"- Checklist status: `{self.checklist_status}`",
+            f"- Summary status: `{self.summary_status}`",
+            f"- Summary state: `{self.summary_state}`",
+            f"- Summarized by: `{self.summarized_by}`",
+            f"- Checked by: `{self.checked_by}`",
+            f"- Handoff status: `{self.handoff_status}`",
+            f"- Handoff to: `{self.handoff_to}`",
+            f"- Verification status: `{self.verification_status}`",
+            f"- Review status: `{self.review_status}`",
+            f"- Bundle directory: `{self.bundle_dir}`",
+            f"- Bundle mode: `{self.bundle_mode}`",
+            f"- Gate ID: `{self.gate_id}`",
+            f"- Request ID: `{self.request_id}`",
+            f"- Gate status: `{self.gate_status}`",
+            "",
+            "## Summary note",
+            "",
+            self.summary_note or "none",
+            "",
+            "## Check counts",
+            "",
+            f"- Required checks: `{self.required_check_count}`",
+            f"- Passed checks: `{self.passed_check_count}`",
+            f"- Failed checks: `{self.failed_check_count}`",
+            "",
+            "## Execution state",
+            "",
+            f"- Adapter execution state: `{self.adapter_execution_state}`",
+            f"- Can execute now: `{str(self.can_execute_now).lower()}`",
+            f"- Execution allowed: `{str(self.execution_allowed).lower()}`",
+            f"- Validation allowed: `{str(self.validation_allowed).lower()}`",
+            f"- Runtime execution allowed: `{str(self.runtime_execution_allowed).lower()}`",
+            f"- Tool execution allowed: `{str(self.tool_execution_allowed).lower()}`",
+            f"- Browser execution allowed: `{str(self.browser_execution_allowed).lower()}`",
+            f"- Network requests allowed: `{str(self.network_requests_allowed).lower()}`",
+            f"- Evidence collection allowed: `{str(self.evidence_collection_allowed).lower()}`",
+            f"- Target mutation allowed: `{str(self.target_mutation_allowed).lower()}`",
+            f"- Report submission allowed: `{str(self.report_submission_allowed).lower()}`",
+            f"- Vulnerability confirmation allowed: `{str(self.vulnerability_confirmation_allowed).lower()}`",
+            "",
+            "## Failed checks",
+            "",
+        ]
+
+        if self.failed_checks:
+            lines.extend(f"- {item}" for item in self.failed_checks)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Checklist findings", ""])
+        if self.checklist_findings:
+            lines.extend(f"- {finding}" for finding in self.checklist_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Summary findings", ""])
+        if self.summary_findings:
+            lines.extend(f"- {finding}" for finding in self.summary_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Blocking findings", ""])
+        if self.blocking_findings:
+            lines.extend(f"- {finding}" for finding in self.blocking_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(
+            [
+                "",
+                "## Safety statement",
+                "",
+                "This summary is local-only, deterministic, planning-only, and dry-run-only.",
+                "",
+                "It does not execute curl, call subprocess, send network requests, execute tools, launch browsers, call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities.",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+
+
+def summarize_scoped_runtime_execution_gate_bundle_handoff_checklist(
+    checklist: dict[str, Any],
+    *,
+    summarized_by: str = "human-reviewer",
+    summary_note: str = "",
+) -> ScopedRuntimeExecutionGateBundleHandoffChecklistSummary:
+    """Create a compact summary from a bundle handoff checklist without execution."""
+    blocking = list(checklist.get("blocking_findings") or [])
+
+    if checklist.get("kind") != "scoped_runtime_execution_gate_bundle_handoff_checklist":
+        blocking.append("Checklist summary input has unexpected artifact kind.")
+
+    if checklist.get("checklist_status") != "passed-local-bundle-handoff-checklist-no-execution":
+        blocking.append("Checklist is not passed-local-bundle-handoff-checklist-no-execution.")
+
+    if checklist.get("checklist_state") != "checked_local_only":
+        blocking.append("Checklist is not in checked_local_only state.")
+
+    if checklist.get("handoff_status") != "ready-local-bundle-handoff-no-execution":
+        blocking.append("Checklist does not reference a ready handoff packet.")
+
+    required_checks = tuple(checklist.get("required_checks") or ())
+    passed_checks = tuple(checklist.get("passed_checks") or ())
+    failed_checks = tuple(checklist.get("failed_checks") or ())
+
+    if failed_checks:
+        blocking.append("Checklist still reports failed checks.")
+
+    if len(required_checks) != len(passed_checks) or failed_checks:
+        blocking.append("Checklist check counts do not show all required checks passed.")
+
+    if checklist.get("bundle_mode") != "local_files_only_no_execution":
+        blocking.append("Checklist does not record local_files_only_no_execution mode.")
+
+    if not checklist.get("gate_id") or not checklist.get("request_id") or not checklist.get("checklist_id"):
+        blocking.append("Checklist is missing gate_id, request_id, or checklist_id.")
+
+    execution_flags = (
+        "can_execute_now",
+        "execution_allowed",
+        "validation_allowed",
+        "runtime_execution_allowed",
+        "tool_execution_allowed",
+        "browser_execution_allowed",
+        "network_requests_allowed",
+        "evidence_collection_allowed",
+        "target_mutation_allowed",
+        "report_submission_allowed",
+        "vulnerability_confirmation_allowed",
+    )
+    for flag in execution_flags:
+        if checklist.get(flag) is not False:
+            blocking.append(f"Checklist does not keep {flag} false.")
+
+    safety = checklist.get("safety")
+    if isinstance(safety, dict):
+        for safety_key in (
+            "network_requests",
+            "tool_execution",
+            "evidence_collection",
+            "validation_execution",
+            "report_submission",
+            "vulnerability_confirmation",
+        ):
+            if safety.get(safety_key) is not False:
+                blocking.append(f"Checklist safety metadata does not keep {safety_key} false.")
+    else:
+        blocking.append("Checklist is missing safety metadata.")
+
+    summary_status = (
+        "blocked-local-bundle-handoff-checklist-summary"
+        if blocking
+        else "summarized-local-bundle-handoff-checklist-no-execution"
+    )
+
+    gate_id = str(checklist.get("gate_id") or "UNKNOWN")
+    checklist_id = str(checklist.get("checklist_id") or "UNKNOWN")
+
+    summary_findings = (
+        "Checklist summary inspected a local bundle handoff checklist only.",
+        "Checklist summary records pass/block status, check counts, failed checks, blockers, and safety metadata.",
+        "Checklist summary preserves not_executed state and false execution flags.",
+        "Checklist summary does not call curl, subprocess, network, browser, provider, evidence, mutation, report, or vulnerability-confirmation paths.",
+    )
+
+    return ScopedRuntimeExecutionGateBundleHandoffChecklistSummary(
+        summary_id=f"SREG-BUNDLE-HANDOFF-CHECKLIST-SUMMARY-{gate_id}",
+        checklist_id=checklist_id,
+        handoff_packet_id=str(checklist.get("handoff_packet_id") or ""),
+        checklist_status=str(checklist.get("checklist_status") or ""),
+        summary_status=summary_status,
+        summary_state="summarized_local_only",
+        summarized_by=summarized_by,
+        summary_note=summary_note,
+        checked_by=str(checklist.get("checked_by") or ""),
+        handoff_status=str(checklist.get("handoff_status") or ""),
+        handoff_to=str(checklist.get("handoff_to") or ""),
+        verification_status=str(checklist.get("verification_status") or ""),
+        review_status=str(checklist.get("review_status") or ""),
+        bundle_dir=str(checklist.get("bundle_dir") or ""),
+        bundle_mode=str(checklist.get("bundle_mode") or ""),
+        gate_id=gate_id,
+        request_id=str(checklist.get("request_id") or ""),
+        gate_status=str(checklist.get("gate_status") or ""),
+        required_check_count=len(required_checks),
+        passed_check_count=len(passed_checks),
+        failed_check_count=len(failed_checks),
+        failed_checks=failed_checks,
+        checklist_findings=tuple(checklist.get("checklist_findings") or ()),
+        summary_findings=summary_findings,
+        blocking_findings=tuple(blocking),
+    )
+
+
 @dataclass(frozen=True)
 class ScopedRuntimeExecutionGate:
     gate_name: str = "scoped-runtime-execution-gate"

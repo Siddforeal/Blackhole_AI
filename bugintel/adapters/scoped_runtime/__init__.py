@@ -27,6 +27,7 @@ from bugintel.adapters.scoped_runtime.execution_gate import (
     ScopedRuntimeExecutionGate,
     ScopedRuntimeExecutionGateArtifact,
     ScopedRuntimeExecutionGateBundleHandoffChecklist,
+    ScopedRuntimeExecutionGateBundleHandoffChecklistSummary,
     ScopedRuntimeExecutionGateBundleHandoffPacket,
     ScopedRuntimeExecutionGateBundleReviewPacket,
     ScopedRuntimeExecutionGateBundleVerificationArtifact,
@@ -34,6 +35,7 @@ from bugintel.adapters.scoped_runtime.execution_gate import (
     build_scoped_runtime_execution_gate_bundle_handoff_packet,
     evaluate_scoped_runtime_execution_gate,
     review_scoped_runtime_execution_gate_bundle_verification,
+    summarize_scoped_runtime_execution_gate_bundle_handoff_checklist,
     verify_scoped_runtime_execution_gate_bundle,
 )
 
@@ -51,6 +53,7 @@ __all__ = [
     "ScopedRuntimeExecutionGate",
     "ScopedRuntimeExecutionGateArtifact",
     "ScopedRuntimeExecutionGateBundleHandoffChecklist",
+    "ScopedRuntimeExecutionGateBundleHandoffChecklistSummary",
     "ScopedRuntimeExecutionGateBundleHandoffPacket",
     "ScopedRuntimeExecutionGateBundleReviewPacket",
     "ScopedRuntimeExecutionGateBundleVerificationArtifact",
@@ -58,5 +61,6 @@ __all__ = [
     "build_scoped_runtime_execution_gate_bundle_handoff_packet",
     "evaluate_scoped_runtime_execution_gate",
     "review_scoped_runtime_execution_gate_bundle_verification",
+    "summarize_scoped_runtime_execution_gate_bundle_handoff_checklist",
     "verify_scoped_runtime_execution_gate_bundle",
 ]
