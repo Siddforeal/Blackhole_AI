@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.67.0",
+                version="1.68.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.67.0",
+            version="1.68.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.67.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.68.0")
 
 
 @app.command("scope-check")
@@ -18255,6 +18255,113 @@ def scoped_runtime_execution_gate_bundle_handoff_checklist_command(
 
     console.print(
         "Safety: This command only creates a local scoped runtime execution gate bundle handoff checklist. "
+        "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
+        "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+@app.command("scoped-runtime-execution-gate-bundle-handoff-checklist-summary")
+def scoped_runtime_execution_gate_bundle_handoff_checklist_summary_command(
+    checklist_file: Path = typer.Argument(
+        ...,
+        help="Path to scoped runtime execution gate bundle handoff checklist JSON output.",
+    ),
+    summarized_by: str = typer.Option(
+        "human-reviewer",
+        "--summarized-by",
+        help="Neutral summarizer label for the human who reviewed the checklist summary.",
+    ),
+    summary_note: str = typer.Option(
+        ...,
+        "--summary-note",
+        help="Human summary note for the local bundle handoff checklist.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write scoped runtime execution gate bundle handoff checklist summary Markdown output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write scoped runtime execution gate bundle handoff checklist summary JSON output.",
+    ),
+) -> None:
+    """Create a scoped runtime execution gate bundle handoff checklist summary without execution."""
+    from bugintel.adapters.scoped_runtime.execution_gate import (
+        summarize_scoped_runtime_execution_gate_bundle_handoff_checklist,
+    )
+
+    if not checklist_file.exists():
+        raise typer.BadParameter(f"checklist file does not exist: {checklist_file}")
+
+    checklist_data = json.loads(checklist_file.read_text())
+    summary = summarize_scoped_runtime_execution_gate_bundle_handoff_checklist(
+        checklist_data,
+        summarized_by=summarized_by,
+        summary_note=summary_note,
+    )
+    data = summary.to_dict()
+
+    table = Table(title="Scoped Runtime Execution Gate Bundle Handoff Checklist Summary")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Summary ID", summary.summary_id)
+    table.add_row("Checklist ID", summary.checklist_id)
+    table.add_row("Handoff packet ID", summary.handoff_packet_id)
+    table.add_row("Checklist status", summary.checklist_status)
+    table.add_row("Summary status", summary.summary_status)
+    table.add_row("Summary state", summary.summary_state)
+    table.add_row("Summarized by", summary.summarized_by)
+    table.add_row("Checked by", summary.checked_by)
+    table.add_row("Handoff status", summary.handoff_status)
+    table.add_row("Handoff to", summary.handoff_to)
+    table.add_row("Verification status", summary.verification_status)
+    table.add_row("Review status", summary.review_status)
+    table.add_row("Bundle directory", summary.bundle_dir)
+    table.add_row("Bundle mode", summary.bundle_mode)
+    table.add_row("Gate ID", summary.gate_id)
+    table.add_row("Request ID", summary.request_id)
+    table.add_row("Gate status", summary.gate_status)
+    table.add_row("Required checks", str(summary.required_check_count))
+    table.add_row("Passed checks", str(summary.passed_check_count))
+    table.add_row("Failed checks", str(summary.failed_check_count))
+    table.add_row("Adapter execution state", summary.adapter_execution_state)
+    table.add_row("Can execute now", str(summary.can_execute_now))
+    table.add_row("Execution allowed", str(summary.execution_allowed))
+    table.add_row("Runtime execution allowed", str(summary.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(summary.tool_execution_allowed))
+    table.add_row("Network requests allowed", str(summary.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(summary.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(summary.target_mutation_allowed))
+
+    safety = data["safety"]
+    table.add_row("Safety network requests", str(safety["network_requests"]).lower())
+    table.add_row("Safety tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Safety evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Safety validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Safety report submission", str(safety["report_submission"]).lower())
+    table.add_row("Safety vulnerability confirmation", str(safety["vulnerability_confirmation"]).lower())
+    console.print(table)
+
+    if summary.blocking_findings:
+        console.print("\n[bold]Blocking findings:[/bold]")
+        for finding in summary.blocking_findings:
+            console.print(f"- {finding}")
+    else:
+        console.print("\n[bold]Bundle handoff checklist summary completed without execution.[/bold]")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved scoped runtime execution gate bundle handoff checklist summary JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(summary.to_markdown())
+        console.print(f"Saved scoped runtime execution gate bundle handoff checklist summary Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only creates a local scoped runtime execution gate bundle handoff checklist summary. "
         "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
         "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )

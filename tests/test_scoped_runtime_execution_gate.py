@@ -13,6 +13,7 @@ from bugintel.adapters.scoped_runtime.execution_gate import (
     build_scoped_runtime_execution_gate_bundle_handoff_packet,
     evaluate_scoped_runtime_execution_gate,
     review_scoped_runtime_execution_gate_bundle_verification,
+    summarize_scoped_runtime_execution_gate_bundle_handoff_checklist,
     verify_scoped_runtime_execution_gate_bundle,
 )
 
@@ -533,6 +534,124 @@ def test_execution_gate_bundle_handoff_checklist_markdown_is_human_readable_and_
     assert "Checklist status: `passed-local-bundle-handoff-checklist-no-execution`" in markdown
     assert "Checklist state: `checked_local_only`" in markdown
     assert "Checked by: `human-reviewer`" in markdown
+    assert "Network requests allowed: `false`" in markdown
+    assert "Tool execution allowed: `false`" in markdown
+    assert "does not execute curl" in markdown
+
+
+
+def test_execution_gate_bundle_handoff_checklist_summary_accepts_passed_checklist_without_execution(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path)
+    verification = verify_scoped_runtime_execution_gate_bundle(bundle_dir)
+    review_packet = review_scoped_runtime_execution_gate_bundle_verification(
+        verification.to_dict(),
+        reviewed_by="human-reviewer",
+        review_note="Reviewed local bundle verification artifact only; no execution authorized.",
+    )
+    handoff = build_scoped_runtime_execution_gate_bundle_handoff_packet(
+        review_packet.to_dict(),
+        handoff_to="future-reviewer",
+        handoff_note="Handoff for future local review only; no execution authorized.",
+    )
+    checklist = build_scoped_runtime_execution_gate_bundle_handoff_checklist(
+        handoff.to_dict(),
+        checked_by="human-reviewer",
+        checklist_note="Checked local handoff packet only; no execution authorized.",
+    )
+
+    summary = summarize_scoped_runtime_execution_gate_bundle_handoff_checklist(
+        checklist.to_dict(),
+        summarized_by="human-reviewer",
+        summary_note="Summarized local checklist only; no execution authorized.",
+    )
+    data = summary.to_dict()
+
+    assert data["kind"] == "scoped_runtime_execution_gate_bundle_handoff_checklist_summary"
+    assert data["summary_status"] == "summarized-local-bundle-handoff-checklist-no-execution"
+    assert data["summary_state"] == "summarized_local_only"
+    assert data["summarized_by"] == "human-reviewer"
+    assert data["checklist_status"] == "passed-local-bundle-handoff-checklist-no-execution"
+    assert data["handoff_status"] == "ready-local-bundle-handoff-no-execution"
+    assert data["required_check_count"] == 11
+    assert data["passed_check_count"] == 11
+    assert data["failed_check_count"] == 0
+    assert data["failed_checks"] == []
+    assert data["adapter_execution_state"] == "not_executed"
+    assert data["can_execute_now"] is False
+    assert data["execution_allowed"] is False
+    assert data["runtime_execution_allowed"] is False
+    assert data["tool_execution_allowed"] is False
+    assert data["network_requests_allowed"] is False
+    assert data["evidence_collection_allowed"] is False
+    assert data["target_mutation_allowed"] is False
+    assert data["report_submission_allowed"] is False
+    assert data["vulnerability_confirmation_allowed"] is False
+    assert data["blocking_findings"] == []
+
+
+def test_execution_gate_bundle_handoff_checklist_summary_blocks_failed_checklist(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path, include_markdown=False)
+    verification = verify_scoped_runtime_execution_gate_bundle(bundle_dir)
+    review_packet = review_scoped_runtime_execution_gate_bundle_verification(
+        verification.to_dict(),
+        reviewed_by="human-reviewer",
+        review_note="Reviewed failed local bundle verification artifact only.",
+    )
+    handoff = build_scoped_runtime_execution_gate_bundle_handoff_packet(
+        review_packet.to_dict(),
+        handoff_to="future-reviewer",
+        handoff_note="Blocked handoff because review packet is blocked.",
+    )
+    checklist = build_scoped_runtime_execution_gate_bundle_handoff_checklist(
+        handoff.to_dict(),
+        checked_by="human-reviewer",
+        checklist_note="Blocked checklist because handoff packet is blocked.",
+    )
+
+    data = summarize_scoped_runtime_execution_gate_bundle_handoff_checklist(
+        checklist.to_dict(),
+        summarized_by="human-reviewer",
+        summary_note="Blocked summary because checklist is blocked.",
+    ).to_dict()
+
+    assert data["summary_status"] == "blocked-local-bundle-handoff-checklist-summary"
+    assert data["checklist_status"] == "blocked-local-bundle-handoff-checklist"
+    assert data["failed_check_count"] >= 1
+    assert any("not passed-local-bundle-handoff-checklist-no-execution" in item for item in data["blocking_findings"])
+
+
+def test_execution_gate_bundle_handoff_checklist_summary_markdown_is_human_readable_and_safe(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path)
+    verification = verify_scoped_runtime_execution_gate_bundle(bundle_dir)
+    review_packet = review_scoped_runtime_execution_gate_bundle_verification(
+        verification.to_dict(),
+        reviewed_by="human-reviewer",
+        review_note="Reviewed local bundle verification artifact only; no execution authorized.",
+    )
+    handoff = build_scoped_runtime_execution_gate_bundle_handoff_packet(
+        review_packet.to_dict(),
+        handoff_to="future-reviewer",
+        handoff_note="Handoff for future local review only; no execution authorized.",
+    )
+    checklist = build_scoped_runtime_execution_gate_bundle_handoff_checklist(
+        handoff.to_dict(),
+        checked_by="human-reviewer",
+        checklist_note="Checked local handoff packet only; no execution authorized.",
+    )
+    summary = summarize_scoped_runtime_execution_gate_bundle_handoff_checklist(
+        checklist.to_dict(),
+        summarized_by="human-reviewer",
+        summary_note="Summarized local checklist only; no execution authorized.",
+    )
+
+    markdown = summary.to_markdown()
+
+    assert "# Scoped Runtime Execution Gate Bundle Handoff Checklist Summary" in markdown
+    assert "Summary status: `summarized-local-bundle-handoff-checklist-no-execution`" in markdown
+    assert "Summary state: `summarized_local_only`" in markdown
+    assert "Summarized by: `human-reviewer`" in markdown
+    assert "Required checks: `11`" in markdown
+    assert "Failed checks: `0`" in markdown
     assert "Network requests allowed: `false`" in markdown
     assert "Tool execution allowed: `false`" in markdown
     assert "does not execute curl" in markdown
