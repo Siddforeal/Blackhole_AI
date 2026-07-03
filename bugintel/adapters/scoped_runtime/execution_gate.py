@@ -2034,6 +2034,361 @@ def build_scoped_runtime_execution_gate_bundle_handoff_checklist_summary_receipt
     )
 
 
+
+@dataclass(frozen=True)
+class ScopedRuntimeExecutionGateBundleHandoffReceiptArchiveManifest:
+    archive_manifest_id: str
+    receipt_id: str
+    summary_id: str
+    checklist_id: str
+    handoff_packet_id: str
+    archive_status: str
+    archive_state: str
+    archived_by: str
+    archive_note: str
+    receipt_status: str
+    receipt_state: str
+    final_handoff_outcome: str
+    summary_status: str
+    checklist_status: str
+    handoff_status: str
+    verification_status: str
+    review_status: str
+    bundle_dir: str
+    bundle_mode: str
+    gate_id: str
+    request_id: str
+    gate_status: str
+    upstream_artifact_chain: tuple[str, ...]
+    archived_artifact_ids: dict[str, str]
+    required_check_count: int
+    passed_check_count: int
+    failed_check_count: int
+    receipt_findings: tuple[str, ...]
+    archive_findings: tuple[str, ...]
+    blocking_findings: tuple[str, ...]
+    adapter_execution_state: str = "not_executed"
+    can_execute_now: bool = False
+    execution_allowed: bool = False
+    validation_allowed: bool = False
+    runtime_execution_allowed: bool = False
+    tool_execution_allowed: bool = False
+    browser_execution_allowed: bool = False
+    network_requests_allowed: bool = False
+    evidence_collection_allowed: bool = False
+    target_mutation_allowed: bool = False
+    report_submission_allowed: bool = False
+    vulnerability_confirmation_allowed: bool = False
+    planning_only: bool = True
+    dry_run_only: bool = True
+    source: str = "scoped-runtime-execution-gate-bundle-handoff-receipt-archive-manifest"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "kind": "scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest",
+            "source": self.source,
+            "archive_manifest_id": self.archive_manifest_id,
+            "receipt_id": self.receipt_id,
+            "summary_id": self.summary_id,
+            "checklist_id": self.checklist_id,
+            "handoff_packet_id": self.handoff_packet_id,
+            "archive_status": self.archive_status,
+            "archive_state": self.archive_state,
+            "archived_by": self.archived_by,
+            "archive_note": self.archive_note,
+            "receipt_status": self.receipt_status,
+            "receipt_state": self.receipt_state,
+            "final_handoff_outcome": self.final_handoff_outcome,
+            "summary_status": self.summary_status,
+            "checklist_status": self.checklist_status,
+            "handoff_status": self.handoff_status,
+            "verification_status": self.verification_status,
+            "review_status": self.review_status,
+            "bundle_dir": self.bundle_dir,
+            "bundle_mode": self.bundle_mode,
+            "gate_id": self.gate_id,
+            "request_id": self.request_id,
+            "gate_status": self.gate_status,
+            "upstream_artifact_chain": list(self.upstream_artifact_chain),
+            "archived_artifact_ids": dict(self.archived_artifact_ids),
+            "required_check_count": self.required_check_count,
+            "passed_check_count": self.passed_check_count,
+            "failed_check_count": self.failed_check_count,
+            "receipt_findings": list(self.receipt_findings),
+            "archive_findings": list(self.archive_findings),
+            "blocking_findings": list(self.blocking_findings),
+            "adapter_execution_state": self.adapter_execution_state,
+            "can_execute_now": self.can_execute_now,
+            "execution_allowed": self.execution_allowed,
+            "validation_allowed": self.validation_allowed,
+            "runtime_execution_allowed": self.runtime_execution_allowed,
+            "tool_execution_allowed": self.tool_execution_allowed,
+            "browser_execution_allowed": self.browser_execution_allowed,
+            "network_requests_allowed": self.network_requests_allowed,
+            "evidence_collection_allowed": self.evidence_collection_allowed,
+            "target_mutation_allowed": self.target_mutation_allowed,
+            "report_submission_allowed": self.report_submission_allowed,
+            "vulnerability_confirmation_allowed": self.vulnerability_confirmation_allowed,
+            "planning_only": self.planning_only,
+            "dry_run_only": self.dry_run_only,
+            "safety": safety_metadata(),
+        }
+
+    def to_markdown(self) -> str:
+        lines = [
+            "# Scoped Runtime Execution Gate Bundle Handoff Receipt Archive Manifest",
+            "",
+            "## Summary",
+            "",
+            f"- Archive manifest ID: `{self.archive_manifest_id}`",
+            f"- Receipt ID: `{self.receipt_id}`",
+            f"- Summary ID: `{self.summary_id}`",
+            f"- Checklist ID: `{self.checklist_id}`",
+            f"- Handoff packet ID: `{self.handoff_packet_id}`",
+            f"- Archive status: `{self.archive_status}`",
+            f"- Archive state: `{self.archive_state}`",
+            f"- Archived by: `{self.archived_by}`",
+            f"- Receipt status: `{self.receipt_status}`",
+            f"- Receipt state: `{self.receipt_state}`",
+            f"- Final handoff outcome: `{self.final_handoff_outcome}`",
+            f"- Summary status: `{self.summary_status}`",
+            f"- Checklist status: `{self.checklist_status}`",
+            f"- Handoff status: `{self.handoff_status}`",
+            f"- Verification status: `{self.verification_status}`",
+            f"- Review status: `{self.review_status}`",
+            f"- Bundle directory: `{self.bundle_dir}`",
+            f"- Bundle mode: `{self.bundle_mode}`",
+            f"- Gate ID: `{self.gate_id}`",
+            f"- Request ID: `{self.request_id}`",
+            f"- Gate status: `{self.gate_status}`",
+            "",
+            "## Archive note",
+            "",
+            self.archive_note or "none",
+            "",
+            "## Upstream artifact chain",
+            "",
+        ]
+
+        if self.upstream_artifact_chain:
+            lines.extend(f"- {item}" for item in self.upstream_artifact_chain)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Archived artifact IDs", ""])
+        if self.archived_artifact_ids:
+            for key, value in self.archived_artifact_ids.items():
+                lines.append(f"- {key}: `{value}`")
+        else:
+            lines.append("- none")
+
+        lines.extend(
+            [
+                "",
+                "## Check counts",
+                "",
+                f"- Required checks: `{self.required_check_count}`",
+                f"- Passed checks: `{self.passed_check_count}`",
+                f"- Failed checks: `{self.failed_check_count}`",
+                "",
+                "## Execution state",
+                "",
+                f"- Adapter execution state: `{self.adapter_execution_state}`",
+                f"- Can execute now: `{str(self.can_execute_now).lower()}`",
+                f"- Execution allowed: `{str(self.execution_allowed).lower()}`",
+                f"- Validation allowed: `{str(self.validation_allowed).lower()}`",
+                f"- Runtime execution allowed: `{str(self.runtime_execution_allowed).lower()}`",
+                f"- Tool execution allowed: `{str(self.tool_execution_allowed).lower()}`",
+                f"- Browser execution allowed: `{str(self.browser_execution_allowed).lower()}`",
+                f"- Network requests allowed: `{str(self.network_requests_allowed).lower()}`",
+                f"- Evidence collection allowed: `{str(self.evidence_collection_allowed).lower()}`",
+                f"- Target mutation allowed: `{str(self.target_mutation_allowed).lower()}`",
+                f"- Report submission allowed: `{str(self.report_submission_allowed).lower()}`",
+                f"- Vulnerability confirmation allowed: `{str(self.vulnerability_confirmation_allowed).lower()}`",
+                "",
+                "## Receipt findings",
+                "",
+            ]
+        )
+
+        if self.receipt_findings:
+            lines.extend(f"- {finding}" for finding in self.receipt_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Archive findings", ""])
+        if self.archive_findings:
+            lines.extend(f"- {finding}" for finding in self.archive_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(["", "## Blocking findings", ""])
+        if self.blocking_findings:
+            lines.extend(f"- {finding}" for finding in self.blocking_findings)
+        else:
+            lines.append("- none")
+
+        lines.extend(
+            [
+                "",
+                "## Safety statement",
+                "",
+                "This archive manifest is local-only, deterministic, planning-only, and dry-run-only.",
+                "",
+                "It does not execute curl, call subprocess, send network requests, execute tools, launch browsers, call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities.",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+
+
+def build_scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest(
+    receipt: dict[str, Any],
+    *,
+    archived_by: str = "human-reviewer",
+    archive_note: str = "",
+) -> ScopedRuntimeExecutionGateBundleHandoffReceiptArchiveManifest:
+    """Create a final local archive manifest from a bundle handoff receipt without execution."""
+    blocking = list(receipt.get("blocking_findings") or [])
+
+    if receipt.get("kind") != "scoped_runtime_execution_gate_bundle_handoff_checklist_summary_receipt":
+        blocking.append("Archive manifest input has unexpected artifact kind.")
+
+    if receipt.get("receipt_status") != "accepted-local-bundle-handoff-checklist-summary-receipt-no-execution":
+        blocking.append("Receipt is not accepted-local-bundle-handoff-checklist-summary-receipt-no-execution.")
+
+    if receipt.get("receipt_state") != "receipt_local_only":
+        blocking.append("Receipt is not in receipt_local_only state.")
+
+    if receipt.get("final_handoff_outcome") != "ready-for-future-local-review-no-execution":
+        blocking.append("Receipt does not record ready-for-future-local-review-no-execution outcome.")
+
+    if receipt.get("summary_status") != "summarized-local-bundle-handoff-checklist-no-execution":
+        blocking.append("Receipt does not reference a summarized local checklist summary.")
+
+    if receipt.get("checklist_status") != "passed-local-bundle-handoff-checklist-no-execution":
+        blocking.append("Receipt does not reference a passed local handoff checklist.")
+
+    if receipt.get("handoff_status") != "ready-local-bundle-handoff-no-execution":
+        blocking.append("Receipt does not reference a ready local handoff packet.")
+
+    if receipt.get("bundle_mode") != "local_files_only_no_execution":
+        blocking.append("Receipt does not record local_files_only_no_execution mode.")
+
+    required_count = int(receipt.get("required_check_count") or 0)
+    passed_count = int(receipt.get("passed_check_count") or 0)
+    failed_count = int(receipt.get("failed_check_count") or 0)
+
+    if required_count <= 0:
+        blocking.append("Receipt does not record any required checks.")
+
+    if required_count != passed_count or failed_count != 0:
+        blocking.append("Receipt check counts do not show all required checks passed.")
+
+    for field in ("gate_id", "request_id", "receipt_id", "summary_id", "checklist_id", "handoff_packet_id"):
+        if not receipt.get(field):
+            blocking.append(f"Receipt is missing {field}.")
+
+    execution_flags = (
+        "can_execute_now",
+        "execution_allowed",
+        "validation_allowed",
+        "runtime_execution_allowed",
+        "tool_execution_allowed",
+        "browser_execution_allowed",
+        "network_requests_allowed",
+        "evidence_collection_allowed",
+        "target_mutation_allowed",
+        "report_submission_allowed",
+        "vulnerability_confirmation_allowed",
+    )
+    for flag in execution_flags:
+        if receipt.get(flag) is not False:
+            blocking.append(f"Receipt does not keep {flag} false.")
+
+    safety = receipt.get("safety")
+    if isinstance(safety, dict):
+        for safety_key in (
+            "network_requests",
+            "tool_execution",
+            "evidence_collection",
+            "validation_execution",
+            "report_submission",
+            "vulnerability_confirmation",
+        ):
+            if safety.get(safety_key) is not False:
+                blocking.append(f"Receipt safety metadata does not keep {safety_key} false.")
+    else:
+        blocking.append("Receipt is missing safety metadata.")
+
+    archive_status = (
+        "blocked-local-bundle-handoff-receipt-archive-manifest"
+        if blocking
+        else "archived-local-bundle-handoff-receipt-manifest-no-execution"
+    )
+
+    gate_id = str(receipt.get("gate_id") or "UNKNOWN")
+
+    upstream_artifact_chain = (
+        "scoped_runtime_execution_gate_artifact",
+        "scoped_runtime_execution_gate_bundle_verification_artifact",
+        "scoped_runtime_execution_gate_bundle_review_packet",
+        "scoped_runtime_execution_gate_bundle_handoff_packet",
+        "scoped_runtime_execution_gate_bundle_handoff_checklist",
+        "scoped_runtime_execution_gate_bundle_handoff_checklist_summary",
+        "scoped_runtime_execution_gate_bundle_handoff_checklist_summary_receipt",
+    )
+
+    archived_artifact_ids = {
+        "receipt_id": str(receipt.get("receipt_id") or ""),
+        "summary_id": str(receipt.get("summary_id") or ""),
+        "checklist_id": str(receipt.get("checklist_id") or ""),
+        "handoff_packet_id": str(receipt.get("handoff_packet_id") or ""),
+        "gate_id": gate_id,
+        "request_id": str(receipt.get("request_id") or ""),
+    }
+
+    archive_findings = (
+        "Archive manifest inspected a local bundle handoff receipt only.",
+        "Archive manifest records final receipt, upstream artifact chain, IDs, check counts, and safety metadata.",
+        "Archive manifest preserves not_executed state and false execution flags.",
+        "Archive manifest does not call curl, subprocess, network, browser, provider, evidence, mutation, report, or vulnerability-confirmation paths.",
+    )
+
+    return ScopedRuntimeExecutionGateBundleHandoffReceiptArchiveManifest(
+        archive_manifest_id=f"SREG-BUNDLE-HANDOFF-RECEIPT-ARCHIVE-{gate_id}",
+        receipt_id=str(receipt.get("receipt_id") or ""),
+        summary_id=str(receipt.get("summary_id") or ""),
+        checklist_id=str(receipt.get("checklist_id") or ""),
+        handoff_packet_id=str(receipt.get("handoff_packet_id") or ""),
+        archive_status=archive_status,
+        archive_state="archive_manifest_local_only",
+        archived_by=archived_by,
+        archive_note=archive_note,
+        receipt_status=str(receipt.get("receipt_status") or ""),
+        receipt_state=str(receipt.get("receipt_state") or ""),
+        final_handoff_outcome=str(receipt.get("final_handoff_outcome") or ""),
+        summary_status=str(receipt.get("summary_status") or ""),
+        checklist_status=str(receipt.get("checklist_status") or ""),
+        handoff_status=str(receipt.get("handoff_status") or ""),
+        verification_status=str(receipt.get("verification_status") or ""),
+        review_status=str(receipt.get("review_status") or ""),
+        bundle_dir=str(receipt.get("bundle_dir") or ""),
+        bundle_mode=str(receipt.get("bundle_mode") or ""),
+        gate_id=gate_id,
+        request_id=str(receipt.get("request_id") or ""),
+        gate_status=str(receipt.get("gate_status") or ""),
+        upstream_artifact_chain=upstream_artifact_chain,
+        archived_artifact_ids=archived_artifact_ids,
+        required_check_count=required_count,
+        passed_check_count=passed_count,
+        failed_check_count=failed_count,
+        receipt_findings=tuple(receipt.get("receipt_findings") or ()),
+        archive_findings=archive_findings,
+        blocking_findings=tuple(blocking),
+    )
+
+
 @dataclass(frozen=True)
 class ScopedRuntimeExecutionGate:
     gate_name: str = "scoped-runtime-execution-gate"
