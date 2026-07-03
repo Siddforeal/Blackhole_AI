@@ -969,3 +969,176 @@ def test_scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest_c
     normalized_stdout = " ".join(archive_result.stdout.split())
     assert "Saved scoped runtime execution gate bundle handoff receipt archive manifest JSON" in normalized_stdout
     assert "Saved scoped runtime execution gate bundle handoff receipt archive manifest Markdown" in normalized_stdout
+
+
+
+def test_scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest_verify_cli_writes_json_and_markdown(tmp_path) -> None:
+    input_file = tmp_path / "request.json"
+    bundle_dir = tmp_path / "bundle"
+    verification_json = tmp_path / "verification.json"
+    review_json = tmp_path / "review.json"
+    handoff_json = tmp_path / "handoff.json"
+    checklist_json = tmp_path / "checklist.json"
+    summary_json = tmp_path / "summary.json"
+    receipt_json = tmp_path / "receipt.json"
+    archive_json = tmp_path / "archive.json"
+    archive_verification_json = tmp_path / "archive-verification.json"
+    archive_verification_markdown = tmp_path / "archive-verification.md"
+    input_file.write_text(json.dumps(_blueprint()))
+
+    bundle_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate",
+            str(input_file),
+            "--future-authorization-requested",
+            "--human-authorization-recorded",
+            "--controlled-account-recorded",
+            "--scope-review-recorded",
+            "--bundle-output-dir",
+            str(bundle_dir),
+        ],
+    )
+    assert bundle_result.exit_code == 0
+
+    verify_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-verify",
+            str(bundle_dir),
+            "--json-output",
+            str(verification_json),
+        ],
+    )
+    assert verify_result.exit_code == 0
+
+    review_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-review-packet",
+            str(verification_json),
+            "--reviewed-by",
+            "human-reviewer",
+            "--review-note",
+            "Reviewed local bundle verification artifact only; no execution authorized.",
+            "--json-output",
+            str(review_json),
+        ],
+    )
+    assert review_result.exit_code == 0
+
+    handoff_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-handoff-packet",
+            str(review_json),
+            "--handoff-to",
+            "future-reviewer",
+            "--handoff-note",
+            "Handoff for future local review only; no execution authorized.",
+            "--json-output",
+            str(handoff_json),
+        ],
+    )
+    assert handoff_result.exit_code == 0
+
+    checklist_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-handoff-checklist",
+            str(handoff_json),
+            "--checked-by",
+            "human-reviewer",
+            "--checklist-note",
+            "Checked local handoff packet only; no execution authorized.",
+            "--json-output",
+            str(checklist_json),
+        ],
+    )
+    assert checklist_result.exit_code == 0
+
+    summary_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-handoff-checklist-summary",
+            str(checklist_json),
+            "--summarized-by",
+            "human-reviewer",
+            "--summary-note",
+            "Summarized local checklist only; no execution authorized.",
+            "--json-output",
+            str(summary_json),
+        ],
+    )
+    assert summary_result.exit_code == 0
+
+    receipt_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-handoff-checklist-summary-receipt",
+            str(summary_json),
+            "--received-by",
+            "human-reviewer",
+            "--receipt-note",
+            "Receipt records local summary acceptance only; no execution authorized.",
+            "--json-output",
+            str(receipt_json),
+        ],
+    )
+    assert receipt_result.exit_code == 0
+
+    archive_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-handoff-receipt-archive-manifest",
+            str(receipt_json),
+            "--archived-by",
+            "human-reviewer",
+            "--archive-note",
+            "Archive manifest records final local receipt only; no execution authorized.",
+            "--json-output",
+            str(archive_json),
+        ],
+    )
+    assert archive_result.exit_code == 0
+
+    archive_verification_result = runner.invoke(
+        app,
+        [
+            "scoped-runtime-execution-gate-bundle-handoff-receipt-archive-manifest-verify",
+            str(archive_json),
+            "--verified-by",
+            "human-reviewer",
+            "--verification-note",
+            "Verified local archive manifest only; no execution authorized.",
+            "--json-output",
+            str(archive_verification_json),
+            "--output-file",
+            str(archive_verification_markdown),
+        ],
+    )
+
+    assert archive_verification_result.exit_code == 0
+    assert archive_verification_json.exists()
+    assert archive_verification_markdown.exists()
+
+    data = json.loads(archive_verification_json.read_text())
+    markdown = archive_verification_markdown.read_text()
+
+    assert data["kind"] == "scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest_verification"
+    assert data["verification_status"] == "verified-local-bundle-handoff-receipt-archive-manifest-no-execution"
+    assert data["verification_state"] == "verified_archive_manifest_local_only"
+    assert data["verified_by"] == "human-reviewer"
+    assert data["archive_status"] == "archived-local-bundle-handoff-receipt-manifest-no-execution"
+    assert data["upstream_artifact_count"] == 7
+    assert data["required_check_count"] == 11
+    assert data["passed_check_count"] == 11
+    assert data["failed_check_count"] == 0
+    assert data["can_execute_now"] is False
+    assert data["network_requests_allowed"] is False
+    assert data["tool_execution_allowed"] is False
+    assert data["evidence_collection_allowed"] is False
+    assert "# Scoped Runtime Execution Gate Bundle Handoff Receipt Archive Manifest Verification" in markdown
+    normalized_stdout = " ".join(archive_verification_result.stdout.split())
+    assert "Saved scoped runtime execution gate bundle handoff receipt archive manifest verification JSON" in normalized_stdout
+    assert "Saved scoped runtime execution gate bundle handoff receipt archive manifest verification Markdown" in normalized_stdout

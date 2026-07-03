@@ -12,6 +12,7 @@ from bugintel.adapters.scoped_runtime.execution_gate import (
     build_scoped_runtime_execution_gate_bundle_handoff_checklist,
     build_scoped_runtime_execution_gate_bundle_handoff_checklist_summary_receipt,
     build_scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest,
+    verify_scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest,
     build_scoped_runtime_execution_gate_bundle_handoff_packet,
     evaluate_scoped_runtime_execution_gate,
     review_scoped_runtime_execution_gate_bundle_verification,
@@ -939,6 +940,171 @@ def test_execution_gate_bundle_handoff_receipt_archive_manifest_markdown_is_huma
     assert "Archived by: `human-reviewer`" in markdown
     assert "Final handoff outcome: `ready-for-future-local-review-no-execution`" in markdown
     assert "scoped_runtime_execution_gate_bundle_handoff_checklist_summary_receipt" in markdown
+    assert "Required checks: `11`" in markdown
+    assert "Failed checks: `0`" in markdown
+    assert "Network requests allowed: `false`" in markdown
+    assert "Tool execution allowed: `false`" in markdown
+    assert "does not execute curl" in markdown
+
+
+
+def test_execution_gate_bundle_handoff_receipt_archive_manifest_verification_accepts_archive_without_execution(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path)
+    verification = verify_scoped_runtime_execution_gate_bundle(bundle_dir)
+    review_packet = review_scoped_runtime_execution_gate_bundle_verification(
+        verification.to_dict(),
+        reviewed_by="human-reviewer",
+        review_note="Reviewed local bundle verification artifact only; no execution authorized.",
+    )
+    handoff = build_scoped_runtime_execution_gate_bundle_handoff_packet(
+        review_packet.to_dict(),
+        handoff_to="future-reviewer",
+        handoff_note="Handoff for future local review only; no execution authorized.",
+    )
+    checklist = build_scoped_runtime_execution_gate_bundle_handoff_checklist(
+        handoff.to_dict(),
+        checked_by="human-reviewer",
+        checklist_note="Checked local handoff packet only; no execution authorized.",
+    )
+    summary = summarize_scoped_runtime_execution_gate_bundle_handoff_checklist(
+        checklist.to_dict(),
+        summarized_by="human-reviewer",
+        summary_note="Summarized local checklist only; no execution authorized.",
+    )
+    receipt = build_scoped_runtime_execution_gate_bundle_handoff_checklist_summary_receipt(
+        summary.to_dict(),
+        received_by="human-reviewer",
+        receipt_note="Receipt records local summary acceptance only; no execution authorized.",
+    )
+    archive = build_scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest(
+        receipt.to_dict(),
+        archived_by="human-reviewer",
+        archive_note="Archive manifest records final local receipt only; no execution authorized.",
+    )
+
+    verified = verify_scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest(
+        archive.to_dict(),
+        verified_by="human-reviewer",
+        verification_note="Verified local archive manifest only; no execution authorized.",
+    )
+    data = verified.to_dict()
+
+    assert data["kind"] == "scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest_verification"
+    assert data["verification_status"] == "verified-local-bundle-handoff-receipt-archive-manifest-no-execution"
+    assert data["verification_state"] == "verified_archive_manifest_local_only"
+    assert data["verified_by"] == "human-reviewer"
+    assert data["archive_status"] == "archived-local-bundle-handoff-receipt-manifest-no-execution"
+    assert data["archive_state"] == "archive_manifest_local_only"
+    assert data["receipt_status"] == "accepted-local-bundle-handoff-checklist-summary-receipt-no-execution"
+    assert data["final_handoff_outcome"] == "ready-for-future-local-review-no-execution"
+    assert data["upstream_artifact_count"] == 7
+    assert data["required_check_count"] == 11
+    assert data["passed_check_count"] == 11
+    assert data["failed_check_count"] == 0
+    assert data["adapter_execution_state"] == "not_executed"
+    assert data["can_execute_now"] is False
+    assert data["execution_allowed"] is False
+    assert data["runtime_execution_allowed"] is False
+    assert data["tool_execution_allowed"] is False
+    assert data["network_requests_allowed"] is False
+    assert data["evidence_collection_allowed"] is False
+    assert data["target_mutation_allowed"] is False
+    assert data["report_submission_allowed"] is False
+    assert data["vulnerability_confirmation_allowed"] is False
+    assert data["blocking_findings"] == []
+
+
+def test_execution_gate_bundle_handoff_receipt_archive_manifest_verification_blocks_failed_archive(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path, include_markdown=False)
+    verification = verify_scoped_runtime_execution_gate_bundle(bundle_dir)
+    review_packet = review_scoped_runtime_execution_gate_bundle_verification(
+        verification.to_dict(),
+        reviewed_by="human-reviewer",
+        review_note="Reviewed failed local bundle verification artifact only.",
+    )
+    handoff = build_scoped_runtime_execution_gate_bundle_handoff_packet(
+        review_packet.to_dict(),
+        handoff_to="future-reviewer",
+        handoff_note="Blocked handoff because review packet is blocked.",
+    )
+    checklist = build_scoped_runtime_execution_gate_bundle_handoff_checklist(
+        handoff.to_dict(),
+        checked_by="human-reviewer",
+        checklist_note="Blocked checklist because handoff packet is blocked.",
+    )
+    summary = summarize_scoped_runtime_execution_gate_bundle_handoff_checklist(
+        checklist.to_dict(),
+        summarized_by="human-reviewer",
+        summary_note="Blocked summary because checklist is blocked.",
+    )
+    receipt = build_scoped_runtime_execution_gate_bundle_handoff_checklist_summary_receipt(
+        summary.to_dict(),
+        received_by="human-reviewer",
+        receipt_note="Blocked receipt because summary is blocked.",
+    )
+    archive = build_scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest(
+        receipt.to_dict(),
+        archived_by="human-reviewer",
+        archive_note="Blocked archive because receipt is blocked.",
+    )
+
+    data = verify_scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest(
+        archive.to_dict(),
+        verified_by="human-reviewer",
+        verification_note="Blocked verification because archive is blocked.",
+    ).to_dict()
+
+    assert data["verification_status"] == "blocked-local-bundle-handoff-receipt-archive-manifest-verification"
+    assert data["archive_status"] == "blocked-local-bundle-handoff-receipt-archive-manifest"
+    assert any("not archived-local-bundle-handoff-receipt-manifest-no-execution" in item for item in data["blocking_findings"])
+
+
+def test_execution_gate_bundle_handoff_receipt_archive_manifest_verification_markdown_is_human_readable_and_safe(tmp_path) -> None:
+    bundle_dir = _write_bundle(tmp_path)
+    verification = verify_scoped_runtime_execution_gate_bundle(bundle_dir)
+    review_packet = review_scoped_runtime_execution_gate_bundle_verification(
+        verification.to_dict(),
+        reviewed_by="human-reviewer",
+        review_note="Reviewed local bundle verification artifact only; no execution authorized.",
+    )
+    handoff = build_scoped_runtime_execution_gate_bundle_handoff_packet(
+        review_packet.to_dict(),
+        handoff_to="future-reviewer",
+        handoff_note="Handoff for future local review only; no execution authorized.",
+    )
+    checklist = build_scoped_runtime_execution_gate_bundle_handoff_checklist(
+        handoff.to_dict(),
+        checked_by="human-reviewer",
+        checklist_note="Checked local handoff packet only; no execution authorized.",
+    )
+    summary = summarize_scoped_runtime_execution_gate_bundle_handoff_checklist(
+        checklist.to_dict(),
+        summarized_by="human-reviewer",
+        summary_note="Summarized local checklist only; no execution authorized.",
+    )
+    receipt = build_scoped_runtime_execution_gate_bundle_handoff_checklist_summary_receipt(
+        summary.to_dict(),
+        received_by="human-reviewer",
+        receipt_note="Receipt records local summary acceptance only; no execution authorized.",
+    )
+    archive = build_scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest(
+        receipt.to_dict(),
+        archived_by="human-reviewer",
+        archive_note="Archive manifest records final local receipt only; no execution authorized.",
+    )
+    verified = verify_scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest(
+        archive.to_dict(),
+        verified_by="human-reviewer",
+        verification_note="Verified local archive manifest only; no execution authorized.",
+    )
+
+    markdown = verified.to_markdown()
+
+    assert "# Scoped Runtime Execution Gate Bundle Handoff Receipt Archive Manifest Verification" in markdown
+    assert "Verification status: `verified-local-bundle-handoff-receipt-archive-manifest-no-execution`" in markdown
+    assert "Verification state: `verified_archive_manifest_local_only`" in markdown
+    assert "Verified by: `human-reviewer`" in markdown
+    assert "Upstream artifact count: `7`" in markdown
     assert "Required checks: `11`" in markdown
     assert "Failed checks: `0`" in markdown
     assert "Network requests allowed: `false`" in markdown
