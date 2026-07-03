@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.70.0",
+                version="1.71.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.70.0",
+            version="1.71.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.70.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.71.0")
 
 
 @app.command("scope-check")
@@ -18585,6 +18585,112 @@ def scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest_comman
 
     console.print(
         "Safety: This command only creates a local scoped runtime execution gate bundle handoff receipt archive manifest. "
+        "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
+        "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+@app.command("scoped-runtime-execution-gate-bundle-handoff-receipt-archive-manifest-verify")
+def scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest_verify_command(
+    archive_manifest_file: Path = typer.Argument(
+        ...,
+        help="Path to scoped runtime execution gate bundle handoff receipt archive manifest JSON output.",
+    ),
+    verified_by: str = typer.Option(
+        "human-reviewer",
+        "--verified-by",
+        help="Neutral verifier label for the human who verified the archive manifest.",
+    ),
+    verification_note: str = typer.Option(
+        ...,
+        "--verification-note",
+        help="Human verification note for the local archive manifest.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write scoped runtime execution gate bundle handoff receipt archive manifest verification Markdown output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write scoped runtime execution gate bundle handoff receipt archive manifest verification JSON output.",
+    ),
+) -> None:
+    """Verify a scoped runtime execution gate bundle handoff receipt archive manifest without execution."""
+    from bugintel.adapters.scoped_runtime.execution_gate import (
+        verify_scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest,
+    )
+
+    if not archive_manifest_file.exists():
+        raise typer.BadParameter(f"archive manifest file does not exist: {archive_manifest_file}")
+
+    archive_manifest_data = json.loads(archive_manifest_file.read_text())
+    verification = verify_scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest(
+        archive_manifest_data,
+        verified_by=verified_by,
+        verification_note=verification_note,
+    )
+    data = verification.to_dict()
+
+    table = Table(title="Scoped Runtime Execution Gate Bundle Handoff Receipt Archive Manifest Verification")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Verification ID", verification.verification_id)
+    table.add_row("Archive manifest ID", verification.archive_manifest_id)
+    table.add_row("Receipt ID", verification.receipt_id)
+    table.add_row("Verification status", verification.verification_status)
+    table.add_row("Verification state", verification.verification_state)
+    table.add_row("Verified by", verification.verified_by)
+    table.add_row("Archive status", verification.archive_status)
+    table.add_row("Archive state", verification.archive_state)
+    table.add_row("Archived by", verification.archived_by)
+    table.add_row("Receipt status", verification.receipt_status)
+    table.add_row("Final handoff outcome", verification.final_handoff_outcome)
+    table.add_row("Bundle mode", verification.bundle_mode)
+    table.add_row("Gate ID", verification.gate_id)
+    table.add_row("Request ID", verification.request_id)
+    table.add_row("Gate status", verification.gate_status)
+    table.add_row("Upstream artifact count", str(verification.upstream_artifact_count))
+    table.add_row("Required checks", str(verification.required_check_count))
+    table.add_row("Passed checks", str(verification.passed_check_count))
+    table.add_row("Failed checks", str(verification.failed_check_count))
+    table.add_row("Adapter execution state", verification.adapter_execution_state)
+    table.add_row("Can execute now", str(verification.can_execute_now))
+    table.add_row("Execution allowed", str(verification.execution_allowed))
+    table.add_row("Runtime execution allowed", str(verification.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(verification.tool_execution_allowed))
+    table.add_row("Network requests allowed", str(verification.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(verification.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(verification.target_mutation_allowed))
+
+    safety = data["safety"]
+    table.add_row("Safety network requests", str(safety["network_requests"]).lower())
+    table.add_row("Safety tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Safety evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Safety validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Safety report submission", str(safety["report_submission"]).lower())
+    table.add_row("Safety vulnerability confirmation", str(safety["vulnerability_confirmation"]).lower())
+    console.print(table)
+
+    if verification.blocking_findings:
+        console.print("\n[bold]Blocking findings:[/bold]")
+        for finding in verification.blocking_findings:
+            console.print(f"- {finding}")
+    else:
+        console.print("\n[bold]Bundle handoff receipt archive manifest verified without execution.[/bold]")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved scoped runtime execution gate bundle handoff receipt archive manifest verification JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(verification.to_markdown())
+        console.print(f"Saved scoped runtime execution gate bundle handoff receipt archive manifest verification Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only verifies a local scoped runtime execution gate bundle handoff receipt archive manifest. "
         "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
         "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
