@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.74.0",
+                version="1.75.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.74.0",
+            version="1.75.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.74.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.75.0")
 
 
 @app.command("scope-check")
@@ -19016,6 +19016,184 @@ def scoped_runtime_archive_chain_batch_validate_command(
 
     console.print(
         "Safety: This command only batch-validates local scoped runtime archive-chain artifacts. "
+        "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
+        "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+@app.command("scoped-runtime-archive-chain-integrity-manifest")
+def scoped_runtime_archive_chain_integrity_manifest_command(
+    artifact_dir: Path = typer.Argument(
+        ...,
+        help="Directory containing scoped runtime archive-chain JSON artifacts.",
+    ),
+    recursive: bool = typer.Option(
+        False,
+        "--recursive",
+        help="Recursively include JSON files from subdirectories.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write archive-chain integrity manifest Markdown output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write archive-chain integrity manifest JSON output.",
+    ),
+) -> None:
+    """Create a scoped runtime archive-chain integrity manifest without execution."""
+    from bugintel.adapters.scoped_runtime.archive_chain_integrity import (
+        build_scoped_runtime_archive_chain_integrity_manifest,
+    )
+
+    manifest = build_scoped_runtime_archive_chain_integrity_manifest(
+        artifact_dir,
+        recursive=recursive,
+    )
+    data = manifest.to_dict()
+
+    table = Table(title="Scoped Runtime Archive Chain Integrity Manifest")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Manifest ID", manifest.manifest_id)
+    table.add_row("Manifest status", manifest.manifest_status)
+    table.add_row("Manifest state", manifest.manifest_state)
+    table.add_row("Input directory", manifest.input_dir)
+    table.add_row("Recursive", str(manifest.recursive))
+    table.add_row("Artifact count", str(manifest.artifact_count))
+    table.add_row("Accepted count", str(manifest.accepted_count))
+    table.add_row("Blocked count", str(manifest.blocked_count))
+    table.add_row("Batch validation status", manifest.batch_validation_status)
+    table.add_row("Adapter execution state", manifest.adapter_execution_state)
+    table.add_row("Can execute now", str(manifest.can_execute_now))
+    table.add_row("Execution allowed", str(manifest.execution_allowed))
+    table.add_row("Runtime execution allowed", str(manifest.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(manifest.tool_execution_allowed))
+    table.add_row("Network requests allowed", str(manifest.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(manifest.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(manifest.target_mutation_allowed))
+
+    safety = data["safety"]
+    table.add_row("Safety network requests", str(safety["network_requests"]).lower())
+    table.add_row("Safety tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Safety evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Safety validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Safety report submission", str(safety["report_submission"]).lower())
+    table.add_row("Safety vulnerability confirmation", str(safety["vulnerability_confirmation"]).lower())
+    console.print(table)
+
+    if manifest.blocking_findings:
+        console.print("\n[bold]Blocking findings:[/bold]")
+        for finding in manifest.blocking_findings:
+            console.print(f"- {finding}")
+    else:
+        console.print("\n[bold]Archive-chain integrity manifest created without execution.[/bold]")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved scoped runtime archive-chain integrity manifest JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(manifest.to_markdown())
+        console.print(f"Saved scoped runtime archive-chain integrity manifest Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only creates a local scoped runtime archive-chain integrity manifest. "
+        "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
+        "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+@app.command("scoped-runtime-archive-chain-integrity-verify")
+def scoped_runtime_archive_chain_integrity_verify_command(
+    manifest_file: Path = typer.Argument(
+        ...,
+        help="Path to scoped runtime archive-chain integrity manifest JSON.",
+    ),
+    artifact_dir: Path | None = typer.Option(
+        None,
+        "--artifact-dir",
+        help="Optional artifact directory to recompute SHA-256 hashes.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write archive-chain integrity verification Markdown output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write archive-chain integrity verification JSON output.",
+    ),
+) -> None:
+    """Verify a scoped runtime archive-chain integrity manifest without execution."""
+    from bugintel.adapters.scoped_runtime.archive_chain_integrity import (
+        verify_scoped_runtime_archive_chain_integrity_manifest,
+    )
+
+    if not manifest_file.exists():
+        raise typer.BadParameter(f"manifest file does not exist: {manifest_file}")
+
+    manifest_data = json.loads(manifest_file.read_text())
+    verification = verify_scoped_runtime_archive_chain_integrity_manifest(
+        manifest_data,
+        artifact_dir=artifact_dir,
+    )
+    data = verification.to_dict()
+
+    table = Table(title="Scoped Runtime Archive Chain Integrity Verification")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Verification ID", verification.verification_id)
+    table.add_row("Manifest ID", verification.manifest_id)
+    table.add_row("Verification status", verification.verification_status)
+    table.add_row("Verification state", verification.verification_state)
+    table.add_row("Manifest status", verification.manifest_status)
+    table.add_row("Manifest state", verification.manifest_state)
+    table.add_row("Artifact count", str(verification.artifact_count))
+    table.add_row("Verified count", str(verification.verified_count))
+    table.add_row("Missing count", str(verification.missing_count))
+    table.add_row("Mismatch count", str(verification.mismatch_count))
+    table.add_row("Recomputed from files", str(verification.recomputed_from_files))
+    table.add_row("Adapter execution state", verification.adapter_execution_state)
+    table.add_row("Can execute now", str(verification.can_execute_now))
+    table.add_row("Execution allowed", str(verification.execution_allowed))
+    table.add_row("Runtime execution allowed", str(verification.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(verification.tool_execution_allowed))
+    table.add_row("Network requests allowed", str(verification.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(verification.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(verification.target_mutation_allowed))
+
+    safety = data["safety"]
+    table.add_row("Safety network requests", str(safety["network_requests"]).lower())
+    table.add_row("Safety tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Safety evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Safety validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Safety report submission", str(safety["report_submission"]).lower())
+    table.add_row("Safety vulnerability confirmation", str(safety["vulnerability_confirmation"]).lower())
+    console.print(table)
+
+    if verification.blocking_findings:
+        console.print("\n[bold]Blocking findings:[/bold]")
+        for finding in verification.blocking_findings:
+            console.print(f"- {finding}")
+    else:
+        console.print("\n[bold]Archive-chain integrity manifest verified without execution.[/bold]")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved scoped runtime archive-chain integrity verification JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(verification.to_markdown())
+        console.print(f"Saved scoped runtime archive-chain integrity verification Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only verifies a local scoped runtime archive-chain integrity manifest. "
         "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
         "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )

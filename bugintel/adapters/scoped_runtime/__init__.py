@@ -23,6 +23,13 @@ from bugintel.adapters.scoped_runtime.archive_chain_batch import (
     ScopedRuntimeArchiveChainBatchValidationReport,
     validate_scoped_runtime_archive_chain_directory,
 )
+from bugintel.adapters.scoped_runtime.archive_chain_integrity import (
+    ScopedRuntimeArchiveChainIntegrityManifest,
+    ScopedRuntimeArchiveChainIntegrityRecord,
+    ScopedRuntimeArchiveChainIntegrityVerification,
+    build_scoped_runtime_archive_chain_integrity_manifest,
+    verify_scoped_runtime_archive_chain_integrity_manifest,
+)
 from bugintel.adapters.scoped_runtime.contracts import (
     ScopedAdapterPreparedCommand,
     ScopedAdapterRequest,
@@ -66,6 +73,11 @@ from bugintel.adapters.scoped_runtime.execution_gate import (
 )
 
 __all__ = [
+    "verify_scoped_runtime_archive_chain_integrity_manifest",
+    "build_scoped_runtime_archive_chain_integrity_manifest",
+    "ScopedRuntimeArchiveChainIntegrityVerification",
+    "ScopedRuntimeArchiveChainIntegrityRecord",
+    "ScopedRuntimeArchiveChainIntegrityManifest",
     "validate_scoped_runtime_archive_chain_directory",
     "ScopedRuntimeArchiveChainBatchValidationReport",
     "ScopedRuntimeArchiveChainBatchItem",
