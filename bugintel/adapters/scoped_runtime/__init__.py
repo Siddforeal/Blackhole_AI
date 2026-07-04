@@ -1,3 +1,15 @@
+from bugintel.adapters.scoped_runtime.archive_chain import (
+    EXPECTED_ARCHIVE_CHAIN,
+    NO_EXECUTION_FLAGS,
+    SAFETY_FALSE_KEYS,
+    ScopedRuntimeArchiveChainValidationResult,
+    missing_required_field_findings,
+    no_execution_flag_findings,
+    safety_metadata_findings,
+    status_mismatch_findings,
+    upstream_chain_findings,
+    validate_scoped_runtime_archive_chain_artifact,
+)
 """Scoped runtime adapter contracts.
 
 This package currently defines local deterministic contracts only. It does not
@@ -48,6 +60,16 @@ from bugintel.adapters.scoped_runtime.execution_gate import (
 )
 
 __all__ = [
+    "validate_scoped_runtime_archive_chain_artifact",
+    "upstream_chain_findings",
+    "status_mismatch_findings",
+    "safety_metadata_findings",
+    "no_execution_flag_findings",
+    "missing_required_field_findings",
+    "ScopedRuntimeArchiveChainValidationResult",
+    "SAFETY_FALSE_KEYS",
+    "NO_EXECUTION_FLAGS",
+    "EXPECTED_ARCHIVE_CHAIN",
     "ScopedAdapterPreparedCommand",
     "ScopedAdapterRequest",
     "ScopedAdapterResult",
