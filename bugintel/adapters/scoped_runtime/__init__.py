@@ -17,6 +17,12 @@ send requests, execute tools, launch browsers, call providers, collect evidence,
 mutate targets, submit reports, or confirm vulnerabilities.
 """
 
+from bugintel.adapters.scoped_runtime.archive_chain_batch import (
+    ARCHIVE_CHAIN_KIND_RULES,
+    ScopedRuntimeArchiveChainBatchItem,
+    ScopedRuntimeArchiveChainBatchValidationReport,
+    validate_scoped_runtime_archive_chain_directory,
+)
 from bugintel.adapters.scoped_runtime.contracts import (
     ScopedAdapterPreparedCommand,
     ScopedAdapterRequest,
@@ -60,6 +66,10 @@ from bugintel.adapters.scoped_runtime.execution_gate import (
 )
 
 __all__ = [
+    "validate_scoped_runtime_archive_chain_directory",
+    "ScopedRuntimeArchiveChainBatchValidationReport",
+    "ScopedRuntimeArchiveChainBatchItem",
+    "ARCHIVE_CHAIN_KIND_RULES",
     "validate_scoped_runtime_archive_chain_artifact",
     "upstream_chain_findings",
     "status_mismatch_findings",
