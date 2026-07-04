@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.72.0",
+                version="1.73.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.72.0",
+            version="1.73.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.72.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.73.0")
 
 
 @app.command("scope-check")
@@ -18801,6 +18801,136 @@ def scoped_runtime_execution_gate_bundle_handoff_receipt_archive_manifest_verifi
 
     console.print(
         "Safety: This command only creates a local scoped runtime execution gate bundle handoff receipt archive manifest verification review packet. "
+        "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
+        "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+@app.command("scoped-runtime-archive-chain-validate")
+def scoped_runtime_archive_chain_validate_command(
+    artifact_file: Path = typer.Argument(
+        ...,
+        help="Path to a scoped runtime archive-chain artifact JSON file.",
+    ),
+    expected_kind: str = typer.Option(
+        "",
+        "--expected-kind",
+        help="Optional expected artifact kind.",
+    ),
+    required_field: list[str] | None = typer.Option(
+        None,
+        "--required-field",
+        help="Required field name. May be provided multiple times.",
+    ),
+    expect_status: list[str] | None = typer.Option(
+        None,
+        "--expect-status",
+        help="Expected status as field=value. May be provided multiple times.",
+    ),
+    expect_default_archive_chain: bool = typer.Option(
+        False,
+        "--expect-default-archive-chain",
+        help="Require the default seven-artifact archive chain.",
+    ),
+    validated_by: str = typer.Option(
+        "human-reviewer",
+        "--validated-by",
+        help="Neutral validator label.",
+    ),
+    validation_note: str = typer.Option(
+        "",
+        "--validation-note",
+        help="Human validation note for this local archive-chain validation.",
+    ),
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write archive-chain validation Markdown output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write archive-chain validation JSON output.",
+    ),
+) -> None:
+    """Validate a scoped runtime archive-chain artifact without execution."""
+    from bugintel.adapters.scoped_runtime.archive_chain import (
+        EXPECTED_ARCHIVE_CHAIN,
+        validate_scoped_runtime_archive_chain_artifact,
+    )
+
+    if not artifact_file.exists():
+        raise typer.BadParameter(f"artifact file does not exist: {artifact_file}")
+
+    expected_statuses: dict[str, str] = {}
+    for item in expect_status or []:
+        if "=" not in item:
+            raise typer.BadParameter(f"expected status must use field=value format: {item}")
+        key, value = item.split("=", 1)
+        if not key.strip():
+            raise typer.BadParameter(f"expected status field is empty: {item}")
+        expected_statuses[key.strip()] = value.strip()
+
+    artifact_data = json.loads(artifact_file.read_text())
+    result = validate_scoped_runtime_archive_chain_artifact(
+        artifact_data,
+        expected_kind=expected_kind,
+        required_fields=tuple(required_field or ()),
+        expected_statuses=expected_statuses,
+        expected_upstream_chain=EXPECTED_ARCHIVE_CHAIN if expect_default_archive_chain else None,
+        validated_by=validated_by,
+        validation_note=validation_note,
+    )
+    data = result.to_dict()
+
+    table = Table(title="Scoped Runtime Archive Chain Validation")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Artifact kind", result.artifact_kind)
+    table.add_row("Validation status", result.validation_status)
+    table.add_row("Validation state", result.validation_state)
+    table.add_row("Validated by", result.validated_by)
+    table.add_row("Expected kind", result.expected_kind or "none")
+    table.add_row("Required fields", ", ".join(result.required_fields) or "none")
+    table.add_row("Expected statuses", ", ".join(f"{k}={v}" for k, v in result.expected_statuses.items()) or "none")
+    table.add_row("Upstream artifact count", str(result.upstream_artifact_count))
+    table.add_row("Expected upstream artifact count", str(result.expected_upstream_artifact_count))
+    table.add_row("Adapter execution state", result.adapter_execution_state)
+    table.add_row("Can execute now", str(result.can_execute_now))
+    table.add_row("Execution allowed", str(result.execution_allowed))
+    table.add_row("Runtime execution allowed", str(result.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(result.tool_execution_allowed))
+    table.add_row("Network requests allowed", str(result.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(result.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(result.target_mutation_allowed))
+
+    safety = data["safety"]
+    table.add_row("Safety network requests", str(safety["network_requests"]).lower())
+    table.add_row("Safety tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Safety evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Safety validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Safety report submission", str(safety["report_submission"]).lower())
+    table.add_row("Safety vulnerability confirmation", str(safety["vulnerability_confirmation"]).lower())
+    console.print(table)
+
+    if result.blocking_findings:
+        console.print("\n[bold]Blocking findings:[/bold]")
+        for finding in result.blocking_findings:
+            console.print(f"- {finding}")
+    else:
+        console.print("\n[bold]Archive-chain artifact validated without execution.[/bold]")
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved scoped runtime archive-chain validation JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(result.to_markdown())
+        console.print(f"Saved scoped runtime archive-chain validation Markdown: {output_file}")
+
+    console.print(
+        "Safety: This command only validates a local scoped runtime archive-chain artifact. "
         "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
         "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )
