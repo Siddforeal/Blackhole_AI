@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.75.0",
+                version="1.76.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.75.0",
+            version="1.76.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.75.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.76.0")
 
 
 @app.command("scope-check")
@@ -19194,6 +19194,88 @@ def scoped_runtime_archive_chain_integrity_verify_command(
 
     console.print(
         "Safety: This command only verifies a local scoped runtime archive-chain integrity manifest. "
+        "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
+        "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+@app.command("scoped-runtime-archive-chain-audit-pack")
+def scoped_runtime_archive_chain_audit_pack_command(
+    artifact_dir: Path = typer.Argument(
+        ...,
+        help="Directory containing scoped runtime archive-chain JSON artifacts.",
+    ),
+    output_dir: Path = typer.Option(
+        ...,
+        "--output-dir",
+        help="Directory to write the archive-chain audit pack.",
+    ),
+    recursive: bool = typer.Option(
+        False,
+        "--recursive",
+        help="Recursively include JSON files from subdirectories.",
+    ),
+) -> None:
+    """Create a scoped runtime archive-chain audit pack without execution."""
+    from bugintel.adapters.scoped_runtime.archive_chain_audit_pack import (
+        build_scoped_runtime_archive_chain_audit_pack,
+    )
+
+    audit_pack = build_scoped_runtime_archive_chain_audit_pack(
+        artifact_dir,
+        output_dir,
+        recursive=recursive,
+    )
+    data = audit_pack.to_dict()
+
+    table = Table(title="Scoped Runtime Archive Chain Audit Pack")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Audit pack ID", audit_pack.audit_pack_id)
+    table.add_row("Audit pack status", audit_pack.audit_pack_status)
+    table.add_row("Audit pack state", audit_pack.audit_pack_state)
+    table.add_row("Artifact directory", audit_pack.artifact_dir)
+    table.add_row("Output directory", audit_pack.output_dir)
+    table.add_row("Recursive", str(audit_pack.recursive))
+    table.add_row("Generated files", str(len(audit_pack.generated_files)))
+    table.add_row("Batch validation status", audit_pack.batch_validation_status)
+    table.add_row("Integrity manifest status", audit_pack.integrity_manifest_status)
+    table.add_row("Integrity verification status", audit_pack.integrity_verification_status)
+    table.add_row("Artifact count", str(audit_pack.artifact_count))
+    table.add_row("Accepted count", str(audit_pack.accepted_count))
+    table.add_row("Blocked count", str(audit_pack.blocked_count))
+    table.add_row("Integrity record count", str(audit_pack.integrity_record_count))
+    table.add_row("Integrity verified count", str(audit_pack.integrity_verified_count))
+    table.add_row("Integrity missing count", str(audit_pack.integrity_missing_count))
+    table.add_row("Integrity mismatch count", str(audit_pack.integrity_mismatch_count))
+    table.add_row("Adapter execution state", audit_pack.adapter_execution_state)
+    table.add_row("Can execute now", str(audit_pack.can_execute_now))
+    table.add_row("Execution allowed", str(audit_pack.execution_allowed))
+    table.add_row("Runtime execution allowed", str(audit_pack.runtime_execution_allowed))
+    table.add_row("Tool execution allowed", str(audit_pack.tool_execution_allowed))
+    table.add_row("Network requests allowed", str(audit_pack.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(audit_pack.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(audit_pack.target_mutation_allowed))
+
+    safety = data["safety"]
+    table.add_row("Safety network requests", str(safety["network_requests"]).lower())
+    table.add_row("Safety tool execution", str(safety["tool_execution"]).lower())
+    table.add_row("Safety evidence collection", str(safety["evidence_collection"]).lower())
+    table.add_row("Safety validation execution", str(safety["validation_execution"]).lower())
+    table.add_row("Safety report submission", str(safety["report_submission"]).lower())
+    table.add_row("Safety vulnerability confirmation", str(safety["vulnerability_confirmation"]).lower())
+    console.print(table)
+
+    if audit_pack.blocking_findings:
+        console.print("\n[bold]Blocking findings:[/bold]")
+        for finding in audit_pack.blocking_findings:
+            console.print(f"- {finding}")
+    else:
+        console.print("\n[bold]Archive-chain audit pack created without execution.[/bold]")
+
+    console.print(f"Saved scoped runtime archive-chain audit pack: {output_dir}")
+    console.print(
+        "Safety: This command only creates a local scoped runtime archive-chain audit pack. "
         "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
         "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
     )

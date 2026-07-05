@@ -30,6 +30,11 @@ from bugintel.adapters.scoped_runtime.archive_chain_integrity import (
     build_scoped_runtime_archive_chain_integrity_manifest,
     verify_scoped_runtime_archive_chain_integrity_manifest,
 )
+from bugintel.adapters.scoped_runtime.archive_chain_audit_pack import (
+    ScopedRuntimeArchiveChainAuditPack,
+    ScopedRuntimeArchiveChainAuditPackFile,
+    build_scoped_runtime_archive_chain_audit_pack,
+)
 from bugintel.adapters.scoped_runtime.contracts import (
     ScopedAdapterPreparedCommand,
     ScopedAdapterRequest,
@@ -73,6 +78,9 @@ from bugintel.adapters.scoped_runtime.execution_gate import (
 )
 
 __all__ = [
+    "build_scoped_runtime_archive_chain_audit_pack",
+    "ScopedRuntimeArchiveChainAuditPackFile",
+    "ScopedRuntimeArchiveChainAuditPack",
     "verify_scoped_runtime_archive_chain_integrity_manifest",
     "build_scoped_runtime_archive_chain_integrity_manifest",
     "ScopedRuntimeArchiveChainIntegrityVerification",
