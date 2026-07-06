@@ -21,3 +21,16 @@ __all__ = [
     "BrainServiceContract",
     "build_blackhole_brain_architecture_spec",
 ]
+
+
+from bugintel.brain.knowledge_store import (
+    BrainKnowledgeRecord,
+    BrainKnowledgeStoreSnapshot,
+    build_brain_knowledge_store_snapshot,
+)
+
+__all__ += [
+    "BrainKnowledgeRecord",
+    "BrainKnowledgeStoreSnapshot",
+    "build_brain_knowledge_store_snapshot",
+]
