@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.76.0",
+                version="1.77.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.76.0",
+            version="1.77.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.76.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.77.0")
 
 
 @app.command("scope-check")
@@ -19278,6 +19278,62 @@ def scoped_runtime_archive_chain_audit_pack_command(
         "Safety: This command only creates a local scoped runtime archive-chain audit pack. "
         "It does not execute curl, call subprocess, send requests, execute tools, launch browsers, "
         "call providers, collect evidence, mutate targets, submit reports, or confirm vulnerabilities."
+    )
+
+
+@app.command("blackhole-brain-architecture")
+def blackhole_brain_architecture_command(
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Blackhole Brain architecture Markdown output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write Blackhole Brain architecture JSON output.",
+    ),
+) -> None:
+    """Export the Blackhole Brain architecture specification."""
+    from bugintel.brain.architecture import build_blackhole_brain_architecture_spec
+
+    spec = build_blackhole_brain_architecture_spec()
+    data = spec.to_dict()
+
+    table = Table(title="Blackhole Brain Architecture")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Architecture ID", spec.architecture_id)
+    table.add_row("Version", spec.version)
+    table.add_row("Status", spec.status)
+    table.add_row("Entities", str(len(spec.entities)))
+    table.add_row("Relationships", str(len(spec.relationships)))
+    table.add_row("Pipeline stages", str(len(spec.pipeline)))
+    table.add_row("Memory layers", str(len(spec.memory_layers)))
+    table.add_row("Service contracts", str(len(spec.service_contracts)))
+    table.add_row("Extension points", str(len(spec.extension_points)))
+    table.add_row("Adapter execution state", spec.safety.adapter_execution_state)
+    table.add_row("Can execute now", str(spec.safety.can_execute_now))
+    table.add_row("Execution allowed", str(spec.safety.execution_allowed))
+    table.add_row("Network requests allowed", str(spec.safety.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(spec.safety.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(spec.safety.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(spec.safety.report_submission_allowed))
+    table.add_row("Vulnerability confirmation allowed", str(spec.safety.vulnerability_confirmation_allowed))
+    console.print(table)
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved Blackhole Brain architecture JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(spec.to_markdown())
+        console.print(f"Saved Blackhole Brain architecture Markdown: {output_file}")
+
+    console.print(
+        "Safety: architecture export only; no execution, no requests, no evidence collection, "
+        "no target mutation, no report submission, and no vulnerability confirmation."
     )
 
 
