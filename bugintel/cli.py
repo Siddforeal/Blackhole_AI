@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.77.0",
+                version="1.78.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.77.0",
+            version="1.78.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.77.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.78.0")
 
 
 @app.command("scope-check")
@@ -19333,6 +19333,75 @@ def blackhole_brain_architecture_command(
 
     console.print(
         "Safety: architecture export only; no execution, no requests, no evidence collection, "
+        "no target mutation, no report submission, and no vulnerability confirmation."
+    )
+
+
+@app.command("brain-knowledge-store")
+def brain_knowledge_store_command(
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Brain Knowledge Store Markdown output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write Brain Knowledge Store JSON output.",
+    ),
+) -> None:
+    """Export a local Brain Knowledge Store snapshot."""
+    from bugintel.brain.knowledge_store import (
+        BrainKnowledgeRecord,
+        build_brain_knowledge_store_snapshot,
+    )
+
+    snapshot = build_brain_knowledge_store_snapshot(
+        records=(
+            BrainKnowledgeRecord(
+                record_id="knowledge-store-foundation",
+                record_type="architecture",
+                title="Brain Knowledge Store foundation",
+                summary="Local deterministic cross-case knowledge snapshot foundation.",
+                source="brain-knowledge-store-cli",
+                tags=("brain", "knowledge-store", "cross-case"),
+                confidence=1.0,
+            ),
+        )
+    )
+    data = snapshot.to_dict()
+
+    table = Table(title="Brain Knowledge Store")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Store ID", snapshot.store_id)
+    table.add_row("Version", snapshot.version)
+    table.add_row("Status", snapshot.status)
+    table.add_row("Records", str(len(snapshot.records)))
+    table.add_row("Entities", str(len(snapshot.entities)))
+    table.add_row("Relationships", str(len(snapshot.relationships)))
+    table.add_row("Hypotheses", str(len(snapshot.hypotheses)))
+    table.add_row("Adapter execution state", snapshot.safety.adapter_execution_state)
+    table.add_row("Can execute now", str(snapshot.safety.can_execute_now))
+    table.add_row("Execution allowed", str(snapshot.safety.execution_allowed))
+    table.add_row("Network requests allowed", str(snapshot.safety.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(snapshot.safety.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(snapshot.safety.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(snapshot.safety.report_submission_allowed))
+    table.add_row("Vulnerability confirmation allowed", str(snapshot.safety.vulnerability_confirmation_allowed))
+    console.print(table)
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved Brain Knowledge Store JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(snapshot.to_markdown())
+        console.print(f"Saved Brain Knowledge Store Markdown: {output_file}")
+
+    console.print(
+        "Safety: knowledge-store export only; no execution, no requests, no evidence collection, "
         "no target mutation, no report submission, and no vulnerability confirmation."
     )
 
