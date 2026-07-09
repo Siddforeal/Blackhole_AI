@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.78.0",
+                version="1.79.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.78.0",
+            version="1.79.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.78.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.79.0")
 
 
 @app.command("scope-check")
@@ -19402,6 +19402,59 @@ def brain_knowledge_store_command(
 
     console.print(
         "Safety: knowledge-store export only; no execution, no requests, no evidence collection, "
+        "no target mutation, no report submission, and no vulnerability confirmation."
+    )
+
+
+@app.command("brain-pattern-library")
+def brain_pattern_library_command(
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Brain Pattern Library Markdown output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write Brain Pattern Library JSON output.",
+    ),
+) -> None:
+    """Export the local Brain Pattern Library."""
+    from bugintel.brain.pattern_library import build_brain_pattern_library_snapshot
+
+    snapshot = build_brain_pattern_library_snapshot()
+    data = snapshot.to_dict()
+
+    table = Table(title="Brain Pattern Library")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Library ID", snapshot.library_id)
+    table.add_row("Version", snapshot.version)
+    table.add_row("Status", snapshot.status)
+    table.add_row("Patterns", str(len(snapshot.patterns)))
+    table.add_row("Vulnerability classes", ", ".join(data["vulnerability_classes"]))
+    table.add_row("Severity hints", ", ".join(data["severity_hints"]))
+    table.add_row("Adapter execution state", snapshot.safety.adapter_execution_state)
+    table.add_row("Can execute now", str(snapshot.safety.can_execute_now))
+    table.add_row("Execution allowed", str(snapshot.safety.execution_allowed))
+    table.add_row("Network requests allowed", str(snapshot.safety.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(snapshot.safety.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(snapshot.safety.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(snapshot.safety.report_submission_allowed))
+    table.add_row("Vulnerability confirmation allowed", str(snapshot.safety.vulnerability_confirmation_allowed))
+    console.print(table)
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved Brain Pattern Library JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(snapshot.to_markdown())
+        console.print(f"Saved Brain Pattern Library Markdown: {output_file}")
+
+    console.print(
+        "Safety: pattern-library export only; no execution, no requests, no evidence collection, "
         "no target mutation, no report submission, and no vulnerability confirmation."
     )
 

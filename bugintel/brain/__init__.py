@@ -34,3 +34,22 @@ __all__ += [
     "BrainKnowledgeStoreSnapshot",
     "build_brain_knowledge_store_snapshot",
 ]
+
+
+from bugintel.brain.pattern_library import (
+    BrainEvidenceRequirement,
+    BrainPattern,
+    BrainPatternIndicator,
+    BrainPatternLibrarySnapshot,
+    build_brain_pattern_library_snapshot,
+    default_brain_patterns,
+)
+
+__all__ += [
+    "BrainEvidenceRequirement",
+    "BrainPattern",
+    "BrainPatternIndicator",
+    "BrainPatternLibrarySnapshot",
+    "build_brain_pattern_library_snapshot",
+    "default_brain_patterns",
+]
