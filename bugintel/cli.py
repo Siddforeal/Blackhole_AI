@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.79.0",
+                version="1.80.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.79.0",
+            version="1.80.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.79.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.80.0")
 
 
 @app.command("scope-check")
@@ -19455,6 +19455,63 @@ def brain_pattern_library_command(
 
     console.print(
         "Safety: pattern-library export only; no execution, no requests, no evidence collection, "
+        "no target mutation, no report submission, and no vulnerability confirmation."
+    )
+
+
+@app.command("brain-pattern-knowledge-export")
+def brain_pattern_knowledge_export_command(
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Brain Pattern Knowledge Export Markdown output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write Brain Pattern Knowledge Export JSON output.",
+    ),
+) -> None:
+    """Export pattern-library knowledge into a Brain Knowledge Store snapshot."""
+    from bugintel.brain.pattern_knowledge_export import build_brain_pattern_knowledge_export
+
+    export = build_brain_pattern_knowledge_export()
+    data = export.to_dict()
+
+    table = Table(title="Brain Pattern Knowledge Export")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Export ID", export.export_id)
+    table.add_row("Version", export.version)
+    table.add_row("Status", export.status)
+    table.add_row("Pattern library", export.pattern_library.library_id)
+    table.add_row("Knowledge store", export.knowledge_store.store_id)
+    table.add_row("Patterns", str(data["pattern_count"]))
+    table.add_row("Records", str(data["record_count"]))
+    table.add_row("Entities", str(data["entity_count"]))
+    table.add_row("Relationships", str(data["relationship_count"]))
+    table.add_row("Hypotheses", str(data["hypothesis_count"]))
+    table.add_row("Adapter execution state", export.safety.adapter_execution_state)
+    table.add_row("Can execute now", str(export.safety.can_execute_now))
+    table.add_row("Execution allowed", str(export.safety.execution_allowed))
+    table.add_row("Network requests allowed", str(export.safety.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(export.safety.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(export.safety.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(export.safety.report_submission_allowed))
+    table.add_row("Vulnerability confirmation allowed", str(export.safety.vulnerability_confirmation_allowed))
+    console.print(table)
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved Brain Pattern Knowledge Export JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(export.to_markdown())
+        console.print(f"Saved Brain Pattern Knowledge Export Markdown: {output_file}")
+
+    console.print(
+        "Safety: pattern-knowledge export only; no execution, no requests, no evidence collection, "
         "no target mutation, no report submission, and no vulnerability confirmation."
     )
 
