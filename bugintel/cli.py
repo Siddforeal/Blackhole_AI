@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.80.0",
+                version="1.81.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.80.0",
+            version="1.81.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.80.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.81.0")
 
 
 @app.command("scope-check")
@@ -19512,6 +19512,64 @@ def brain_pattern_knowledge_export_command(
 
     console.print(
         "Safety: pattern-knowledge export only; no execution, no requests, no evidence collection, "
+        "no target mutation, no report submission, and no vulnerability confirmation."
+    )
+
+
+@app.command("blackhole-demo-case-pack")
+def blackhole_demo_case_pack_command(
+    output_file: Path | None = typer.Option(
+        None,
+        "--output-file",
+        "--output",
+        help="Optional path to write Blackhole Demo Case Pack Markdown output.",
+    ),
+    json_output: Path | None = typer.Option(
+        None,
+        "--json-output",
+        help="Optional path to write Blackhole Demo Case Pack JSON output.",
+    ),
+) -> None:
+    """Export a local demo case pack showing Blackhole's brain workflow."""
+    from bugintel.brain.demo_case_pack import build_blackhole_demo_case_pack
+
+    pack = build_blackhole_demo_case_pack()
+    data = pack.to_dict()
+
+    table = Table(title="Blackhole Demo Case Pack")
+    table.add_column("Field", style="cyan", no_wrap=True)
+    table.add_column("Value", style="white")
+    table.add_row("Demo ID", pack.demo_id)
+    table.add_row("Version", pack.version)
+    table.add_row("Status", pack.status)
+    table.add_row("Case", pack.case_title)
+    table.add_row("Target label", pack.target_label)
+    table.add_row("Endpoint", pack.endpoint)
+    table.add_row("Observations", str(data["observation_count"]))
+    table.add_row("Matched patterns", str(data["matched_pattern_count"]))
+    table.add_row("Knowledge records", str(data["knowledge_record_count"]))
+    table.add_row("Hypotheses", str(data["hypothesis_count"]))
+    table.add_row("Next steps", str(data["next_step_count"]))
+    table.add_row("Adapter execution state", pack.safety.adapter_execution_state)
+    table.add_row("Can execute now", str(pack.safety.can_execute_now))
+    table.add_row("Execution allowed", str(pack.safety.execution_allowed))
+    table.add_row("Network requests allowed", str(pack.safety.network_requests_allowed))
+    table.add_row("Evidence collection allowed", str(pack.safety.evidence_collection_allowed))
+    table.add_row("Target mutation allowed", str(pack.safety.target_mutation_allowed))
+    table.add_row("Report submission allowed", str(pack.safety.report_submission_allowed))
+    table.add_row("Vulnerability confirmation allowed", str(pack.safety.vulnerability_confirmation_allowed))
+    console.print(table)
+
+    if json_output is not None:
+        json_output.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+        console.print(f"Saved Blackhole Demo Case Pack JSON: {json_output}")
+
+    if output_file is not None:
+        output_file.write_text(pack.to_markdown())
+        console.print(f"Saved Blackhole Demo Case Pack Markdown: {output_file}")
+
+    console.print(
+        "Safety: demo case pack export only; no execution, no requests, no evidence collection, "
         "no target mutation, no report submission, and no vulnerability confirmation."
     )
 

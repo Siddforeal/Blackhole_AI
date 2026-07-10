@@ -64,3 +64,18 @@ __all__ += [
     "BrainPatternKnowledgeExport",
     "build_brain_pattern_knowledge_export",
 ]
+
+
+from bugintel.brain.demo_case_pack import (
+    BlackholeDemoCasePack,
+    BlackholeDemoMatchedPattern,
+    BlackholeDemoObservation,
+    build_blackhole_demo_case_pack,
+)
+
+__all__ += [
+    "BlackholeDemoCasePack",
+    "BlackholeDemoMatchedPattern",
+    "BlackholeDemoObservation",
+    "build_blackhole_demo_case_pack",
+]
