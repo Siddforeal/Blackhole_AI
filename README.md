@@ -4,14 +4,40 @@
 [![Latest release](https://img.shields.io/github/v/release/Siddforeal/Blackhole_AI?label=release)](https://github.com/Siddforeal/Blackhole_AI/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Blackhole AI Workbench** is an in-progress agentic security research system for authorized vulnerability research, bug bounty investigation, evidence planning, browser-assisted analysis, Burp Suite workflows, command-line research, and human-reviewed proof-of-concept development.
+**Blackhole AI Workbench** is a local-first security research brain for authorized vulnerability research.
 
-Blackhole is being built as a local-first AI research brain: it breaks a target into hypotheses, plans investigation steps, reviews evidence, decides what is safe to do next, and routes work through small task-focused agents.
+It helps turn rough security notes into structured observations, vulnerability pattern matches, hypotheses, next investigation steps, and report-readiness summaries.
 
-> **Current release:** `v1.81.0`
+> **Current release:** `v1.82.0`
 > **Project status:** active research prototype
 > **Current mode:** local-first, planning-first, human-in-the-loop
 > **Long-term direction:** scope-gated AI agents that can interact with browsers, Burp Suite, curl, local tools, structured case memory, and controlled proof-of-concept workflows.
+
+---
+
+## Run the Demo
+
+The fastest way to understand Blackhole is the checked-in demo case pack.
+
+```bash
+blackhole blackhole-demo-case-pack --json-output examples/blackhole-demo-case-pack.json --output-file examples/blackhole-demo-case-pack.md
+```
+
+The demo turns a synthetic local case into:
+
+- observations
+- matched vulnerability patterns
+- knowledge records
+- hypotheses
+- next investigation steps
+- a `Not report-ready` summary
+
+Example outputs:
+
+```text
+examples/blackhole-demo-case-pack.md
+examples/blackhole-demo-case-pack.json
+```
 
 ---
 
@@ -100,6 +126,26 @@ This makes the system suitable for building toward live automation without skipp
 
 ---
 
+## Current Brain Sequence
+
+```text
+v1.77  Blackhole Brain Architecture
+v1.78  Brain Knowledge Store
+v1.79  Brain Pattern Library
+v1.80  Brain Pattern Knowledge Export
+v1.81  Blackhole Demo Case Pack
+v1.82  Product README Polish
+```
+
+The visible demo is built on top of the Brain pattern and knowledge layers:
+
+```text
+Pattern Library
+→ Pattern Knowledge Export
+→ Demo Case Pack
+→ Human-readable investigation summary
+```
+
 ## Current Capabilities
 
 ### Research Planning
@@ -152,46 +198,24 @@ Blackhole can organize evidence, blockers, guardrails, and report-readiness note
 
 ---
 
-## What v1.81.0 Adds
+## What v1.82.0 Adds
 
-`v1.81.0` adds the **Blackhole Demo Case Pack**.
+`v1.82.0` improves the GitHub landing page and product explanation.
 
-This is the first product-visible demo output for the Brain sequence. It shows how Blackhole turns a synthetic local security case into:
+This release makes the project easier to understand by moving the visible demo near the top of the README, removing old release-history clutter, and explaining the current Brain sequence more clearly.
+
+The main code behavior remains the v1.81 demo case pack:
 
 ```text
 observations
 → matched vulnerability patterns
 → knowledge records
 → hypotheses
-→ next investigation plan
+→ next investigation steps
 → report-readiness summary
 ```
 
-The demo is intentionally local-only and synthetic. It does not contact a target, execute curl, collect live evidence, mutate anything, submit reports, or confirm vulnerabilities.
-
-Run the demo:
-
-```bash
-blackhole blackhole-demo-case-pack \
-  --json-output examples/blackhole-demo-case-pack.json \
-  --output-file examples/blackhole-demo-case-pack.md
-```
-
-Example outputs are checked in at:
-
-```text
-examples/blackhole-demo-case-pack.json
-examples/blackhole-demo-case-pack.md
-```
-
-The demo output includes:
-
-- 3 observations
-- 3 matched patterns
-- 3 knowledge records
-- 3 hypotheses
-- 5 next investigation steps
-- a clear `Not report-ready` summary
+v1.82 is a product-facing polish release. It does not add live execution, network requests, evidence collection, target mutation, report submission, or vulnerability confirmation.
 
 ## Example Workflow Shape
 
@@ -316,13 +340,3 @@ Blackhole AI Workbench is intended only for authorized security research, bug bo
 Do not use it against systems where you do not have permission.
 
 The project is intentionally designed around scope control, human review, safety gates, and evidence-based research decisions.
-
-## What v1.36.0 Adds
-
-Version 1.36.0 adds a practical bug bounty case intake workflow.
-
-The new `bug-bounty-case-intake` command connects endpoint mining, endpoint priority scoring, endpoint investigation planning, and evidence requirement planning into one P1/P2-focused human workflow.
-
-Input can be HAR text, Burp exports, JavaScript, endpoint lists, or notes. Output includes top endpoints, P1/P2 potential lanes, investigation tasks, evidence requirements, and a manual testing plan.
-
-This still does **not** send requests, execute tools, launch browsers, call providers, collect evidence, submit reports, mutate targets, or confirm vulnerabilities.
