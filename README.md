@@ -8,7 +8,7 @@
 
 Blackhole is being built as a local-first AI research brain: it breaks a target into hypotheses, plans investigation steps, reviews evidence, decides what is safe to do next, and routes work through small task-focused agents.
 
-> **Current release:** `v1.80.0`
+> **Current release:** `v1.81.0`
 > **Project status:** active research prototype
 > **Current mode:** local-first, planning-first, human-in-the-loop
 > **Long-term direction:** scope-gated AI agents that can interact with browsers, Burp Suite, curl, local tools, structured case memory, and controlled proof-of-concept workflows.
@@ -152,21 +152,46 @@ Blackhole can organize evidence, blockers, guardrails, and report-readiness note
 
 ---
 
-## What v1.35.0 Adds
+## What v1.81.0 Adds
 
-`v1.35.0` adds the **Human Final Apply Execution Decision Packet** stage.
+`v1.81.0` adds the **Blackhole Demo Case Pack**.
 
-Accepted human feedback decisions can now be converted into proposed confidence update records:
+This is the first product-visible demo output for the Brain sequence. It shows how Blackhole turns a synthetic local security case into:
 
 ```text
-final apply execution review gate
-→ human final apply execution decision packet
-→ later final apply execution packet
+observations
+→ matched vulnerability patterns
+→ knowledge records
+→ hypotheses
+→ next investigation plan
+→ report-readiness summary
 ```
 
-This still does **not** write persistent research state. It combines final apply execution review items with explicit human final apply execution decisions before any final apply execution packet or stored-state write path is considered.
+The demo is intentionally local-only and synthetic. It does not contact a target, execute curl, collect live evidence, mutate anything, submit reports, or confirm vulnerabilities.
 
----
+Run the demo:
+
+```bash
+blackhole blackhole-demo-case-pack \
+  --json-output examples/blackhole-demo-case-pack.json \
+  --output-file examples/blackhole-demo-case-pack.md
+```
+
+Example outputs are checked in at:
+
+```text
+examples/blackhole-demo-case-pack.json
+examples/blackhole-demo-case-pack.md
+```
+
+The demo output includes:
+
+- 3 observations
+- 3 matched patterns
+- 3 knowledge records
+- 3 hypotheses
+- 5 next investigation steps
+- a clear `Not report-ready` summary
 
 ## Example Workflow Shape
 
