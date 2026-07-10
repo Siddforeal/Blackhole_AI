@@ -53,3 +53,14 @@ __all__ += [
     "build_brain_pattern_library_snapshot",
     "default_brain_patterns",
 ]
+
+
+from bugintel.brain.pattern_knowledge_export import (
+    BrainPatternKnowledgeExport,
+    build_brain_pattern_knowledge_export,
+)
+
+__all__ += [
+    "BrainPatternKnowledgeExport",
+    "build_brain_pattern_knowledge_export",
+]
