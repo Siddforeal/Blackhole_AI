@@ -362,7 +362,7 @@ def main_callback(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         show_intro(
             config=IntroConfig(
-                version="1.83.0",
+                version="1.84.0",
                 force=True,
             )
         )
@@ -374,7 +374,7 @@ def intro_command():
     """Show the Blackhole startup intro."""
     show_intro(
         config=IntroConfig(
-            version="1.83.0",
+            version="1.84.0",
             force=True,
         )
     )
@@ -383,7 +383,7 @@ def intro_command():
 @app.command()
 def version():
     """Show Blackhole version."""
-    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.83.0")
+    console.print("[bold green]Blackhole AI Workbench[/bold green] version 1.84.0")
 
 
 @app.command("scope-check")
@@ -19540,7 +19540,9 @@ def blackhole_demo_case_pack_command(
     table.add_column("Field", style="cyan", no_wrap=True)
     table.add_column("Value", style="white")
     table.add_row("Demo ID", pack.demo_id)
-    table.add_row("Version", pack.version)
+    table.add_row("Product version", pack.product_version)
+    table.add_row("Demo schema version", pack.demo_schema_version)
+    table.add_row("Legacy version alias", pack.version)
     table.add_row("Status", pack.status)
     table.add_row("Case", pack.case_title)
     table.add_row("Target label", pack.target_label)

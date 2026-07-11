@@ -8,7 +8,7 @@
 
 It helps turn rough security notes into structured observations, vulnerability pattern matches, hypotheses, next investigation steps, and report-readiness summaries.
 
-> **Current release:** `v1.83.0`
+> **Current release:** `v1.84.0`
 > **Project status:** active research prototype
 > **Current mode:** local-first, planning-first, human-in-the-loop
 > **Long-term direction:** scope-gated AI agents that can interact with browsers, Burp Suite, curl, local tools, structured case memory, and controlled proof-of-concept workflows.
@@ -138,6 +138,7 @@ v1.80  Brain Pattern Knowledge Export
 v1.81  Blackhole Demo Case Pack
 v1.82  Product README Polish
 v1.83  Demo Visual Asset
+v1.84  Demo Version Clarity
 ```
 
 The visible demo is built on top of the Brain pattern and knowledge layers:
@@ -201,27 +202,23 @@ Blackhole can organize evidence, blockers, guardrails, and report-readiness note
 
 ---
 
-## What v1.83.0 Adds
+## What v1.84.0 Adds
 
-`v1.83.0` adds a static visual preview of the Blackhole Demo Case Pack.
+`v1.84.0` clarifies the difference between the Blackhole product release and the demo artifact schema.
 
-The new SVG makes the current workflow understandable directly from the GitHub README:
-
-```text
-observations
-→ matched vulnerability patterns
-→ hypotheses
-→ next investigation plan
-→ report-readiness summary
-```
-
-Asset:
+Demo output now exposes:
 
 ```text
-docs/assets/blackhole-demo-case-pack.svg
+product_version: 1.84.0
+demo_schema_version: 1.81.0
+version: 1.81.0  # retained as a legacy compatibility alias
 ```
 
-The visual is synthetic and local-only. This release does not add execution, network requests, evidence collection, target mutation, report submission, or vulnerability confirmation.
+The existing demo ID, schema version, and legacy `version` field remain unchanged so existing consumers are not broken.
+
+The CLI and Markdown output now use explicit labels instead of the ambiguous single `Version` label.
+
+This release does not change the demo safety boundary or add execution, network requests, evidence collection, target mutation, report submission, or vulnerability confirmation.
 
 ## Example Workflow Shape
 

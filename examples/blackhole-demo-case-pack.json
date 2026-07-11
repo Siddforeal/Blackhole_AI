@@ -6,6 +6,7 @@
   "case_summary": "A synthetic local-only case showing how Blackhole turns observations into matched patterns, knowledge records, hypotheses, next evidence requirements, and a report-readiness summary.",
   "case_title": "Synthetic account export boundary review",
   "demo_id": "BLACKHOLE-DEMO-CASE-PACK-v1.81.0",
+  "demo_schema_version": "1.81.0",
   "dry_run_only": true,
   "endpoint": "/api/v1/accounts/{account_id}/exports?callback_url=https://researcher.invalid/sink",
   "evidence_collection_allowed": false,
@@ -640,6 +641,7 @@
     "vulnerability_confirmation_allowed": false
   },
   "planning_only": true,
+  "product_version": "1.84.0",
   "report_ready_summary": "Not report-ready. The demo shows a plausible research path, but it intentionally does not confirm a vulnerability. A human researcher still needs authorized boundary comparison, redacted evidence, and impact review.",
   "report_submission_allowed": false,
   "runtime_execution_allowed": false,
