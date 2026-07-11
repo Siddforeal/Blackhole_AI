@@ -641,7 +641,7 @@
     "vulnerability_confirmation_allowed": false
   },
   "planning_only": true,
-  "product_version": "1.84.0",
+  "product_version": "1.84.1",
   "report_ready_summary": "Not report-ready. The demo shows a plausible research path, but it intentionally does not confirm a vulnerability. A human researcher still needs authorized boundary comparison, redacted evidence, and impact review.",
   "report_submission_allowed": false,
   "runtime_execution_allowed": false,

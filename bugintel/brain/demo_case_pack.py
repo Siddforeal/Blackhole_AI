@@ -229,7 +229,7 @@ def build_blackhole_demo_case_pack(
     return BlackholeDemoCasePack(
         demo_id="BLACKHOLE-DEMO-CASE-PACK-v1.81.0",
         version="1.81.0",
-        product_version="1.84.0",
+        product_version="1.84.1",
         demo_schema_version="1.81.0",
         status="demo-case-pack-local-only",
         case_title="Synthetic account export boundary review",

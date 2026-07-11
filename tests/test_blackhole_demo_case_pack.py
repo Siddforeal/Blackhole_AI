@@ -14,7 +14,7 @@ def test_blackhole_demo_case_pack_builds_visible_demo_output() -> None:
     assert data["kind"] == "blackhole_demo_case_pack"
     assert data["demo_id"] == "BLACKHOLE-DEMO-CASE-PACK-v1.81.0"
     assert data["version"] == "1.81.0"
-    assert data["product_version"] == "1.84.0"
+    assert data["product_version"] == "1.84.1"
     assert data["demo_schema_version"] == "1.81.0"
     assert data["status"] == "demo-case-pack-local-only"
 
@@ -122,7 +122,7 @@ def test_blackhole_demo_case_pack_markdown_is_product_visible() -> None:
     markdown = build_blackhole_demo_case_pack().to_markdown()
 
     assert "# Blackhole Demo Case Pack" in markdown
-    assert "Product version: `1.84.0`" in markdown
+    assert "Product version: `1.84.1`" in markdown
     assert "Demo schema version: `1.81.0`" in markdown
     assert "Legacy version alias: `1.81.0`" in markdown
     assert "Synthetic account export boundary review" in markdown
