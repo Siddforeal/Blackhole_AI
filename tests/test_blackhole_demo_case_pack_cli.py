@@ -35,7 +35,7 @@ def test_blackhole_demo_case_pack_cli_writes_json_and_markdown(tmp_path) -> None
     assert data["kind"] == "blackhole_demo_case_pack"
     assert data["demo_id"] == "BLACKHOLE-DEMO-CASE-PACK-v1.81.0"
     assert data["version"] == "1.81.0"
-    assert data["product_version"] == "1.84.0"
+    assert data["product_version"] == "1.84.1"
     assert data["demo_schema_version"] == "1.81.0"
     assert data["status"] == "demo-case-pack-local-only"
     assert data["observation_count"] == 3

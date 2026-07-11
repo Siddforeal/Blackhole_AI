@@ -1,7 +1,7 @@
 # Blackhole Demo Case Pack
 
 - Demo ID: `BLACKHOLE-DEMO-CASE-PACK-v1.81.0`
-- Product version: `1.84.0`
+- Product version: `1.84.1`
 - Demo schema version: `1.81.0`
 - Legacy version alias: `1.81.0`
 - Status: `demo-case-pack-local-only`
