@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-label="Blackhole Demo Case Pack workflow">
+<rect width="1200" height="600" rx="28" fill="#0d1117"/>
+<rect x="24" y="24" width="1152" height="552" rx="22" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+<text x="64" y="82" fill="#f0f6fc" font-family="Segoe UI,Arial,sans-serif" font-size="34" font-weight="700">Blackhole Demo Case Pack</text>
+<text x="64" y="116" fill="#8b949e" font-family="Segoe UI,Arial,sans-serif" font-size="17">Synthetic account export boundary review</text>
+<rect x="968" y="54" width="144" height="36" rx="18" fill="#1f6feb"/>
+<text x="1040" y="78" text-anchor="middle" fill="#fff" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="700">LOCAL ONLY</text>
+
+<rect x="64" y="166" width="292" height="132" rx="18" fill="#0d1117" stroke="#30363d" stroke-width="2"/>
+<text x="88" y="202" fill="#8b949e" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="700">OBSERVATIONS</text>
+<text x="88" y="258" fill="#f0f6fc" font-family="Segoe UI,Arial,sans-serif" font-size="42" font-weight="700">3</text>
+
+<path d="M372 232 H410" stroke="#58a6ff" stroke-width="4"/><path d="M402 222 L416 232 L402 242" fill="none" stroke="#58a6ff" stroke-width="4"/>
+
+<rect x="428" y="166" width="344" height="132" rx="18" fill="#0d1117" stroke="#30363d" stroke-width="2"/>
+<text x="452" y="202" fill="#8b949e" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="700">MATCHED PATTERNS</text>
+<text x="452" y="258" fill="#f0f6fc" font-family="Segoe UI,Arial,sans-serif" font-size="42" font-weight="700">3</text>
+<text x="520" y="254" fill="#c9d1d9" font-family="Segoe UI,Arial,sans-serif" font-size="14">authorization · disclosure · SSRF</text>
+
+<path d="M788 232 H826" stroke="#58a6ff" stroke-width="4"/><path d="M818 222 L832 232 L818 242" fill="none" stroke="#58a6ff" stroke-width="4"/>
+
+<rect x="844" y="166" width="268" height="132" rx="18" fill="#0d1117" stroke="#30363d" stroke-width="2"/>
+<text x="868" y="202" fill="#8b949e" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="700">HYPOTHESES</text>
+<text x="868" y="258" fill="#f0f6fc" font-family="Segoe UI,Arial,sans-serif" font-size="42" font-weight="700">3</text>
+
+<rect x="64" y="330" width="708" height="132" rx="18" fill="#0d1117" stroke="#30363d" stroke-width="2"/>
+<text x="88" y="366" fill="#8b949e" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="700">NEXT INVESTIGATION PLAN</text>
+<text x="88" y="422" fill="#f0f6fc" font-family="Segoe UI,Arial,sans-serif" font-size="42" font-weight="700">5 steps</text>
+<text x="256" y="417" fill="#c9d1d9" font-family="Segoe UI,Arial,sans-serif" font-size="15">scope · boundary · evidence · impact review</text>
+
+<rect x="804" y="330" width="308" height="132" rx="18" fill="#2d1b1f" stroke="#f85149" stroke-width="2"/>
+<text x="828" y="366" fill="#ff7b72" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="700">REPORT READINESS</text>
+<text x="828" y="414" fill="#f0f6fc" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="700">NOT REPORT-READY</text>
+
+<text x="64" y="508" fill="#58a6ff" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="700">SAFETY BOUNDARY</text>
+<text x="64" y="542" fill="#c9d1d9" font-family="Segoe UI,Arial,sans-serif" font-size="14">Network OFF   ·   Mutation OFF   ·   Submission OFF   ·   Confirmation OFF</text>
+</svg>

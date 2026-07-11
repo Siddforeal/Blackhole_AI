@@ -8,7 +8,7 @@
 
 It helps turn rough security notes into structured observations, vulnerability pattern matches, hypotheses, next investigation steps, and report-readiness summaries.
 
-> **Current release:** `v1.82.0`
+> **Current release:** `v1.83.0`
 > **Project status:** active research prototype
 > **Current mode:** local-first, planning-first, human-in-the-loop
 > **Long-term direction:** scope-gated AI agents that can interact with browsers, Burp Suite, curl, local tools, structured case memory, and controlled proof-of-concept workflows.
@@ -18,6 +18,8 @@ It helps turn rough security notes into structured observations, vulnerability p
 ## Run the Demo
 
 The fastest way to understand Blackhole is the checked-in demo case pack.
+
+![Blackhole Demo Case Pack workflow](docs/assets/blackhole-demo-case-pack.svg)
 
 ```bash
 blackhole blackhole-demo-case-pack --json-output examples/blackhole-demo-case-pack.json --output-file examples/blackhole-demo-case-pack.md
@@ -135,6 +137,7 @@ v1.79  Brain Pattern Library
 v1.80  Brain Pattern Knowledge Export
 v1.81  Blackhole Demo Case Pack
 v1.82  Product README Polish
+v1.83  Demo Visual Asset
 ```
 
 The visible demo is built on top of the Brain pattern and knowledge layers:
@@ -198,24 +201,27 @@ Blackhole can organize evidence, blockers, guardrails, and report-readiness note
 
 ---
 
-## What v1.82.0 Adds
+## What v1.83.0 Adds
 
-`v1.82.0` improves the GitHub landing page and product explanation.
+`v1.83.0` adds a static visual preview of the Blackhole Demo Case Pack.
 
-This release makes the project easier to understand by moving the visible demo near the top of the README, removing old release-history clutter, and explaining the current Brain sequence more clearly.
-
-The main code behavior remains the v1.81 demo case pack:
+The new SVG makes the current workflow understandable directly from the GitHub README:
 
 ```text
 observations
 → matched vulnerability patterns
-→ knowledge records
 → hypotheses
-→ next investigation steps
+→ next investigation plan
 → report-readiness summary
 ```
 
-v1.82 is a product-facing polish release. It does not add live execution, network requests, evidence collection, target mutation, report submission, or vulnerability confirmation.
+Asset:
+
+```text
+docs/assets/blackhole-demo-case-pack.svg
+```
+
+The visual is synthetic and local-only. This release does not add execution, network requests, evidence collection, target mutation, report submission, or vulnerability confirmation.
 
 ## Example Workflow Shape
 
