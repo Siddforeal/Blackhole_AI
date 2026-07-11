@@ -54,6 +54,8 @@ class BlackholeDemoMatchedPattern:
 class BlackholeDemoCasePack:
     demo_id: str
     version: str
+    product_version: str
+    demo_schema_version: str
     status: str
     case_title: str
     case_summary: str
@@ -76,6 +78,8 @@ class BlackholeDemoCasePack:
             "kind": "blackhole_demo_case_pack",
             "demo_id": self.demo_id,
             "version": self.version,
+            "product_version": self.product_version,
+            "demo_schema_version": self.demo_schema_version,
             "status": self.status,
             "case_title": self.case_title,
             "case_summary": self.case_summary,
@@ -102,7 +106,9 @@ class BlackholeDemoCasePack:
             "# Blackhole Demo Case Pack",
             "",
             f"- Demo ID: `{self.demo_id}`",
-            f"- Version: `{self.version}`",
+            f"- Product version: `{self.product_version}`",
+            f"- Demo schema version: `{self.demo_schema_version}`",
+            f"- Legacy version alias: `{self.version}`",
             f"- Status: `{self.status}`",
             f"- Case: {self.case_title}",
             f"- Target label: `{self.target_label}`",
@@ -223,6 +229,8 @@ def build_blackhole_demo_case_pack(
     return BlackholeDemoCasePack(
         demo_id="BLACKHOLE-DEMO-CASE-PACK-v1.81.0",
         version="1.81.0",
+        product_version="1.84.0",
+        demo_schema_version="1.81.0",
         status="demo-case-pack-local-only",
         case_title="Synthetic account export boundary review",
         case_summary=(
