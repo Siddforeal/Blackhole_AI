@@ -2,7 +2,8 @@
 
 **Date:** 2026-08-13
 
-**Status:** Approved in design conversation; pending written-spec review
+**Status:** Approved for implementation planning
+**Approval:** Written specification approved by the researcher on 2026-08-13
 
 **Branch:** `codex/web-api-investigator-alpha`
 **Release policy:** Development milestone only. This work does not authorize a version bump, tag, GitHub release, public announcement, merge to `main`, or external-target use.
@@ -507,6 +508,8 @@ The gateway enforces these alpha hard ceilings. A scope snapshot may lower them 
 - 1 MiB per HTTP response or browser resource and 5 MiB total bytes per browser navigation;
 - 40 browser subresources and one top-level navigation per browser action; and
 - 24 model decisions and 24 provider calls per investigation, including the single permitted correction retry.
+
+The limits are conjunctive: the 40-request investigation ceiling includes the initial browser document. Therefore a browser action started before any other target traffic can authorize at most 39 subresources, and fewer when earlier requests have already consumed the investigation budget. The per-action 40-subresource field is an absolute schema ceiling, not permission to exceed the investigation ceiling.
 
 Exhaustion pauses the investigation and cannot be overridden by the model.
 
